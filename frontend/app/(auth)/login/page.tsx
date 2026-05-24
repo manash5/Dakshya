@@ -1,8 +1,9 @@
 "use client";
 
-import LoginForm from "./_components/LoginForm";
+
 import { motion } from 'framer-motion';
 import Image from 'next/image';
+import LoginForm from '../_components/LoginForm';
 
 
 export default function Page() {
