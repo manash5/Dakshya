@@ -1,7 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import SingUpForm from "./_components/SignUpForm";
+import SingUpForm from '../_components/SignUpForm';
+
 
 
 export default function Page() {
