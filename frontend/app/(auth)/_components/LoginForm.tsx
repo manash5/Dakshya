@@ -6,6 +6,8 @@ import Link from "next/link";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { loginSchema, LoginFormValues } from './schema';
+import Image from 'next/image';
+
 
 
 
@@ -38,31 +40,19 @@ export default function LoginForm() {
         <div className="relative flex w-full max-w-[480px] flex-col text-neutral-900">
             <div className="space-y-5">
                 <div className="flex items-center gap-2">
-                    <svg
-                        width="140"
-                        height="40"
-                        viewBox="0 0 140 40"
-                        aria-label="Dakshya"
-                        role="img"
-                    >
-                        <rect x="2" y="6" width="28" height="28" rx="8" fill="#b9e956" />
-                        <path
-                            d="M12 14h8a7 7 0 1 1 0 14h-8z"
-                            fill="#0c2422"
+                    <div className="relative h-8 w-28 shrink-0">
+                        <Image
+                            src="/dakshya_main.png"
+                            alt="Dakshya"
+                            fill
+                            sizes="128px"
+                            className="object-cover -trasnlate-x-5"
+                            priority
+                            loading="eager"
                         />
-                        <text
-                            x="38"
-                            y="26"
-                            fontFamily="Arial, Helvetica, sans-serif"
-                            fontSize="20"
-                            fontWeight="700"
-                            fill="#0c2422"
-                        >
-                            Dakshya
-                        </text>
-                    </svg>
+                    </div>
                     <span className="rounded-full border border-lime-200 bg-lime-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-lime-700">
-                        Welcome back
+                        Start free
                     </span>
                 </div>
 
