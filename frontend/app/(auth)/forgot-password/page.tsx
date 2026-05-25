@@ -51,7 +51,7 @@ export default function Page() {
                                         alt="3D illustration"
                                         width={860}
                                         height={520}
-                                        className="pointer-events-none absolute left-15 bottom-0 z-30 h-[620px] w-[860px] scale-[1.38] translate-x-[5%] object-contain drop-shadow-[0_26px_40px_rgba(0,0,0,0.3)] max-lg:static max-lg:mx-auto max-lg:h-[340px] max-lg:w-[340px] max-lg:scale-100 max-lg:translate-x-0"
+                                        className="pointer-events-none absolute  bottom-0 z-30 h-[620px] w-[860px] scale-[1.38] translate-x-[5%] object-contain drop-shadow-[0_26px_40px_rgba(0,0,0,0.3)] max-lg:static max-lg:mx-auto max-lg:h-[340px] max-lg:w-[340px] max-lg:scale-100 max-lg:translate-x-0"
                                     />
                             </div>
                         </section>

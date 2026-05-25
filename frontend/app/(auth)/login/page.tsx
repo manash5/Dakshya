@@ -30,7 +30,7 @@ export default function Page() {
                             <div className="absolute right-24 top-32 h-1.5 w-1.5 rounded-full bg-white/20" aria-hidden="true" />
                             <div className="absolute left-24 bottom-28 h-1.5 w-1.5 rounded-full bg-white/25" aria-hidden="true" />
                             <div className="relative z-10 flex h-full flex-col justify-between -translate-y-6 max-lg:gap-10 max-lg:translate-y-0">
-                                
+
                                 <div className="max-w-sm">
                                     <div className="flex items-center gap-2 py-10">
                                         <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/40">
@@ -44,13 +44,15 @@ export default function Page() {
                                         Welcome back to your learning space. Your next milestone is waiting.
                                     </p>
                                 </div>
-                                    <Image
-                                        src="/login.png"
-                                        alt="3D illustration"
-                                        width={860}
-                                        height={520}
-                                        className="pointer-events-none absolute left-15 bottom-0 z-30 h-[520px] w-[860px] scale-[1.38] translate-x-[5%] object-contain drop-shadow-[0_26px_40px_rgba(0,0,0,0.3)] max-lg:static max-lg:mx-auto max-lg:h-[340px] max-lg:w-[340px] max-lg:scale-100 max-lg:translate-x-0"
-                                    />
+                                <Image
+                                    src="/login.png"
+                                    alt="3D illustration"
+                                    width={860}
+                                    height={520}
+                                    priority
+                                    loading="eager"
+                                    className="pointer-events-none absolute left-15 bottom-0 z-30 w-[860px] h-[500px] scale-[1.38] translate-x-[5%] object-contain drop-shadow-[0_26px_40px_rgba(0,0,0,0.3)] max-lg:static max-lg:mx-auto max-lg:w-[340px] max-lg:h-auto max-lg:scale-100 max-lg:translate-x-0"
+                                />
                             </div>
                         </section>
 
@@ -61,8 +63,8 @@ export default function Page() {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.5, ease: "easeOut" }}
                             >
-                               
-                                
+
+
                                 <LoginForm />
                             </motion.div>
                         </section>
