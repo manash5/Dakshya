@@ -7,7 +7,9 @@ export const loginSchema = z.object({
         .email("Enter a valid email address"),
     password: z
         .string()
-        .min(8, "Password must be at least 8 characters"),
+        .min(8, "Password must be at least 8 characters")
+        .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+        .regex(/[^a-zA-Z0-9]/, "Password must contain at least one special character"),
 });
 
 export type LoginFormValues = z.infer<typeof loginSchema>;
@@ -29,7 +31,9 @@ export const signupSchema = z
             .email("Enter a valid email address"),
         password: z
             .string()
-            .min(8, "Password must be at least 8 characters"),
+            .min(8, "Password must be at least 8 characters")
+            .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+            .regex(/[^a-zA-Z0-9]/, "Password must contain at least one special character"),
         confirmPassword: z
             .string()
             .min(8, "Confirm your password"),
@@ -55,7 +59,9 @@ export const resetPasswordSchema = z
     .object({
         password: z
             .string()
-            .min(8, "Password must be at least 8 characters"),
+            .min(8, "Password must be at least 8 characters")
+            .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+            .regex(/[^a-zA-Z0-9]/, "Password must contain at least one special character"),
         confirmPassword: z
             .string()
             .min(8, "Confirm your password"),
