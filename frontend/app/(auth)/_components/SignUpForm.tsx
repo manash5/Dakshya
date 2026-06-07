@@ -2,17 +2,22 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff } from "lucide-react";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 
 
 import { signupSchema, SignUpFormValues } from "./schema"
 import Image from 'next/image';
+import { useRouter } from "next/navigation";
+import { registerUser } from "@/lib/actions/auth-action";
 
 
 export default function SingUpForm() {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [isPending, startTransition] = useTransition();
+    const [error, setError] = useState('');
+    const router = useRouter();
     const {
         register,
         handleSubmit,
@@ -20,7 +25,8 @@ export default function SingUpForm() {
     } = useForm<SignUpFormValues>({
         resolver: zodResolver(signupSchema),
         defaultValues: {
-            fullName: "",
+            firstName: "",
+            lastName: "",
             username: "",
             email: "",
             password: "",
@@ -34,6 +40,26 @@ export default function SingUpForm() {
     const handleGoogleSignIn = () => {
         alert("feature not added yet")
     };
+
+    const onSubmit = (data: SignUpFormValues) => {
+        // isPending is true during the transition, 
+        // and false after it finishes
+        setError('');
+        startTransition(
+            async () => {
+                try {
+                    const result = await registerUser(data);
+                    if (!result.success) {
+                        setError(result.message || 'Registration failed');
+                        return;
+                    }
+                    router.push("/login");
+                } catch (error: any) {
+                    setError(error?.message || 'Registration failed');
+                }
+            }
+        );
+    }
     return (
         <>
             <div className="pointer-events-none absolute -right-24 -top-20 h-64 w-64 rounded-full bg-lime-200/40 blur-[90px]" />
@@ -66,39 +92,60 @@ export default function SingUpForm() {
                         </p>
                     </div>
 
-                    <form className="space-y-4" onSubmit={handleSubmit(() => { })} noValidate>
+                    <form className="space-y-4" onSubmit={handleSubmit(onSubmit)} noValidate>
+                        {error ? (
+                            <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+                                {error}
+                            </p>
+                        ) : null}
                         <div className="grid gap-4 sm:grid-cols-2">
                             <div>
                                 <label className="block text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
-                                    Full name
+                                    First name
                                 </label>
                                 <input
                                     type="text"
-                                    placeholder="Enter your full name"
+                                    placeholder="Enter your first name"
                                     className={inputBaseClasses}
-                                    aria-invalid={Boolean(errors.fullName)}
-                                    {...register("fullName")}
+                                    aria-invalid={Boolean(errors.firstName)}
+                                    {...register("firstName")}
                                 />
-                                {errors.fullName ? (
-                                    <p className="mt-1 text-xs text-rose-500">{errors.fullName.message}</p>
+                                {errors.firstName ? (
+                                    <p className="mt-1 text-xs text-rose-500">{errors.firstName.message}</p>
                                 ) : null}
                             </div>
 
                             <div>
                                 <label className="block text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
-                                    Username
+                                    Last name
                                 </label>
                                 <input
                                     type="text"
-                                    placeholder="Choose a username"
+                                    placeholder="Enter your last name"
                                     className={inputBaseClasses}
-                                    aria-invalid={Boolean(errors.username)}
-                                    {...register("username")}
+                                    aria-invalid={Boolean(errors.lastName)}
+                                    {...register("lastName")}
                                 />
-                                {errors.username ? (
-                                    <p className="mt-1 text-xs text-rose-500">{errors.username.message}</p>
+                                {errors.lastName ? (
+                                    <p className="mt-1 text-xs text-rose-500">{errors.lastName.message}</p>
                                 ) : null}
                             </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
+                                Username
+                            </label>
+                            <input
+                                type="text"
+                                placeholder="Choose a username"
+                                className={inputBaseClasses}
+                                aria-invalid={Boolean(errors.username)}
+                                {...register("username")}
+                            />
+                            {errors.username ? (
+                                <p className="mt-1 text-xs text-rose-500">{errors.username.message}</p>
+                            ) : null}
                         </div>
 
                         <div>
