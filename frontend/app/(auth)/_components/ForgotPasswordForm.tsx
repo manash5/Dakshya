@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { forgotPasswordSchema, ForgotPasswordValues } from "./schema";
 import  Image from 'next/image';
 export default function FogotPasswordForm() {
+    
     const {
         register,
         handleSubmit,

@@ -3,16 +3,23 @@
 import { Eye, EyeOff } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { loginSchema, LoginFormValues } from './schema';
 import Image from 'next/image';
+import { useRouter } from "next/navigation";
+import { loginUser } from "@/lib/actions/auth-action";
+import { useAuth } from "@/lib/context/AuthContext";
 
 
 
 
 export default function LoginForm() {
     const [showPassword, setShowPassword] = useState(false);
+    const [isPending, startTransition] = useTransition();
+    const [error, setError] = useState('');
+    const router = useRouter();
+    const { checkAuth } = useAuth();
     const {
         register,
         handleSubmit,
@@ -29,8 +36,25 @@ export default function LoginForm() {
         "mt-2 w-full rounded-xl border border-transparent bg-neutral-50 px-4 py-3 text-sm text-neutral-800 outline-none transition duration-200 placeholder:text-neutral-400 focus:border-lime-300 focus:bg-white focus:ring-4 focus:ring-lime-200/30";
 
     const onSubmit = (data: LoginFormValues) => {
-        void data;
-    };
+        // isPending is true during the transition, 
+        // and false after it finishes
+        setError('');
+        startTransition(
+            async () => {
+                try {
+                    const result = await loginUser(data);
+                    if (result.success) {
+                        await checkAuth();
+                        router.push('/dashboard')
+                    } else {
+                        setError(result.message || 'Login failed');
+                    }
+                } catch (error: any) {
+                    setError(error?.message || 'Login failed');
+                }
+            }
+        );
+    }
 
     const handleGoogleSignIn = () => {
         alert("feature not added yet")
@@ -39,6 +63,11 @@ export default function LoginForm() {
     return (
         <div className="relative flex w-full max-w-[480px] flex-col text-neutral-900">
             <div className="space-y-5">
+                {error ? (
+                    <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+                        {error}
+                    </p>
+                ) : null}
                 <div className="flex items-center gap-2">
                     <div className="relative h-8 w-28 shrink-0">
                         <Image
