@@ -17,10 +17,10 @@ const UserModelSchema: Schema = new Schema<IUser>(
         lastName: { type: String, required: true },
         password: { type: String, required: true },
         role: { type: String, enum: ["admin", "user"], default: "user" },
+        phoneNumber: { type: String, default: null },       
+        profilePicture: { type: String, default: null },   
     },
-    {
-        timestamps: true, // createdAt and updatedAt
-    }
+    { timestamps: true }
 );
 export default mongoose.model<IUser>(
     "User", // collection name in db.users
