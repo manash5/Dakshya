@@ -4,7 +4,7 @@ import { connectToMongoDB } from "./src/database/mongo-db";
 
 connectToMongoDB()
     .then(() => {
-        console.log("MongoDB connection established, starting server...");
+        console.log("MongoDB connection established, starting server  ...");
     })
     .catch((error) => {
         console.error("Failed to connect to MongoDB, server not started.", error);
