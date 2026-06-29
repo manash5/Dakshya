@@ -1,7 +1,7 @@
 import { UserService } from "../services/user.service";
 import { HttpException } from "../exceptions/http-exceptions";
 import { z } from "zod";
-import { CreateUserDto, LoginUserDto, updateUserDTO } from "../dtos/user.dto";
+import { CreateUserDto, LoginUserDto, UpdatePasswordDto, updateUserDTO } from "../dtos/user.dto";
 import { ApiResponseHelper } from "../utils/api-response";
 import { Request, Response } from "express";
 import { baseUrl } from "../config/constant";
@@ -110,12 +110,18 @@ export class UserController {
 
     async changePassword(req: Request, res: Response) {
       try {
-          const { currentPassword, newPassword } = req.body;
-          const userId = req.user?._id;  // matches your pattern from updateUser
+        const userId = req.user?._id;  
+        
+        const userData = UpdatePasswordDto.safeParse(req.body);
+        if (!userData.success) {
+          return ApiResponseHelper.error(res, z.prettifyError(userData.error), 400);
+        }
+        
+        const { currentPassword, newPassword } = req.body;
 
-          await userService.changePassword(userId, currentPassword, newPassword);
+        await userService.changePassword(userId, currentPassword, newPassword);
 
-          return ApiResponseHelper.success(res, null, 200, "Password updated successfully");
+        return ApiResponseHelper.success(res, null, 200, "Password updated successfully");
       } catch (e: Error | unknown | any) {
           return ApiResponseHelper.error(
               res,
