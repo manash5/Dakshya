@@ -79,7 +79,7 @@ export default function DashboardHeader() {
   {/* Conditional Render */}
   {user.avatarUrl && !imgError ? (
     <Image
-      src={`http://localhost:8088${user.avatarUrl}`}
+      src={`${user.avatarUrl}`}
       alt={user.name}
       fill 
       sizes="40px" 

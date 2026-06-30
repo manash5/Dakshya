@@ -16,7 +16,9 @@ export type CreateUserDto = z.infer<typeof CreateUserDto>;
 
 export const UpdateUserDto = z.object({
     firstName: z.string().optional(),
-    lastName: z.string(), 
+    email: z.string().optional(), 
+    lastName: z.string().optional(), 
+    username: z.string().optional(), 
     phoneNumber: z.string().optional(),      
     profilePicture: z.string().optional(),   
 });

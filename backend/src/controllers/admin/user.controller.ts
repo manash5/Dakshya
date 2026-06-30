@@ -13,13 +13,18 @@ interface QueryParams {
 export class AdminUserController {
     async createUser(req: Request, res: Response) {
         try {
-            const userData = CreateUserDtoAdmin.safeParse(req.body);
-            if (!userData.success) {
-                return ApiResponseHelper
-                    .error(res, z.prettifyError(userData.error), 400);
-            }
-            const user = await userService.createUser(userData.data);
-            return ApiResponseHelper.success(res, user, 200,"User created successfully");
+        const payload = { ...req.body };
+        if (req.file) {
+            payload.profilePicture = "/uploads/" + req.file.filename;
+        }
+
+        const userData = CreateUserDtoAdmin.safeParse(payload);
+        if (!userData.success) {
+            return ApiResponseHelper.error(res, z.prettifyError(userData.error), 400);
+        }
+
+        const user = await userService.createUser(userData.data);
+        return ApiResponseHelper.success(res, user, 200, "User created successfully");
         } catch (error: Error | any | unknown) {
             return ApiResponseHelper.error(
                 res,
@@ -30,29 +35,32 @@ export class AdminUserController {
     }
 
     async updateUser(req: Request, res: Response) {
-        try {
-            const userId = req.params.id as string;
+    try {
+        const userId = req.params.id as string;
 
-            const userData = UpdateUserDto.safeParse(req.body);
+        // 1. Create a combined object from req.body
+        const payload = { ...req.body };
 
-            if (!userData.success) {
-                return ApiResponseHelper
-                    .error(res, z.prettifyError(userData.error), 400);
-            }
-
-            if (req.file) {
-                userData.data.profilePicture = "/uploads/" + req.file.filename; // add profileImage path to body
-            }
-            const updatedUser = await userService.updateUser(userId, userData.data);
-            return ApiResponseHelper.success(res, updatedUser, 200,"User updated successfully");
-        } catch (error: Error | any | unknown) {
-            return ApiResponseHelper.error(
-                res,
-                error.message || "Internal Server Error",
-                error.status || 500
-            );
+        // 2. Add the file path if it exists BEFORE validation
+        if (req.file) {
+            payload.profilePicture = "/uploads/" + req.file.filename;
         }
+
+        const userData = UpdateUserDto.safeParse(payload);
+
+        if (!userData.success) {
+            return ApiResponseHelper
+                .error(res, z.prettifyError(userData.error), 400);
+        }
+
+        // 4. Pass the cleaned, validated data to your service
+        const updatedUser = await userService.updateUser(userId, userData.data);
+        
+        return ApiResponseHelper.success(res, updatedUser, 200, "User updated successfully");
+    } catch (error: any) {
+        return ApiResponseHelper.error(res, error.message || "Internal Server Error", error.status || 500);
     }
+}
 
     async updatePassword(req: Request, res: Response) {
         try {
