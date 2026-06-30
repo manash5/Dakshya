@@ -5,14 +5,14 @@ import { Bell } from "lucide-react";
 import { getProfile } from "@/lib/api/auth";
 import Image from "next/image";
 
-interface UserProfile {
+interface AdminProfile {
   name: string;
   role: string;
   avatarUrl: string | null;
 }
 
-export default function DashboardHeader() {
-  const [user, setUser] = useState<UserProfile | null>(null);
+export default function AdminHeader() {
+  const [user, setUser] = useState<AdminProfile | null>(null);
   const [imgError, setImgError] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -25,7 +25,7 @@ export default function DashboardHeader() {
       if (userData) {
         setUser({
           name: `${userData.firstName || ""} ${userData.lastName || ""}`.trim() || "User",
-          role: "software engineer",
+          role: "Admin",
           avatarUrl: userData.profilePicture || null, 
         });
       }
@@ -79,7 +79,7 @@ export default function DashboardHeader() {
   {/* Conditional Render */}
   {user.avatarUrl && !imgError ? (
     <Image
-      src={`${user.avatarUrl}`}
+      src={process.env.NEXT_PUBLIC_API_BASE_URL + user.avatarUrl}
       alt={user.name}
       fill 
       sizes="40px" 

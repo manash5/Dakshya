@@ -17,9 +17,16 @@ export async function proxy(request: NextRequest){
         if(isAdminRoute && user.role !== "admin"){
             return NextResponse.redirect(new URL("/unauthorized", request.url));
         }
+
+        if(!isAdminRoute && !isPublicRoute && user.role === "admin"){
+            return NextResponse.redirect(new URL("/admin", request.url));
+        }
     }
 
     if(token && isPublicRoute){
+        if(user?.role === "admin"){
+            return NextResponse.redirect(new URL("/admin", request.url));
+        }
         return NextResponse.redirect(new URL("/dashboard", request.url));
     }
 

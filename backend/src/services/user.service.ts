@@ -60,7 +60,7 @@ export class UserService {
     return { user, token };
   }
 
-  async updateUser(id: string, updateData: updateUserDTO) {
+  async updateUser(id: string, updateData: updateUserDTO): Promise<IUser> {
         const user = await userRepository.findById(id);
         if (!user) {
             throw new HttpException(404, "user not found");
@@ -98,4 +98,57 @@ export class UserService {
 
       await this.updateUser(userId, { password: newPassword });
     }
+
+    async getAllUserPaginated(page?: string, limit?: string, search?: string) {
+        const currentPage = page && parseInt(page) > 0 ? parseInt(page) : 1;
+        const currentLimit = limit && parseInt(limit) > 0 ? parseInt(limit) : 10;
+        const currentSearch = search && search.trim() !== "" ? search : undefined;
+
+        const { data, total } = await userRepository.getAllPaginated(currentPage, currentLimit, currentSearch);
+        const totalPages = Math.ceil(total / currentLimit);
+        const pagination = {
+            page: currentPage,
+            limit: currentLimit,
+            totalPages: totalPages,
+            total: total,
+        }
+        return { data, pagination };
+    }
+
+    async deleteUser(id: string): Promise<boolean> {
+        const existingUser = await userRepository.findById(id);
+        if (!existingUser) {
+            throw new HttpException(404, "User not found");
+        }
+        const deleted = await userRepository.delete(id);
+        if (!deleted) {
+            throw new HttpException(500, "Failed to delete user");
+        }
+        return deleted;
+    }
+
+    async getUserById(id: string): Promise<IUser | null> {
+        const user = await userRepository.findById(id);
+        if (!user) {
+            throw new HttpException(404, "User not found");
+        }
+        return user;
+    }
+
+
+    async checkPassword(userId: string, currentPassword: string): Promise<boolean> {
+        const user = await userRepository.findById(userId);
+        if (!user) {
+            throw new HttpException(404, "User not found");
+        }
+        const isPasswordValid = await bcrypt.compare(
+            currentPassword,
+            user.password
+        );
+        if (!isPasswordValid) {
+            throw new HttpException(400, "Current password is incorrect");
+        }
+        return isPasswordValid;
+    }
+
 }

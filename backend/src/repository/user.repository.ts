@@ -36,11 +36,26 @@ export class UserMongoRepository implements IUserRepository {
     }
     async update(id: string, user: Partial<IUser>)
         : Promise<IUser | null> {
-        const updatedUser = await User.findByIdAndUpdate(id, user, { new: true });
+        const updatedUser = await User.findByIdAndUpdate(id, user, { returnDocument: 'after' });
         return updatedUser;
     }
     async delete(id: string): Promise<boolean> {
         const deletedUser = await User.findByIdAndDelete(id);
         return !!deletedUser; // return true if deleted, false if not found
+    }
+
+    async getAllPaginated(page: number, limit: number, search?: string): Promise<{ data: IUser[]; total: number }> {
+        const query: any = {};
+        if (search) {
+            query.$or = [
+                { username: { $regex: search, $options: "i" } },
+                { email: { $regex: search, $options: "i" } },
+            ];
+        }
+        const total = await User.countDocuments(query);
+        const data = await User.find(query)
+            .skip((page - 1) * limit)
+            .limit(limit);
+        return { data, total };
     }
 }
