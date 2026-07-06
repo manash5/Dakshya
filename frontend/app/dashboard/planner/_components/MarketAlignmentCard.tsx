@@ -1,3 +1,5 @@
+import RingGauge from "../../_components/RingGauge";
+
 interface MarketAlignmentCardProps {
   matchScore?: number;
   vacancies?: number;
@@ -9,10 +11,6 @@ export default function MarketAlignmentCard({
   vacancies = 142,
   location = "Kathmandu valley",
 }: MarketAlignmentCardProps) {
-  const radius = 80;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference * (1 - matchScore / 100);
-
   return (
     <div className="rounded-2xl border border-black/5 bg-white p-5">
       <p className="mb-6 text-xs font-medium tracking-wide text-neutral-400">
@@ -20,41 +18,20 @@ export default function MarketAlignmentCard({
       </p>
 
       <div className="flex justify-center">
-        <div className="relative h-[210px] w-[210px]">
-          <svg
-            viewBox="0 0 200 200"
-            className="h-full w-full -rotate-90"
-          >
-            <circle
-              cx="100"
-              cy="100"
-              r={radius}
-              fill="none"
-              stroke="#EBECE6"
-              strokeWidth="16"
-            />
-            <circle
-              cx="100"
-              cy="100"
-              r={radius}
-              fill="none"
-              stroke="#C6EA5D"
-              strokeWidth="16"
-              strokeLinecap="round"
-              strokeDasharray={circumference}
-              strokeDashoffset={offset}
-            />
-          </svg>
-
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-4xl font-bold text-neutral-900">
-              {matchScore}%
-            </span>
-            <span className="mt-1 text-xs font-medium tracking-wide text-neutral-400">
-              MATCH SCORE
-            </span>
-          </div>
-        </div>
+        <RingGauge
+          value={`${matchScore}%`}
+          label="MATCH SCORE"
+          diameter={210}
+          viewBoxSize={200}
+          radius={80}
+          strokeWidth={16}
+          trackStroke="#EBECE6"
+          progressStroke="#C6EA5D"
+          progressDasharray={`${2 * Math.PI * 80}`}
+          progressDashoffset={2 * Math.PI * 80 * (1 - matchScore / 100)}
+          valueClassName="text-4xl font-bold text-neutral-900"
+          labelClassName="mt-1 text-xs font-medium tracking-wide text-neutral-400"
+        />
       </div>
 
       <p className="mt-6 text-center text-sm leading-relaxed text-neutral-500">
