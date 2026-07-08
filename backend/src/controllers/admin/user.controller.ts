@@ -1,6 +1,6 @@
 import { UserService } from "../../services/user.service";
 import { z } from "zod";
-import { CreateUserDto, LoginUserDto, UpdateUserDto, UpdatePasswordDto, CreateUserDtoAdmin } from "../../dtos/user.dto";
+import { CreateUserDto, LoginUserDto, updateUserDTO, UpdatePasswordDto, CreateUserDtoAdmin } from "../../dtos/user.dto";
 import { ApiResponseHelper } from "../../utils/api-response";
 import { Request, Response } from "express";
 const userService = new UserService();
@@ -46,7 +46,7 @@ export class AdminUserController {
             payload.profilePicture = "/uploads/" + req.file.filename;
         }
 
-        const userData = UpdateUserDto.safeParse(payload);
+        const userData = updateUserDTO.safeParse(payload);
 
         if (!userData.success) {
             return ApiResponseHelper

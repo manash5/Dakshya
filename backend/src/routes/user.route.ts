@@ -31,4 +31,10 @@ router.get(
 
 router.put("/change-password", authorizedMiddleware, userController.changePassword);
 
+router.post(
+    "/onboarding",
+    authorizedMiddleware,
+    userController.completeOnboarding
+);
+
 export default router;
