@@ -1,13 +1,22 @@
-import { Building2, MapPin } from "lucide-react";
+import { Bookmark, Building2, MapPin } from "lucide-react";
 
 export type JobCardProps = {
   match: string;
   title: string;
   company: string;
   location: string;
+  saved?: boolean;
+  onToggleSave?: () => void;
 };
 
-export default function JobCard({ match, title, company, location }: JobCardProps) {
+export default function JobCard({
+  match,
+  title,
+  company,
+  location,
+  saved = false,
+  onToggleSave,
+}: JobCardProps) {
   return (
     <article className="rounded-[24px] border border-zinc-200 bg-white p-5 shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
       <div className="flex items-start justify-between">
@@ -31,9 +40,21 @@ export default function JobCard({ match, title, company, location }: JobCardProp
         <span>{location}</span>
       </div>
 
-      <button className="mt-8 flex h-12 w-full items-center justify-center rounded-full border border-zinc-900 text-sm font-semibold text-zinc-900 transition hover:bg-zinc-50">
-        VIEW DETAILS
-      </button>
+      <div className="mt-8 flex items-center gap-2">
+        <button className="flex h-12 flex-1 items-center justify-center rounded-full border border-zinc-900 text-sm font-semibold text-zinc-900 transition hover:bg-zinc-50">
+          VIEW DETAILS
+        </button>
+
+        <button
+          type="button"
+          onClick={onToggleSave}
+          aria-pressed={saved}
+          aria-label={saved ? "Remove from saved jobs" : "Save job"}
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#D9F24A] text-zinc-900 transition hover:brightness-95"
+        >
+          <Bookmark size={16} fill={saved ? "currentColor" : "none"} />
+        </button>
+      </div>
     </article>
   );
 }
