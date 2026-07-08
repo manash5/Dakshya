@@ -14,16 +14,16 @@ export const CreateUserDto = z.object({
 
 export type CreateUserDto = z.infer<typeof CreateUserDto>; 
 
-export const UpdateUserDto = z.object({
-    firstName: z.string().optional(),
-    email: z.string().optional(), 
-    lastName: z.string().optional(), 
-    username: z.string().optional(), 
-    phoneNumber: z.string().optional(),      
-    profilePicture: z.string().optional(),   
-});
+// export const UpdateUserDto = z.object({
+//     firstName: z.string().optional(),
+//     email: z.string().optional(), 
+//     lastName: z.string().optional(), 
+//     username: z.string().optional(), 
+//     phoneNumber: z.string().optional(),      
+//     profilePicture: z.string().optional(),   
+// });
 
-export type UpdateUserDto = z.infer<typeof UpdateUserDto>;
+// export type UpdateUserDto = z.infer<typeof UpdateUserDto>;
 
 export const LoginUserDto = UserSchema.pick({
     email: true, 
@@ -31,7 +31,14 @@ export const LoginUserDto = UserSchema.pick({
 }); 
 export type LoginUserDto = z.infer<typeof LoginUserDto> 
 
-export const updateUserDTO = UserSchema.partial();
+export const updateUserDTO = UserSchema.omit({
+  universityId: true,
+  courseId: true,
+  targetRoles: true,
+  currentSemester: true,
+  onboardingCompleted: true,
+}).partial();
+
 export type updateUserDTO = z.infer<typeof updateUserDTO>;
 
 export const UpdatePasswordDto = z.object({
@@ -56,3 +63,20 @@ export const CreateUserDtoAdmin = UserSchema.pick({
     profilePicture: true,   
 });
 export type CreateUserDtoAdmin = z.infer<typeof CreateUserDtoAdmin>;
+
+export const CompleteOnboardingDto = z.object({
+
+    age: z.number().int().positive(),
+
+    universityId: z.string(),
+
+    courseId: z.string(),
+
+    currentSemester: z.number().int().min(1).max(8),
+
+    targetRoles: z.array(z.string()).min(1)
+
+});
+
+export type CompleteOnboardingDto =
+    z.infer<typeof CompleteOnboardingDto>;
