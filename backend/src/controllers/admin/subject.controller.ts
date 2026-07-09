@@ -119,9 +119,9 @@ export class AdminSubjectController {
 
   async getSubjectById(req: Request, res: Response) {
     try {
-      const { courseId } = req.params;
+      const subjectId= req.params.subjectId;
 
-      const subject = await service.getSubjectById(courseId as string);
+      const subject = await service.getSubjectById(subjectId as string);
 
       return ApiResponseHelper.success(
         res,
