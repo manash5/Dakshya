@@ -1,10 +1,6 @@
 import User, { IUser } from "../models/user.model";
 import mongoose, { UpdateQuery } from "mongoose";
 
-const toObjectId = (id?: string | null): mongoose.Types.ObjectId | null | undefined => {
-    if (id === undefined) return undefined;
-    return id ? new mongoose.Types.ObjectId(id) : null;
-};
 export interface IUserRepository {
     findByUsername(username: string): Promise<IUser | null>;
     findByEmail(email: string): Promise<IUser | null>;

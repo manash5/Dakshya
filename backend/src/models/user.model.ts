@@ -23,9 +23,9 @@ const UserModelSchema: Schema = new Schema<IUser>(
         phoneNumber: { type: String, default: null },       
         profilePicture: { type: String, default: null },   
         age: {
-        type: Number,
-        default: null
-    },
+            type: Number,
+            default: null
+        },
 
     universityId: {
         type: Schema.Types.ObjectId,
