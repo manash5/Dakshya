@@ -56,7 +56,7 @@ export class CourseMongoRepository implements ICourseRepository {
       data.universityId = toObjectId(data.universityId as any) as any;
     }
 
-    return await Course.findByIdAndUpdate(id, data, { new: true });
+    return await Course.findByIdAndUpdate(id, data, { returnDocument: 'after' });
   }
 
   async delete(id: string): Promise<boolean> {

@@ -13,6 +13,7 @@ router.post('/', adminCourseController.createCourse)
 router.put('/:courseId', adminCourseController.updateCourse)
 router.delete('/:courseId', adminCourseController.deleteCourse)
 router.get('/', adminCourseController.getAllCoursesPaginated)
+router.get('/:courseId', adminCourseController.getCourseById); 
 router.get('/:courseId/subjects', adminSubjectController.getSubjectsByCourse)
 
 
