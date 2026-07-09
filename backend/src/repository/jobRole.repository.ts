@@ -58,7 +58,7 @@ export class JobRoleMongoRepository implements IJobRoleRepository {
     return await JobRole.findByIdAndUpdate(
       id,
       data,
-      { new: true }
+      { returnDocument: 'after' }
     );
   }
 
