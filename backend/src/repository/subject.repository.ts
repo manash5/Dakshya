@@ -86,7 +86,7 @@ export class SubjectMongoRepository implements ISubjectRepository {
       data.courseId = toObjectId(data.courseId as any) as any;
     }
 
-    return await Subject.findByIdAndUpdate(id, data, { new: true });
+    return await Subject.findByIdAndUpdate(id, data, { returnDocument: 'after' });
   }
 
   async delete(id: string): Promise<boolean> {

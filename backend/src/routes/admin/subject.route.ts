@@ -12,6 +12,7 @@ router.post('/', adminSubjectController.createSubject);
 router.put('/:subjectId', adminSubjectController.updateSubject); 
 router.delete('/:subjectId', adminSubjectController.deleteSubject); 
 router.get('/', adminSubjectController.getAllSubjectsPaginated); 
+router.get('/:subjectId', adminSubjectController.getSubjectById); 
 
 
 export default router; 
