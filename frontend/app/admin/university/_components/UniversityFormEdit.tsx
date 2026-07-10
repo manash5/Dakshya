@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { updateUniversitySchema } from "./schema";
 import { handleUpdateUniversity } from "@/lib/actions/admin/university-action";
+import UniversityCoursesSection from "./UniversityCoursesSection";
 
 const fieldClass =
     "h-12 w-full rounded-lg border border-gray-200 bg-gray-50 px-4 text-sm text-gray-800 placeholder:text-gray-400 outline-none transition-colors focus:border-gray-400 focus:bg-white";
@@ -132,6 +133,8 @@ export default function UniversityFormEdit({ university }: { university: any }) 
                         </button>
                     </div>
                 </form>
+
+                <UniversityCoursesSection universityId={university._id} />
             </div>
         </div>
     );
