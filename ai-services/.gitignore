@@ -1,0 +1,13 @@
+# Virtual environment
+.venv/
+venv/
+
+# Environment variables
+.env
+
+# Python cache
+**/__pycache__/
+*.pyc
+
+# Project locks/dependencies (Optional: only if you don't want to commit uv.lock)
+uv.lock
