@@ -27,4 +27,6 @@ const SubjectModelSchema: Schema = new Schema<ISubject>(
   { timestamps: true },
 );
 
+SubjectModelSchema.index({ courseId: 1, semester: 1 });
+
 export default mongoose.model<ISubject>("Subject", SubjectModelSchema);

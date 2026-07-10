@@ -25,6 +25,8 @@ const CourseModelSchema: Schema = new Schema<ICourse>(
   { timestamps: true },
 );
 
+CourseModelSchema.index({ universityId: 1, isActive: 1 });
+
 export default mongoose.model<ICourse>(
     "Course", 
     CourseModelSchema

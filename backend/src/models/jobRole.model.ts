@@ -10,10 +10,10 @@ export interface IJobRole extends JobRoleType, Document {
 const JobRoleSchema: Schema = new Schema<IJobRole>(
   {
     title: { type: String, required: true, unique: true , trim: true},
-    category: { type: String, required: true , trim: true},
+    category: { type: String, required: true , trim: true, index: true},
     description: { type: String, default: "", trim: true },
     icon: { type: String, default: null },
-    isActive: { type: Boolean, default: true },
+    isActive: { type: Boolean, default: true, trim: true},
   },
   { timestamps: true },
 );

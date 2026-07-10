@@ -35,7 +35,7 @@ app.use("/api/v1/auth", userRoute);
 app.use('/api/v1/university', universityRoute)
 app.use('/api/v1/course', courseRoute); 
 app.use('/api/v1/subject', subjectRoute); 
-app.use('api/v1/jobRoles', jobRoleRoute); 
+app.use('/api/v1/jobRoles', jobRoleRoute); 
 app.use('/api/v1/admin/university', adminUniversityRoute); 
 app.use('/api/v1/admin/course', adminCourseRoute); 
 app.use('/api/v1/admin/subject', adminSubjectRoute); 
