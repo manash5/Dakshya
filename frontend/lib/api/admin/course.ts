@@ -10,6 +10,18 @@ export const getAllCourses = async (params: { page?: number; limit?: number; sea
     }
 }
 
+export const getCoursesByUniversity = async (
+    universityId: string,
+    params: { page?: number; limit?: number; search?: string } = {}
+) => {
+    try {
+        const response = await axiosInstance.get(API.ADMIN.UNIVERSITY.GET_COURSES(universityId), { params });
+        return response.data;
+    } catch (error: Error | any) {
+        throw new Error(error?.response?.data?.message || 'Failed to fetch university courses');
+    }
+}
+
 export const getCourseById = async (id: string) => {
     try {
         const response = await axiosInstance.get(API.ADMIN.COURSE.GET_BY_ID(id));

@@ -10,6 +10,18 @@ export const getAllSubjects = async (params: { page?: number; limit?: number; se
     }
 }
 
+export const getSubjectsByCourse = async (
+    courseId: string,
+    params: { page?: number; limit?: number; search?: string } = {}
+) => {
+    try {
+        const response = await axiosInstance.get(API.ADMIN.COURSE.GET_SUBJECTS(courseId), { params });
+        return response.data;
+    } catch (error: Error | any) {
+        throw new Error(error?.response?.data?.message || 'Failed to fetch course subjects');
+    }
+}
+
 export const getSubjectById = async (id: string) => {
     try {
         const response = await axiosInstance.get(API.ADMIN.SUBJECT.GET_BY_ID(id));

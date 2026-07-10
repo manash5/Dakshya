@@ -20,6 +20,7 @@ export const API = {
         UNIVERSITY: {
             GET_ALL: "/api/v1/admin/university",
             GET_BY_ID: (id: string) => `/api/v1/admin/university/${id}`,
+            GET_COURSES: (id: string) => `/api/v1/admin/university/${id}/courses`,
             CREATE: "/api/v1/admin/university",
             UPDATE: (id: string) => `/api/v1/admin/university/${id}`,
             DELETE: (id: string) => `/api/v1/admin/university/${id}`,
@@ -27,6 +28,7 @@ export const API = {
         COURSE: {
             GET_ALL: "/api/v1/admin/course",
             GET_BY_ID: (id: string) => `/api/v1/admin/course/${id}`,
+            GET_SUBJECTS: (id: string) => `/api/v1/admin/course/${id}/subjects`,
             CREATE: "/api/v1/admin/course",
             UPDATE: (id: string) => `/api/v1/admin/course/${id}`,
             DELETE: (id: string) => `/api/v1/admin/course/${id}`,
