@@ -6,7 +6,22 @@ export const API = {
         UPDATE: "/api/v1/auth/update",
         GET_PROFILE: '/api/v1/auth/getProfile',
         CHANGE_PASSWORD: '/api/v1/auth/change-password',
+        ONBOARDING: '/api/v1/auth/onboarding'
     }, 
+
+    UNIVERSITY: {
+        GET_ALL: "/api/v1/university",
+        GET_BY_ID: (id: string) => `/api/v1/university/${id}`,
+        GET_COURSES: (id: string) => `/api/v1/university/${id}/courses`,
+    },
+    COURSE: {
+        GET_BY_ID: (id: string) => `/api/v1/course/${id}`,
+        GET_SUBJECTS: (id: string) => `/api/v1/course/${id}/subjects`,
+    },
+    JOB_ROLE: {
+        GET_ALL: "/api/v1/jobRoles",
+        GET_BY_ID: (id: string) => `/api/v1/jobRoles/${id}`,
+    },
 
     ADMIN: {
         USERS: {
