@@ -1,6 +1,6 @@
 "use server";
 import { revalidatePath } from "next/cache";
-import { getAllSubjects, createSubject, deleteSubject, getSubjectById, updateSubject } from "@/lib/api/admin/subject";
+import { getAllSubjects, createSubject, deleteSubject, getSubjectById, updateSubject, getSubjectsByCourse } from "@/lib/api/admin/subject";
 
 export const handleCreateSubject = async (data: any) => {
     try {
@@ -27,6 +27,28 @@ export const handleGetAllSubjects = async ({ page, limit, search }: { page?: num
         return { success: false, message: result.message || 'Failed to fetch subjects' };
     } catch (error: any) {
         return { success: false, message: error?.message || 'Failed to fetch subjects' };
+    }
+}
+
+export const handleGetSubjectsByCourse = async (
+    courseId: string,
+    { page, limit, search }: { page?: number; limit?: number; search?: string } = {}
+) => {
+    try {
+        const currentPage = page ? page > 0 ? page : 1 : 1;
+        const currentLimit = limit ? limit > 0 ? limit : 10 : 10;
+        const currentSearch = search || "";
+        const result = await getSubjectsByCourse(courseId, {
+            page: currentPage,
+            limit: currentLimit,
+            search: currentSearch,
+        });
+        if (result.success) {
+            return { success: true, message: result.message, data: result.data, pagination: result.meta };
+        }
+        return { success: false, message: result.message || 'Failed to fetch course subjects' };
+    } catch (error: any) {
+        return { success: false, message: error?.message || 'Failed to fetch course subjects' };
     }
 }
 

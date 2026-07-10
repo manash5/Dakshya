@@ -1,6 +1,6 @@
 "use server";
 import { revalidatePath } from "next/cache";
-import { getAllCourses, createCourse, deleteCourse, getCourseById, updateCourse } from "@/lib/api/admin/course";
+import { getAllCourses, createCourse, deleteCourse, getCourseById, updateCourse, getCoursesByUniversity } from "@/lib/api/admin/course";
 
 export const handleCreateCourse = async (data: any) => {
     try {
@@ -27,6 +27,28 @@ export const handleGetAllCourses = async ({ page, limit, search }: { page?: numb
         return { success: false, message: result.message || 'Failed to fetch courses' };
     } catch (error: any) {
         return { success: false, message: error?.message || 'Failed to fetch courses' };
+    }
+}
+
+export const handleGetCoursesByUniversity = async (
+    universityId: string,
+    { page, limit, search }: { page?: number; limit?: number; search?: string } = {}
+) => {
+    try {
+        const currentPage = page ? page > 0 ? page : 1 : 1;
+        const currentLimit = limit ? limit > 0 ? limit : 10 : 10;
+        const currentSearch = search || "";
+        const result = await getCoursesByUniversity(universityId, {
+            page: currentPage,
+            limit: currentLimit,
+            search: currentSearch,
+        });
+        if (result.success) {
+            return { success: true, message: result.message, data: result.data, pagination: result.meta };
+        }
+        return { success: false, message: result.message || 'Failed to fetch university courses' };
+    } catch (error: any) {
+        return { success: false, message: error?.message || 'Failed to fetch university courses' };
     }
 }
 
