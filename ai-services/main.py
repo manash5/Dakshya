@@ -1,4 +1,6 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+import os
 import whisper
 
 from app.core.config import AI_SERVICE_PORT
@@ -12,7 +14,21 @@ from app.core.config import AI_SERVICE_PORT
 from app.services.course_generator.router import router as course_generator_router
 
 app = FastAPI(title="Dakshya")
-origins = ["http://localhost:500"]
+
+# Frontend dev server (Next.js) and any extra origins from env, comma-separated.
+_cors_origins = os.getenv(
+    "CORS_ALLOWED_ORIGINS",
+    "http://localhost:3000,http://localhost:500",
+)
+origins = [origin.strip() for origin in _cors_origins.split(",") if origin.strip()]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Register each AI service's router here as you add more, e.g.:
 # from app.services.transcript_summarizer.router import router as transcript_summarizer_router

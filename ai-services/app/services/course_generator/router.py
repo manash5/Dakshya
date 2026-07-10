@@ -4,7 +4,7 @@ from typing import List
 import httpx
 from fastapi import APIRouter, HTTPException
 
-from app.services.course_generator.backend_client import  create_course, create_subject
+from app.services.course_generator.backend_client import AdminAuthError, create_course, create_subject
 from app.services.course_generator.extractor import extract_courses_with_gemini
 from app.services.course_generator.scraper import crawl_website
 from app.services.course_generator.schemas import (
