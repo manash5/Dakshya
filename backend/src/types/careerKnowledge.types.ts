@@ -48,14 +48,14 @@ export const CareerKnowledgeSchema = z.object({
 
     importantConcepts: z.array(z.string()),
   }),
-  
+
   learningResources: z.array(
     z.object({
       title: z.string(),
 
       type: z.enum(["Course", "Documentation", "Video", "Article"]),
 
-      url: z.string().url(),
+      url: z.url(),
     }),
   ),
 
