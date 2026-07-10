@@ -16,6 +16,7 @@ export interface ICourseRepository {
   update(id: string, data: UpdateQuery<ICourse>): Promise<ICourse | null>;
   delete(id: string): Promise<boolean>;
   findByNameAndUniversity(name: string, universityId: string): Promise<ICourse | null>;
+  deleteByUniversity(universityId: string): Promise<number>;
   getAllPaginated(
     page: number,
     limit: number,
@@ -67,6 +68,11 @@ export class CourseMongoRepository implements ICourseRepository {
 
   async findByNameAndUniversity(name: string, universityId: string): Promise<ICourse | null> {
     return await Course.findOne({ name: name, universityId: universityId });
+  }
+
+  async deleteByUniversity(universityId: string): Promise<number> {
+    const result = await Course.deleteMany({ universityId });
+    return result.deletedCount ?? 0;
   }
 
   async getAllPaginated(page: number, limit: number, search?: string, universityId?: string) {

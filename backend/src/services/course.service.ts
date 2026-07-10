@@ -145,15 +145,8 @@ export class CourseService {
       throw new HttpException(404, "Course not found");
     }
 
-    // Prevent deleting course with subjects
-    const subjects = await subjectRepository.findByCourse(id);
-
-    if (subjects.length > 0) {
-      throw new HttpException(
-        400,
-        "Cannot delete a course that still contains subjects",
-      );
-    }
+    // Cascade: remove all subjects belonging to this course
+    await subjectRepository.deleteByCourse(id);
 
     const deleted = await courseRepository.delete(id);
 

@@ -2,7 +2,11 @@ import { UniversityMongoRepository } from "../repository/university.repository";
 import { HttpException } from "../exceptions/http-exceptions";
 import { IUniversity } from "../models/university.model";
 import { CreateUniversityDto, UpdateUniversityDto } from '../dtos/university.dto';
+import { CourseMongoRepository } from "../repository/course.repository";
+import { SubjectMongoRepository } from "../repository/subject.repository";
 
+const courseRepository = new CourseMongoRepository();
+const subjectRepository = new SubjectMongoRepository();
 const universityRepository = new UniversityMongoRepository();
 
 export class UniversityService {
@@ -73,6 +77,16 @@ export class UniversityService {
     if (!existingUniversity) {
       throw new HttpException(404, "University not found");
     }
+
+    // Cascade: delete all subjects under every course of this university
+    const courses = await courseRepository.findByUniversity(id);
+    for (const course of courses) {
+      await subjectRepository.deleteByCourse(course._id.toString());
+    }
+
+    // Cascade: delete all courses under this university
+    await courseRepository.deleteByUniversity(id);
+
     const deleted = await universityRepository.delete(id);
     if (!deleted) {
       throw new HttpException(500, "Failed to delete university");

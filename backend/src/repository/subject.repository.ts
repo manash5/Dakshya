@@ -27,6 +27,8 @@ export interface ISubjectRepository {
 
   delete(id: string): Promise<boolean>;
 
+  deleteByCourse(courseId: string): Promise<number>;
+
   getAllPaginated(
     page: number,
     limit: number,
@@ -92,6 +94,11 @@ export class SubjectMongoRepository implements ISubjectRepository {
   async delete(id: string): Promise<boolean> {
     const deleted = await Subject.findByIdAndDelete(id);
     return !!deleted;
+  }
+
+  async deleteByCourse(courseId: string): Promise<number> {
+    const result = await Subject.deleteMany({ courseId: toObjectId(courseId) });
+    return result.deletedCount ?? 0;
   }
 
   async getAllPaginated(
