@@ -78,10 +78,7 @@ export const CareerKnowledgeSchema = z.object({
   }),
 
   estimatedCompletionMonths: z.number().positive(),
-  averageReadinessScore: z.number().min(0).max(100),
   aiGeneratedDate: z.date(),
-  lastUpdated: z.date(),
-  aiVersion: z.string(),
   isUpdating: z.boolean().default(false),
 });
 

@@ -79,9 +79,7 @@ const CareerKnowledgeModelSchema: Schema = new Schema<ICareerKnowledge>(
     },
     
     estimatedCompletionMonths: { type: Number, required: true },
-    averageReadinessScore: { type: Number, required: true, min: 0, max: 100 },
     aiGeneratedDate: { type: Date, required: true },
-    aiVersion: { type: String, required: true },
     isUpdating: { type: Boolean, default: false },
   },
   { 
@@ -91,7 +89,6 @@ const CareerKnowledgeModelSchema: Schema = new Schema<ICareerKnowledge>(
 );
 
 
-CareerKnowledgeModelSchema.index({ jobRoleId: 1 });
 CareerKnowledgeModelSchema.index({ difficulty: 1, futureDemand: 1 });
 
 

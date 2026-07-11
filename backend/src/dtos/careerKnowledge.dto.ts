@@ -4,9 +4,7 @@ import { CareerKnowledgeSchema } from "../types/careerKnowledge.types";
 export const CreateCareerKnowledgeDtoSchema =
 CareerKnowledgeSchema.omit({
     isUpdating: true,
-    averageReadinessScore: true,
     aiGeneratedDate: true,
-    aiVersion: true,
 });
 
 export const UpdateCareerKnowledgeDtoSchema =
@@ -15,7 +13,6 @@ CareerKnowledgeSchema
 .omit({
     jobRoleId: true,
     aiGeneratedDate: true,
-    aiVersion: true,
 });
 
 export type CreateCareerKnowledgeDto =
