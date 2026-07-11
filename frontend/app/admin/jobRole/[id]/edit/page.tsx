@@ -6,15 +6,16 @@ import JobFormEdit from "../../_components/JobFormEdit";
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
     const result = await handleGetJobRoleById(id);
+    console.log("FETCHED JOB ROLE DATA:", result.data);
     if (!result.success || !result.data) notFound();
 
     return (
         <section>
-            <Link href="/admin/jobs" className="text-xs uppercase tracking-[1.5px] text-muted hover:text-on-dark">
+            <Link href="/admin/jobRole" className="text-xs uppercase tracking-[1.5px] text-muted hover:text-on-dark">
                 ← Back to jobs
             </Link>
             
-            <JobFormEdit job={result.data} />
+            <JobFormEdit job={result.data.jobRole} />
         </section>
     );
 }
