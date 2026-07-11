@@ -11,7 +11,8 @@ from app.core.config import AI_SERVICE_PORT
 # APIRouter instance that, depending on import order (e.g. under --reload),
 # can resolve to the wrong one. Importing straight from the submodule avoids
 # the ambiguity entirely.
-from app.services.course_generator.router import router as course_generator_router
+from app.api import course_generator
+from app.api import career_knowledge
 
 app = FastAPI(title="Dakshya")
 
@@ -33,8 +34,8 @@ app.add_middleware(
 # Register each AI service's router here as you add more, e.g.:
 # from app.services.transcript_summarizer.router import router as transcript_summarizer_router
 # app.include_router(transcript_summarizer_router)
-app.include_router(course_generator_router)
-
+app.include_router(course_generator.router)
+app.include_router(career_knowledge.router)
 
 if __name__ == "__main__":
     import uvicorn
