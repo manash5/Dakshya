@@ -5,6 +5,15 @@ import cors from 'cors';
 import userRoute from './routes/user.route'; 
 import path from "path";
 import adminUserRoutes from './routes/admin/user.route'
+import universityRoute from './routes/university.route'
+import adminUniversityRoute from './routes/admin/university.route'; 
+import courseRoute from './routes/course.route'
+import subjectRoute from './routes/subject.route'; 
+import jobRoleRoute from './routes/jobRoles.route'
+import adminCourseRoute from './routes/admin/course.route'
+import adminSubjectRoute from './routes/admin/subject.route'
+import adminJobRoleRoute from './routes/admin/jobRoles.route'
+import adminCareerKnowledgeRouter from './routes/admin/careerKnowledge.route'
 
 
 const app: Application = express();
@@ -24,7 +33,15 @@ app.use(express.urlencoded({ extended: true }));//use form-urlencoded as request
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 app.use("/api/v1/auth", userRoute);
-
+app.use('/api/v1/university', universityRoute)
+app.use('/api/v1/course', courseRoute); 
+app.use('/api/v1/subject', subjectRoute); 
+app.use('/api/v1/jobRoles', jobRoleRoute); 
+app.use('/api/v1/admin/university', adminUniversityRoute); 
+app.use('/api/v1/admin/course', adminCourseRoute); 
+app.use('/api/v1/admin/subject', adminSubjectRoute); 
+app.use('/api/v1/admin/jobRoles', adminJobRoleRoute); 
+app.use('/api/v1/admin/careerKnowledge', adminCareerKnowledgeRouter); 
 app.use("/api/v1/admin/users", adminUserRoutes);
 
 

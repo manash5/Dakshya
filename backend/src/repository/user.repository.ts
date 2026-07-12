@@ -1,5 +1,5 @@
 import User, { IUser } from "../models/user.model";
-
+import mongoose, { UpdateQuery } from "mongoose";
 
 export interface IUserRepository {
     findByUsername(username: string): Promise<IUser | null>;
@@ -7,7 +7,7 @@ export interface IUserRepository {
     create(user: IUser): Promise<IUser>;
     findById(id: string): Promise<IUser | null>;
     findAll(): Promise<IUser[]>;
-    update(id: string, user: Partial<IUser>)
+    update(id: string, user: UpdateQuery<IUser>)
         : Promise<IUser | null>;
     delete(id: string): Promise<boolean>;
 }
@@ -34,7 +34,7 @@ export class UserMongoRepository implements IUserRepository {
         const users = await User.find();
         return users;
     }
-    async update(id: string, user: Partial<IUser>)
+    async update(id: string, user: UpdateQuery<IUser>)
         : Promise<IUser | null> {
         const updatedUser = await User.findByIdAndUpdate(id, user, { returnDocument: 'after' });
         return updatedUser;

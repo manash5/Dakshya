@@ -1,10 +1,11 @@
 import { UserService } from "../services/user.service";
 import { HttpException } from "../exceptions/http-exceptions";
 import { z } from "zod";
-import { CreateUserDto, LoginUserDto, UpdatePasswordDto, updateUserDTO } from "../dtos/user.dto";
+import { CompleteOnboardingDto, CreateUserDto, LoginUserDto, UpdatePasswordDTO, updateUserDTO } from "../dtos/user.dto";
 import { ApiResponseHelper } from "../utils/api-response";
 import { Request, Response } from "express";
 import { baseUrl } from "../config/constant";
+import { updateUser } from '../../../frontend/lib/api/admin/user';
 
 const userService = new UserService();
 
@@ -74,6 +75,27 @@ export class UserController {
         }
     }
 
+    async completeOnboarding(req: Request, res: Response) {
+      try {
+        const userId = req.user?._id;
+        if (!userId) {
+          throw new HttpException(401, "Unauthorized");
+        }
+        const parseResult = CompleteOnboardingDto.safeParse(req.body);
+        if (!parseResult.success) {
+          throw new HttpException(400, z.prettifyError(parseResult.error));
+        }
+        const updatedUser = await userService.completeOnboarding(userId, parseResult.data);
+        return ApiResponseHelper.success(res, updatedUser, 200, "Onboarding completed");
+      } catch (e: Error | unknown | any) {
+        return ApiResponseHelper.error(
+          res,
+          e?.message || "Failed to onboard the user",
+          e.status || 500
+        );
+      }
+    }
+
 
     async getUser(req: Request, res: Response) {
         try{
@@ -112,7 +134,7 @@ export class UserController {
       try {
         const userId = req.user?._id;  
         
-        const userData = UpdatePasswordDto.safeParse(req.body);
+        const userData = updateUserDTO.safeParse(req.body);
         if (!userData.success) {
           return ApiResponseHelper.error(res, z.prettifyError(userData.error), 400);
         }

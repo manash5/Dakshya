@@ -1,11 +1,12 @@
 import { UserMongoRepository } from "../repository/user.repository";
-import { CreateUserDto, LoginUserDto, updateUserDTO } from "../dtos/user.dto";
+import { CompleteOnboardingDto, CreateUserDto, LoginUserDto, updateUserDTO } from "../dtos/user.dto";
 import { HttpException } from "../exceptions/http-exceptions";
 import bcrypt from 'bcryptjs'
 import { IUser } from "../models/user.model";
 // jwt for taken generation
 import jwt from "jsonwebtoken";
 import { JWT_KEY } from "../config/constant";
+import { UpdateQuery } from "mongoose";
 
 const userRepository = new UserMongoRepository();
 export class UserService {
@@ -81,7 +82,28 @@ export class UserService {
             updateData.password = await bcrypt.hash(updateData.password, 10);
         }
         const updatedUser = await userRepository.update(id, updateData);
+        if (!updatedUser) {
+          throw new HttpException(404, "user not found");
+        }
         return updatedUser;
+    }
+
+    async completeOnboarding(id: string, onboardingData: CompleteOnboardingDto): Promise<IUser> {
+      const user = await userRepository.findById(id);
+      if (!user) {
+        throw new HttpException(404, "user not found");
+      }
+      if (user.onboardingCompleted) {
+        throw new HttpException(400, "Onboarding already completed");
+      }
+      const updatedUser = await userRepository.update(id, {
+        ...onboardingData,
+        onboardingCompleted: true,
+      });
+      if (!updatedUser) {
+        throw new HttpException(404, "user not found");
+      }
+      return updatedUser;
     }
 
 

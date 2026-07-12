@@ -1,22 +1,36 @@
+"use client";
+
 import DashboardHeader from "./_components/layout/header";
 import Sidebar from "./_components/layout/sidebar";
+import { UserProvider, useUser } from "@/lib/context/UserContext";
+import OnboardingOverlay from "./_components/onboarding-overlay";
 
-export default function Layout({children}: {children: React.ReactNode}) {
+function DashboardContent({ children }: { children: React.ReactNode }) {
+    const { onboardingCompleted, loading } = useUser();
+
     return (
         <section className="h-screen overflow-hidden bg-[#F7F8F5]">
-          <div className="flex h-full min-h-0">
-            <Sidebar />
+            <div className="flex h-full min-h-0">
+                <Sidebar />
 
-            <main className="min-w-0 flex flex-1 flex-col overflow-hidden">
-              <div className="shrink-0">
-                <DashboardHeader />
-              </div>
+                <main className="min-w-0 flex flex-1 flex-col overflow-hidden">
+                    <div className="shrink-0">
+                        <DashboardHeader />
+                    </div>
 
-              <div className="min-h-0 flex-1 overflow-y-auto">
-                {children}
-              </div>
-            </main>
-          </div>
+                    <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
+                </main>
+            </div>
+
+            {!loading && !onboardingCompleted && <OnboardingOverlay />}
         </section>
+    );
+}
+
+export default function Layout({ children }: { children: React.ReactNode }) {
+    return (
+        <UserProvider>
+            <DashboardContent>{children}</DashboardContent>
+        </UserProvider>
     );
 }
