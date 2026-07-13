@@ -1,11 +1,17 @@
 import { UserService } from "../services/user.service";
 import { HttpException } from "../exceptions/http-exceptions";
 import { z } from "zod";
-import { CompleteOnboardingDto, CreateUserDto, LoginUserDto, UpdatePasswordDTO, updateUserDTO } from "../dtos/user.dto";
+import {
+  CompleteOnboardingDto,
+  CreateUserDto,
+  LoginUserDto,
+  UpdatePasswordDTO,
+  UpdateUserDto,
+} from "../dtos/user.dto";
 import { ApiResponseHelper } from "../utils/api-response";
 import { Request, Response } from "express";
 import { baseUrl } from "../config/constant";
-import { updateUser } from '../../../frontend/lib/api/admin/user';
+import { updateUser } from "../../../frontend/lib/api/admin/user";
 
 const userService = new UserService();
 
@@ -50,109 +56,119 @@ export class UserController {
   }
 
   async updateUser(req: Request, res: Response) {
-        try{
-            const userId = req.user?._id;
-            const filename = req.file?.filename;
-            const parseResult = updateUserDTO.safeParse(req.body);
-            if(!parseResult.success){
-                throw new HttpException(
-                    400, 
-                    z.prettifyError(parseResult.error)
-                );
-            }
-            const updateData = {
-              ...parseResult.data,
-              ...(filename && { profilePicture: `${baseUrl}/uploads/${filename}` })
-            }
-            const updatedUser = await userService.updateUser(userId, updateData);
-            return ApiResponseHelper.success(res, updatedUser,  200, "User updated");
-        }catch(e: Error | unknown | any){
-            return ApiResponseHelper.error(
-                res, 
-                e?.message || "Failed to update user", 
-                e.status || 500
-            );
-        }
+    try {
+      const userId = req.user?._id;
+      const filename = req.file?.filename;
+      const parseResult = UpdateUserDto.safeParse(req.body);
+      if (!parseResult.success) {
+        throw new HttpException(400, z.prettifyError(parseResult.error));
+      }
+      const updateData = {
+        ...parseResult.data,
+        ...(filename && { profilePicture: `${baseUrl}/uploads/${filename}` }),
+      };
+      const updatedUser = await userService.updateUser(userId, updateData);
+      return ApiResponseHelper.success(res, updatedUser, 200, "User updated");
+    } catch (e: Error | unknown | any) {
+      return ApiResponseHelper.error(
+        res,
+        e?.message || "Failed to update user",
+        e.status || 500,
+      );
     }
+  }
 
-    async completeOnboarding(req: Request, res: Response) {
-      try {
-        const userId = req.user?._id;
-        if (!userId) {
-          throw new HttpException(401, "Unauthorized");
-        }
-        const parseResult = CompleteOnboardingDto.safeParse(req.body);
-        if (!parseResult.success) {
-          throw new HttpException(400, z.prettifyError(parseResult.error));
-        }
-        const updatedUser = await userService.completeOnboarding(userId, parseResult.data);
-        return ApiResponseHelper.success(res, updatedUser, 200, "Onboarding completed");
-      } catch (e: Error | unknown | any) {
+  async completeOnboarding(req: Request, res: Response) {
+    try {
+      const userId = req.user?._id;
+      if (!userId) {
+        throw new HttpException(401, "Unauthorized");
+      }
+      const parseResult = CompleteOnboardingDto.safeParse(req.body);
+      if (!parseResult.success) {
+        throw new HttpException(400, z.prettifyError(parseResult.error));
+      }
+      const updatedUser = await userService.completeOnboarding(
+        userId,
+        parseResult.data,
+      );
+
+      return ApiResponseHelper.success(
+        res,
+        updatedUser,
+        200,
+        "Onboarding completed",
+      );
+    } catch (e: Error | unknown | any) {
+      return ApiResponseHelper.error(
+        res,
+        e?.message || "Failed to onboard the user",
+        e.status || 500,
+      );
+    }
+  }
+
+  async getUser(req: Request, res: Response) {
+    try {
+      const user = req.user;
+      if (!user) {
+        throw new HttpException(401, "Unauthorized");
+      }
+      return ApiResponseHelper.success(res, user, 200, "User info retrieved");
+    } catch (e: Error | unknown | any) {
+      return ApiResponseHelper.error(
+        res,
+        e?.message || "Failed to get user info",
+        e.status || 500,
+      );
+    }
+  }
+
+  async whoami(req: Request, res: Response) {
+    try {
+      const user = req.user;
+      if (!user) {
+        throw new HttpException(401, "Unauthorized");
+      }
+      return ApiResponseHelper.success(res, user, 200, "User info retrieved");
+    } catch (e: Error | unknown | any) {
+      return ApiResponseHelper.error(
+        res,
+        e?.message || "Failed to get user info",
+        e.status || 500,
+      );
+    }
+  }
+
+  async changePassword(req: Request, res: Response) {
+    try {
+      const userId = req.user?._id;
+
+      const userData = UpdateUserDto.safeParse(req.body);
+      if (!userData.success) {
         return ApiResponseHelper.error(
           res,
-          e?.message || "Failed to onboard the user",
-          e.status || 500
+          z.prettifyError(userData.error),
+          400,
         );
       }
+
+      const { currentPassword, newPassword } = req.body;
+
+      await userService.changePassword(userId, currentPassword, newPassword);
+
+      return ApiResponseHelper.success(
+        res,
+        null,
+        200,
+        "Password updated successfully",
+      );
+    } catch (e: Error | unknown | any) {
+      return ApiResponseHelper.error(
+        res,
+        e?.message || "Failed to change password",
+        e.status || 500,
+      );
     }
-
-
-    async getUser(req: Request, res: Response) {
-        try{
-            const user = req.user;
-            if(!user){
-                throw new HttpException(401, "Unauthorized");
-            }
-            return ApiResponseHelper.success(res, user,  200, "User info retrieved");
-        }catch(e: Error | unknown | any){
-            return ApiResponseHelper.error(
-                res, 
-                e?.message || "Failed to get user info", 
-                e.status || 500
-            );
-        }
-    }
-
-    async whoami(req: Request, res: Response) {
-        try{
-            const user = req.user;
-            if(!user){
-                throw new HttpException(401, "Unauthorized");
-            }
-            return ApiResponseHelper.success(res, user, 200, "User info retrieved");
-        }catch(e: Error | unknown | any){
-            return ApiResponseHelper.error(
-                res, 
-                e?.message || "Failed to get user info", 
-                e.status || 500
-            );
-        }
-    }
-
-
-    async changePassword(req: Request, res: Response) {
-      try {
-        const userId = req.user?._id;  
-        
-        const userData = updateUserDTO.safeParse(req.body);
-        if (!userData.success) {
-          return ApiResponseHelper.error(res, z.prettifyError(userData.error), 400);
-        }
-        
-        const { currentPassword, newPassword } = req.body;
-
-        await userService.changePassword(userId, currentPassword, newPassword);
-
-        return ApiResponseHelper.success(res, null, 200, "Password updated successfully");
-      } catch (e: Error | unknown | any) {
-          return ApiResponseHelper.error(
-              res,
-              e?.message || "Failed to change password",
-              e.status || 500
-          );
-      }
-    }
-
-
-    
+  }
 }
