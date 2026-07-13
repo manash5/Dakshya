@@ -13,13 +13,13 @@ const toObjectId = (id?: string | null) => {
 };
 
 export interface ICareerKnowledgeRepository {
-  create(data: CreateCareerKnowledgeDto): Promise<ICareerKnowledge>;
+  create(data: Partial<ICareerKnowledge>): Promise<ICareerKnowledge>;
 
   findByJobRoleId(jobRoleId: string): Promise<ICareerKnowledge | null>;
 
   updateByJobRoleId(
     jobRoleId: string,
-    data: UpdateCareerKnowledgeDto,
+    data: Partial<ICareerKnowledge>,
   ): Promise<ICareerKnowledge | null>;
 
   deleteByJobRoleId(jobRoleId: string): Promise<boolean>;
@@ -40,11 +40,11 @@ export interface ICareerKnowledgeRepository {
 }
 
 export class CareerKnowledgeMongoRepository implements ICareerKnowledgeRepository {
-  async create(data: CreateCareerKnowledgeDto): Promise<ICareerKnowledge> {
+  async create(data: Partial<ICareerKnowledge>): Promise<ICareerKnowledge> {
     return await CareerKnowledge.create({
       ...data,
       aiGeneratedDate: new Date(),
-      jobRoleId: toObjectId(data.jobRoleId),
+      jobRoleId: data.jobRoleId,
     });
   }
 
@@ -56,7 +56,7 @@ export class CareerKnowledgeMongoRepository implements ICareerKnowledgeRepositor
 
   async updateByJobRoleId(
     jobRoleId: string,
-    data: UpdateCareerKnowledgeDto,
+    data: Partial<ICareerKnowledge>,
   ): Promise<ICareerKnowledge | null> {
     return await CareerKnowledge.findOneAndUpdate(
       {

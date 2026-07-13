@@ -8,7 +8,7 @@ const toObjectId = (id?: string | null) => {
 };
 
 export interface ICourseRepository {
-  create(data: CreateCourseDto): Promise<ICourse>;
+  create(data: Partial<ICourse>): Promise<ICourse>;
   findById(id: string): Promise<ICourse | null>;
   findByName(name: string): Promise<ICourse | null>;
   findByUniversity(universityId: string): Promise<ICourse[]>;
@@ -29,7 +29,7 @@ export interface ICourseRepository {
 
 export class CourseMongoRepository implements ICourseRepository {
 
-  async create(data: CreateCourseDto): Promise<ICourse> {
+  async create(data: Partial<ICourse>): Promise<ICourse> {
     return await Course.create({
       ...data,
       universityId: toObjectId(data.universityId as any),
