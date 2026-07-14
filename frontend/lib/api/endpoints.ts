@@ -26,6 +26,9 @@ export const API = {
         GET_ALL: "/api/v1/job-postings",
         GET_BY_ID: (id: string) => `/api/v1/job-postings/${id}`,
     },
+    DASHBOARD: {
+        CAREER: "/api/v1/dashboard/career",
+    },
 
     ADMIN: {
         USERS: {
