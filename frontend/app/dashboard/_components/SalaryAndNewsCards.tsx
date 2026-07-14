@@ -1,4 +1,5 @@
 import { ChartNoAxesColumn, Cpu, Newspaper, Sparkles } from "lucide-react";
+import type { SalaryRange } from "@/lib/api/dashboard";
 
 const newsItems = [
   {
@@ -15,7 +16,16 @@ const newsItems = [
   },
 ];
 
-export function SalaryRangeCard() {
+interface SalaryRangeCardProps {
+  salaryRange: SalaryRange;
+}
+
+export function SalaryRangeCard({ salaryRange }: SalaryRangeCardProps) {
+  const chipLabel =
+    salaryRange.levelLabel && salaryRange.jobRole
+      ? `${salaryRange.levelLabel} ${salaryRange.jobRole}`.toUpperCase()
+      : null;
+
   return (
     <article className="rounded-[24px] border border-zinc-200 bg-white p-6 shadow-[0_12px_30px_rgba(15,23,42,0.06)]">
       <p className="text-[11px] font-semibold tracking-[0.2em] text-zinc-500">
@@ -23,15 +33,19 @@ export function SalaryRangeCard() {
       </p>
       <div className="mt-2 flex items-end gap-2">
         <h3 className="text-[24px] font-semibold tracking-tight text-zinc-900">
-          NPR 60k - 95k
+          {salaryRange.formatted}
         </h3>
-        <span className="pb-1 text-[11px] text-zinc-500">/ MONTH</span>
+        {salaryRange.min !== null && (
+          <span className="pb-1 text-[11px] text-zinc-500">/ MONTH</span>
+        )}
       </div>
 
-      <div className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#F6FAE8] px-4 py-3 text-sm font-semibold text-zinc-900">
-        <ChartNoAxesColumn size={14} />
-        ENTRY LEVEL FRONTEND
-      </div>
+      {chipLabel && (
+        <div className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#F6FAE8] px-4 py-3 text-sm font-semibold text-zinc-900">
+          <ChartNoAxesColumn size={14} />
+          {chipLabel}
+        </div>
+      )}
     </article>
   );
 }
