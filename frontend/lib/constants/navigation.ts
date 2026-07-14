@@ -52,6 +52,12 @@ export const NAV_ITEMS: NavItem[] = [
     icon: BriefcaseBusiness,
     description: "Create, edit and publish job posts.",
   },
+  {
+    name: "Job Postings",
+    href: "/admin/job-postings",
+    icon: BriefcaseBusiness,
+    description: "Scrape, edit and manage job postings.",
+  },
 ];
 
 // Filter items to show in cards (exclude home)

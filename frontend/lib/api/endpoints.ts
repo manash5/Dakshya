@@ -22,6 +22,10 @@ export const API = {
         GET_ALL: "/api/v1/jobRoles",
         GET_BY_ID: (id: string) => `/api/v1/jobRoles/${id}`,
     },
+    JOB_POSTING: {
+        GET_ALL: "/api/v1/job-postings",
+        GET_BY_ID: (id: string) => `/api/v1/job-postings/${id}`,
+    },
 
     ADMIN: {
         USERS: {
@@ -61,6 +65,11 @@ export const API = {
             CREATE: "/api/v1/admin/jobRoles",
             UPDATE: (id: string) => `/api/v1/admin/jobRoles/${id}`,
             DELETE: (id: string) => `/api/v1/admin/jobRoles/${id}`,
+        },
+        JOB_POSTING: {
+            SCRAPE: "/api/v1/admin/job-postings/scrape",
+            UPDATE: (id: string) => `/api/v1/admin/job-postings/${id}`,
+            DELETE: (id: string) => `/api/v1/admin/job-postings/${id}`,
         }
     }
 }
