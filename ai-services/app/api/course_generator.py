@@ -5,7 +5,7 @@ import httpx
 from fastapi import APIRouter, HTTPException
 
 from app.services.course_generator.backend_client import AdminAuthError, create_course, create_subject
-from app.services.course_generator.extractor import extract_courses_with_gemini
+from app.services.course_generator.extractor import extract_courses
 from app.services.course_generator.scraper import crawl_website
 from app.services.course_generator.schemas import (
     CourseResult,
@@ -42,7 +42,7 @@ async def generate_university_courses(payload: GenerateCoursesRequest):
     if not crawl["combined_text"].strip():
         raise HTTPException(status_code=502, detail="No readable text found on the website")
 
-    extraction = extract_courses_with_gemini(crawl["combined_text"])
+    extraction = extract_courses(crawl["combined_text"])
     if not extraction.courses:
         return GenerateCoursesResponse(
             website=website,
