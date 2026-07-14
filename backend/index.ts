@@ -1,10 +1,12 @@
 import app from "./src/app";
 import {PORT } from './src/config/constant'
 import { connectToMongoDB } from "./src/database/mongo-db";
+import { registerCronJobs } from "./src/cron";
 
 connectToMongoDB()
     .then(() => {
         console.log("MongoDB connection established, starting server  ...");
+        registerCronJobs();
     })
     .catch((error) => {
         console.error("Failed to connect to MongoDB, server not started.", error);
