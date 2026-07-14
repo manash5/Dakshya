@@ -31,6 +31,12 @@ export interface IJobPostingRepository {
   }>;
 
   deactivateStale(jobRoleId: string, seenApplyLinks: string[]): Promise<number>;
+
+  getMarketPulseByRole(jobRoleId: string): Promise<{
+    jobCount: number;
+    topLocations: string[];
+    topCompanies: string[];
+  }>;
 }
 
 export class JobPostingMongoRepository implements IJobPostingRepository {
@@ -147,5 +153,45 @@ export class JobPostingMongoRepository implements IJobPostingRepository {
     );
 
     return result.modifiedCount ?? 0;
+  }
+
+  async getMarketPulseByRole(jobRoleId: string): Promise<{
+    jobCount: number;
+    topLocations: string[];
+    topCompanies: string[];
+  }> {
+    const [result] = await JobPosting.aggregate([
+      {
+        $match: {
+          jobRole: new mongoose.Types.ObjectId(jobRoleId),
+          isActive: true,
+        },
+      },
+      {
+        $facet: {
+          count: [{ $count: "total" }],
+          locations: [
+            { $group: { _id: "$location", count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+            { $limit: 3 },
+          ],
+          companies: [
+            { $group: { _id: "$company", count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+            { $limit: 3 },
+          ],
+        },
+      },
+    ]);
+
+    return {
+      jobCount: result?.count?.[0]?.total ?? 0,
+      topLocations: (result?.locations ?? [])
+        .map((entry: { _id: string | null }) => entry._id)
+        .filter((location: string | null): location is string => !!location),
+      topCompanies: (result?.companies ?? [])
+        .map((entry: { _id: string | null }) => entry._id)
+        .filter((company: string | null): company is string => !!company),
+    };
   }
 }
