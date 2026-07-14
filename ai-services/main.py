@@ -13,6 +13,7 @@ from app.core.config import AI_SERVICE_PORT
 # the ambiguity entirely.
 from app.api import course_generator
 from app.api import career_knowledge
+from app.api import job_poster
 
 app = FastAPI(title="Dakshya")
 
@@ -36,6 +37,7 @@ app.add_middleware(
 # app.include_router(transcript_summarizer_router)
 app.include_router(course_generator.router)
 app.include_router(career_knowledge.router)
+app.include_router(job_poster.router)
 
 if __name__ == "__main__":
     import uvicorn
