@@ -3,6 +3,9 @@ import axios from "axios";
 export interface ScrapeRoleTarget {
     jobRoleId: string;
     jobRoleTitle: string;
+    // Cached similar-titles from a previous run, if we have them — lets
+    // ai-services skip the Gemini keyword-generation call entirely.
+    keywords?: string[];
 }
 
 export interface ScrapedJob {
