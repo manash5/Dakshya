@@ -6,6 +6,7 @@ import { JobRoleMongoRepository } from "../repository/jobRole.repository";
 import { fastApiClient, RoleScrapeResult } from "../clients/fastapi.client";
 import { HttpException } from "../exceptions/http-exceptions";
 import { CreateJobPostingDto, UpdateJobPostingDto } from "../dtos/jobPosting.dto";
+import { IJobRole } from "../models/jobRole.model";
 
 const jobPostingRepository = new JobPostingMongoRepository();
 const jobRoleRepository = new JobRoleMongoRepository();
@@ -38,10 +39,14 @@ export class JobPostingService {
     }
 
     const { results } = await fastApiClient.scrapeJobPostings([
-      { jobRoleId: jobRole._id.toString(), jobRoleTitle: jobRole.title },
+      {
+        jobRoleId: jobRole._id.toString(),
+        jobRoleTitle: jobRole.title,
+        keywords: jobRole.keywords,
+      },
     ]);
 
-    return await this.persistRoleResult(results[0], jobRole.title);
+    return await this.persistRoleResult(results[0], jobRole);
   }
 
   async scrapeAndStoreAllActive(): Promise<ScrapeRunStats[]> {
@@ -51,26 +56,21 @@ export class JobPostingService {
       return [];
     }
 
-    const roleTitleById = new Map(
-      jobRoles.map((role) => [role._id.toString(), role.title]),
-    );
+    const jobRoleById = new Map(jobRoles.map((role) => [role._id.toString(), role]));
 
     const { results } = await fastApiClient.scrapeJobPostings(
       jobRoles.map((role) => ({
         jobRoleId: role._id.toString(),
         jobRoleTitle: role.title,
+        keywords: role.keywords,
       })),
     );
 
     const stats: ScrapeRunStats[] = [];
 
     for (const result of results) {
-      stats.push(
-        await this.persistRoleResult(
-          result,
-          roleTitleById.get(result.jobRoleId) ?? "",
-        ),
-      );
+      const jobRole = jobRoleById.get(result.jobRoleId);
+      stats.push(await this.persistRoleResult(result, jobRole));
     }
 
     return stats;
@@ -78,7 +78,7 @@ export class JobPostingService {
 
   private async persistRoleResult(
     result: RoleScrapeResult,
-    jobRoleTitle: string,
+    jobRole: IJobRole | undefined,
   ): Promise<ScrapeRunStats> {
     let created = 0;
     let updated = 0;
@@ -126,9 +126,19 @@ export class JobPostingService {
       ? 0
       : await jobPostingRepository.deactivateStale(result.jobRoleId, seenApplyLinks);
 
+    // Cache newly-generated keywords onto the JobRole so the next scrape
+    // sends them back to ai-services instead of paying for another Gemini
+    // call. Only writes when we didn't already have a cached value — this
+    // is a cache, not a refresh mechanism.
+    if (jobRole && jobRole.keywords.length === 0 && result.keywords?.length) {
+      await jobRoleRepository.update(jobRole._id.toString(), {
+        keywords: result.keywords,
+      });
+    }
+
     return {
       jobRoleId: result.jobRoleId,
-      jobRoleTitle,
+      jobRoleTitle: jobRole?.title ?? "",
       startedAt: result.stats.startedAt,
       completedAt: result.stats.completedAt,
       durationSeconds: result.stats.durationSeconds,
@@ -165,6 +175,16 @@ export class JobPostingService {
         total,
       },
     };
+  }
+
+  async getJobPostingById(id: string) {
+    const jobPosting = await jobPostingRepository.findById(id);
+
+    if (!jobPosting) {
+      throw new HttpException(404, "Job posting not found");
+    }
+
+    return jobPosting;
   }
 
   async updateJobPosting(id: string, data: UpdateJobPostingDto) {

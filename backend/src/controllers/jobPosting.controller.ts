@@ -15,6 +15,27 @@ interface QueryParams {
 const service = new JobPostingService();
 
 export class JobPostingController {
+  async getJobPostingById(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+
+      const jobPosting = await service.getJobPostingById(id as string);
+
+      return ApiResponseHelper.success(
+        res,
+        jobPosting,
+        200,
+        "Job posting fetched successfully"
+      );
+    } catch (e: any) {
+      return ApiResponseHelper.error(
+        res,
+        e?.message || "Internal Server Error",
+        e.status || 500
+      );
+    }
+  }
+
   async getJobPostings(req: Request, res: Response) {
     try {
       const {

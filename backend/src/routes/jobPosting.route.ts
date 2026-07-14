@@ -8,5 +8,6 @@ const jobPostingController = new JobPostingController();
 router.use(authorizedMiddleware);
 
 router.get('/', jobPostingController.getJobPostings);
+router.get('/:id', jobPostingController.getJobPostingById);
 
 export default router;

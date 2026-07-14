@@ -6,6 +6,7 @@ import { CareerKnowledgeMongoRepository } from "../repository/careerKnowledge.re
 import { CareerKnowledgeService } from "./careerKnowledge.service";
 
 const jobRoleRepository = new JobRoleMongoRepository();
+const careerKnowledgeRepository = new CareerKnowledgeMongoRepository();
 const careerKnowledgeService = new CareerKnowledgeService();
 
 // NOTE:
@@ -26,14 +27,20 @@ export class JobRoleService {
     }
 
     const jobRole = await jobRoleRepository.create(data);
+
     try {
       await careerKnowledgeService.generateCareerKnowledge(
         jobRole._id.toString(),
       );
-    } catch {
-      await jobRoleRepository.delete(jobRole._id.toString());
-
-      throw new HttpException(500, "Failed to generate career knowledge.");
+    } catch (error: any) {
+      // Don't roll back the job role over an AI hiccup (quota, rate limit,
+      // transient outage — all things Gemini's free tier actually does).
+      // The role itself is valid data independent of career knowledge;
+      // admin can retry generation via the regenerate endpoint once
+      // Gemini is available again.
+      console.error(
+        `Career knowledge generation failed for job role ${jobRole._id}: ${error?.message || error}`,
+      );
     }
 
     return jobRole;
@@ -58,10 +65,30 @@ export class JobRoleService {
       throw new HttpException(400, "Category cannot be empty");
     }
 
+    const titleChanged = !!data.title && data.title !== jobRole.title;
+
     const updatedJobRole = await jobRoleRepository.update(id, data);
 
     if (!updatedJobRole) {
       throw new HttpException(404, "Job role not found");
+    }
+
+    if (titleChanged) {
+      // Career knowledge content is generated FROM the title — if it
+      // changes, existing content is stale. Same failure tolerance as
+      // create: don't let an AI hiccup block the job role update itself.
+      try {
+        const hasCareerKnowledge = await careerKnowledgeRepository.exists(id);
+        if (hasCareerKnowledge) {
+          await careerKnowledgeService.regenerateCareerKnowledge(id);
+        } else {
+          await careerKnowledgeService.generateCareerKnowledge(id);
+        }
+      } catch (error: any) {
+        console.error(
+          `Career knowledge update failed for job role ${id}: ${error?.message || error}`,
+        );
+      }
     }
 
     return updatedJobRole;
@@ -110,10 +137,17 @@ export class JobRoleService {
       throw new HttpException(404, "Job role not found");
     }
 
-    const careerKnowledge =
-      await careerKnowledgeService.getCareerKnowledgeByJobRole(
+    // Career knowledge may not exist yet — generation can fail (AI quota,
+    // rate limit, transient outage) without blocking job role creation, so
+    // this has to tolerate that instead of throwing.
+    let careerKnowledge = null;
+    try {
+      careerKnowledge = await careerKnowledgeService.getCareerKnowledgeByJobRole(
         jobRole._id.toString(),
       );
+    } catch {
+      careerKnowledge = null;
+    }
 
     return {
       jobRole,
@@ -122,8 +156,12 @@ export class JobRoleService {
   }
 
   /**
-   * Soft delete instead of permanent delete.
-   * This prevents breaking references from existing users.
+   * NOTE: despite this comment's original claim, jobRoleRepository.delete()
+   * is a hard delete (findByIdAndDelete), not a soft one — there is no
+   * isActive-flip path here. That's a real risk: any UserProgress doc with
+   * a targetRoleProgress.jobRoleId pointing at this role, or any other
+   * collection referencing it, is left dangling once this runs. Confirmed
+   * this happen live to real user data — see conversation history.
    */
   async deleteJobRole(id: string): Promise<boolean> {
     const jobRole = await jobRoleRepository.findById(id);
@@ -136,6 +174,13 @@ export class JobRoleService {
 
     if (!deleted) {
       throw new HttpException(500, "Failed to deactivate job role");
+    }
+
+    try {
+      await careerKnowledgeService.deleteCareerKnowledgeByJobRole(id);
+    } catch {
+      // No career knowledge existed for this role (e.g. generation never
+      // succeeded, or it was already removed) — nothing to clean up.
     }
 
     return deleted;
