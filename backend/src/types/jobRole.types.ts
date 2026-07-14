@@ -6,7 +6,8 @@ export const JobRoleSchema = z.object({
     category: z.string(), 
     description: z.string(), 
     icon: z.string().optional(), 
-    isActive: z.boolean().default(true)
+    isActive: z.boolean().default(true), 
+    
 }); 
 
 export type JobRoleType = z.infer<typeof JobRoleSchema>; 

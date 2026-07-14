@@ -167,9 +167,7 @@ const UserProgressSchema = new Schema<IUserProgress>(
   }
 );
 
-// Indexes 
-
-UserProgressSchema.index({ userId: 1 });
+// Index
 
 UserProgressSchema.index({
   "targetRoleProgress.jobRoleId": 1,
