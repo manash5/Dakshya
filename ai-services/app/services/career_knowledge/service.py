@@ -6,7 +6,7 @@ from app.services.career_knowledge.schemas import (
 )
 
 
-def generate_career_knowledge_with_gemini(job_role: str) -> CareerKnowledgeResponse:
+def generate_career_knowledge(job_role: str) -> CareerKnowledgeResponse:
     """
     Pure AI function. Knows nothing about MongoDB, Express, repositories,
     users, or job role IDs. Input: a job role string. Output: a validated

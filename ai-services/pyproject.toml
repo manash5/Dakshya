@@ -11,6 +11,7 @@ dependencies = [
     "fastapi>=0.139.0",
     "generativeai>=0.0.1",
     "google-genai>=2.11.0",
+    "groq>=1.5.0",
     "httpx>=0.28.1",
     "openai-whisper>=20250625",
     "playwright>=1.61.0",

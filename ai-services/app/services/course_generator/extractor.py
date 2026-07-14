@@ -1,7 +1,4 @@
-from fastapi import HTTPException
-from google.genai import types
-
-from app.core.config import GEMINI_MODEL_NAME, gemini_client
+from app.shared.ai_generation import generate_structured
 from app.services.course_generator.schemas import ExtractionResult
 
 EXTRACTION_PROMPT = """You are analyzing text scraped from a college/university website.
@@ -40,28 +37,10 @@ WEBSITE TEXT:
 """
 
 
-def extract_courses_with_gemini(combined_text: str) -> ExtractionResult:
+def extract_courses(combined_text: str) -> ExtractionResult:
     prompt = EXTRACTION_PROMPT.format(content=combined_text)
-
-    try:
-        response = gemini_client.models.generate_content(
-            model=GEMINI_MODEL_NAME,
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                response_schema=ExtractionResult,
-            ),
-        )
-    except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"Gemini extraction failed: {exc}") from exc
-
-    raw_text = getattr(response, "text", None)
-    if not raw_text:
-        raise HTTPException(status_code=502, detail="Gemini returned an empty response")
-
-    try:
-        return ExtractionResult.model_validate_json(raw_text)
-    except Exception as exc:
-        raise HTTPException(
-            status_code=502, detail=f"Gemini response did not match expected schema: {exc}"
-        ) from exc
+    # Scraped website text routinely runs 60-90k characters -- hard 413s on
+    # Groq's free tier regardless of model (see core/config.py). Gemini's
+    # context handles it in one shot, and this is a rare, admin-triggered
+    # action, so its small daily quota isn't the constraint here.
+    return generate_structured(prompt, ExtractionResult, provider="gemini")

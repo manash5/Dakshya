@@ -11,15 +11,17 @@ class JobRoleTarget(BaseModel):
     JobRole doc — never stored or interpreted here, just echoed back so
     Express can map results without guessing.
 
-    No ``keywords``/similar-titles field here on purpose — Express does not
-    supply those. ai-services derives them itself (see keyword_generator.py)
-    and echoes them back on RoleScrapeResult so Express can see/cache them.
+    ``keywords`` is an optional cache hint — real alternate job titles for
+    this role, if Express has any cached on the JobRole doc from a previous
+    run. Purely additive input to role_filter.py's word matching; nothing
+    generates new values for this anymore (no AI in this pipeline).
     """
 
     model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
 
     job_role_id: str
     job_role_title: str
+    keywords: list[str] = []
 
 
 class ScrapeRequest(BaseModel):
@@ -30,9 +32,8 @@ class ScrapeRequest(BaseModel):
     model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
 
     roles: list[JobRoleTarget]
-    sources: list[str] | None = None  
+    sources: list[str] | None = None
     max_jobs_per_role: int = 50
-    use_ai_matching: bool = True  
 
 
 class ScrapeStats(BaseModel):

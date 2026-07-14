@@ -5,8 +5,6 @@ import time
 from datetime import datetime, timezone
 from urllib.parse import urlparse
 
-from app.services.job_posting.ai_matcher import refine_with_gemini
-from app.services.job_posting.keyword_generator import generate_similar_titles
 from app.services.job_posting.models import JobPosting
 from app.services.job_posting.role_filter import filter_by_role
 from app.services.job_posting.schemas import (
@@ -50,7 +48,7 @@ def _dedupe(jobs: list[JobPosting]) -> list[JobPosting]:
 
 
 async def _scrape_one_role(
-    role: JobRoleTarget, *, source_names: list[str], max_jobs: int, use_ai_matching: bool
+    role: JobRoleTarget, *, source_names: list[str], max_jobs: int
 ) -> RoleScrapeResult:
     started_at = datetime.now(timezone.utc)
     started_perf = time.perf_counter()
@@ -59,12 +57,13 @@ async def _scrape_one_role(
     failed: dict[str, str] = {}
     all_jobs: list[JobPosting] = []
 
-    try:
-        title_synonyms = await asyncio.to_thread(generate_similar_titles, role.job_role_title)
-    except Exception as exc:
-        print(f"[{role.job_role_title}] keyword_generator failed, continuing with no synonyms: {exc}")
-        title_synonyms = []
-    print(f"[{role.job_role_title}] AI-generated similar titles: {title_synonyms}")
+    # No AI call here anymore — only ever use a cache from a previous run
+    # (see jobRole.model.ts on the Express side). Nothing generates new
+    # entries for this field, so brand-new roles just match on role_title
+    # alone until someone populates it another way.
+    title_synonyms = role.keywords or []
+    if title_synonyms:
+        print(f"[{role.job_role_title}] using cached similar titles: {title_synonyms}")
 
     async def run_source(name: str) -> None:
         source = SOURCES[name]
@@ -79,13 +78,12 @@ async def _scrape_one_role(
 
     total_scraped = len(all_jobs)
 
+    # role_filter.py is the only relevance decision now — no AI stage-2.
+    # It requires ALL significant words of role_title (or one of
+    # title_synonyms) to appear in the job title, which is what keeps this
+    # precise without a judge call.
     matched = filter_by_role(all_jobs, role_title=role.job_role_title, title_synonyms=title_synonyms)
-    print(f"[{role.job_role_title}] stage1: {total_scraped} scraped -> {len(matched)} passed word filter")
-    print(f"[{role.job_role_title}] stage1 titles: {[j.title for j in all_jobs]}")
-
-    if use_ai_matching:
-        matched = await refine_with_gemini(matched, role_title=role.job_role_title, title_synonyms=title_synonyms)
-        print(f"[{role.job_role_title}] stage2: -> {len(matched)} passed AI filter")
+    print(f"[{role.job_role_title}] word filter: {total_scraped} scraped -> {len(matched)} matched")
 
     matched = _dedupe(matched)[:max_jobs]
     print(f"[{role.job_role_title}] final: -> {len(matched)} after dedupe/cap")
@@ -116,7 +114,6 @@ async def run_scrape(request: ScrapeRequest) -> ScrapeResponse:
                 role,
                 source_names=source_names,
                 max_jobs=request.max_jobs_per_role,
-                use_ai_matching=request.use_ai_matching,
             )
         except Exception as exc:
 
