@@ -31,6 +31,7 @@ export interface IUserProgress
       completedAt: Date;
     }[];
     lastAnalyzed: Date;
+    lastVisited: Date | null;
   }[];
 
   createdAt: Date;
@@ -136,11 +137,20 @@ const TargetRoleProgressSchema = new Schema(
       type: Date,
       default: Date.now,
     },
+
+    // Last time the user opened the roadmap/progress page for this specific
+    // target role — powers a "continue where you left off" UI. Deliberately
+    // not folded into lastAnalyzed, which tracks readiness recomputation,
+    // not page visits.
+    lastVisited: {
+      type: Date,
+      default: null,
+    },
   },
   { _id: false }
 );
 
-//Main Schema 
+//Main Schema
 
 const UserProgressSchema = new Schema<IUserProgress>(
   {

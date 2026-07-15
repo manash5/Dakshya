@@ -43,6 +43,8 @@ export const CreateUserProgressDto = z.object({
       ),
 
       lastAnalyzed: z.date(),
+
+      lastVisited: z.date().nullable().optional(),
     }),
   ),
 });
@@ -54,3 +56,17 @@ export const UpdateUserProgressDto = CreateUserProgressDto.omit({
 }).partial();
 
 export type UpdateUserProgressDto = z.infer<typeof UpdateUserProgressDto>;
+
+// Response-only DTO. Folds what would otherwise be a separate
+// UserRoadmapProgress collection into a computed view over the existing
+// targetRoleProgress subdocument + that role's CareerKnowledge, instead of
+// persisting a second, easy-to-desync copy of the same completion state.
+export interface RoadmapProgressDto {
+  jobRoleId: string;
+  completedModules: number;
+  totalModules: number;
+  progressPercent: number;
+  completedProjects: number;
+  totalProjects: number;
+  lastVisited: Date | null;
+}

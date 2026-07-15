@@ -43,6 +43,8 @@ export const UserProgressSchema = z.object({
       ),
 
       lastAnalyzed: z.date(),
+
+      lastVisited: z.date().nullable().optional(),
     }),
   ),
 });

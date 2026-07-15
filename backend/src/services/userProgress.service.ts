@@ -5,6 +5,7 @@ import { IUserProgress } from "../models/userProgress.model";
 import {
   CreateUserProgressDto,
   UpdateUserProgressDto,
+  RoadmapProgressDto,
 } from "../dtos/userProgress.dto";
 
 import {
@@ -58,6 +59,10 @@ export interface IUserProgressService {
   refreshAcademicProgress(userId: string): Promise<IUserProgress>;
 
   refreshReadinessForRole(jobRoleId: string): Promise<void>;
+
+  touchRoadmapVisit(userId: string, jobRoleId: string): Promise<IUserProgress>;
+
+  getRoadmapProgress(userId: string, jobRoleId: string): Promise<RoadmapProgressDto>;
 }
 
 export class UserProgressService implements IUserProgressService {
@@ -125,6 +130,7 @@ export class UserProgressService implements IUserProgressService {
           completedRoadmapSteps: [],
           completedProjects: [],
           lastAnalyzed: new Date(),
+          lastVisited: null,
         });
       }
     }
@@ -364,6 +370,67 @@ export class UserProgressService implements IUserProgressService {
     }
 
     return updated;
+  }
+
+  // Called when a user opens the roadmap/progress page for a specific
+  // target role — powers a "continue where you left off" UI.
+  async touchRoadmapVisit(userId: string, jobRoleId: string): Promise<IUserProgress> {
+    const progress = await this.getUserProgress(userId);
+
+    const role = progress.targetRoleProgress.find(
+      (r) => r.jobRoleId._id.toString() === jobRoleId,
+    );
+
+    if (!role) {
+      throw new HttpException(404, "Target role not found");
+    }
+
+    role.lastVisited = new Date();
+
+    const updatedProgress = await progressRepository.update(
+      progress._id.toString(),
+      {
+        targetRoleProgress: progress.targetRoleProgress,
+      },
+    );
+
+    if (!updatedProgress) {
+      throw new HttpException(500, "Failed to update last visited");
+    }
+
+    return updatedProgress;
+  }
+
+  // Computed on the fly from targetRoleProgress + that role's CareerKnowledge
+  // instead of a persisted UserRoadmapProgress collection — see
+  // RoadmapProgressDto for why.
+  async getRoadmapProgress(userId: string, jobRoleId: string): Promise<RoadmapProgressDto> {
+    const progress = await this.getUserProgress(userId);
+
+    const role = progress.targetRoleProgress.find(
+      (r) => r.jobRoleId._id.toString() === jobRoleId,
+    );
+
+    if (!role) {
+      throw new HttpException(404, "Target role not found");
+    }
+
+    const knowledge = await careerKnowledgeRepository.findByJobRoleId(jobRoleId);
+
+    const totalModules = knowledge?.roadmap.length ?? 0;
+    const totalProjects = knowledge?.projects.length ?? 0;
+    const completedModules = role.completedRoadmapSteps.length;
+
+    return {
+      jobRoleId,
+      completedModules,
+      totalModules,
+      progressPercent:
+        totalModules > 0 ? Math.round((completedModules / totalModules) * 100) : 0,
+      completedProjects: role.completedProjects.length,
+      totalProjects,
+      lastVisited: role.lastVisited,
+    };
   }
 
   // ====================== Private Methods ===============================

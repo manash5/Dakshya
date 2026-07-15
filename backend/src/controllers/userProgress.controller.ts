@@ -70,4 +70,68 @@ export class UserProgressController {
 
     }
 
+    async getRoadmapProgress(
+        req: Request,
+        res: Response
+    ) {
+
+        try {
+
+            const userId = req.user._id.toString();
+            const { jobRoleId } = req.params;
+
+            const progress =
+                await userProgressService.getRoadmapProgress(userId, jobRoleId as string);
+
+            return ApiResponseHelper.success(
+                res,
+                progress,
+                200,
+                "Roadmap progress fetched successfully"
+            );
+
+        } catch (e: any) {
+
+            return ApiResponseHelper.error(
+                res,
+                e?.message || "Failed to fetch roadmap progress",
+                e.status || 500
+            );
+
+        }
+
+    }
+
+    async touchRoadmapVisit(
+        req: Request,
+        res: Response
+    ) {
+
+        try {
+
+            const userId = req.user._id.toString();
+            const { jobRoleId } = req.params;
+
+            const progress =
+                await userProgressService.touchRoadmapVisit(userId, jobRoleId as string);
+
+            return ApiResponseHelper.success(
+                res,
+                progress,
+                200,
+                "Roadmap visit recorded successfully"
+            );
+
+        } catch (e: any) {
+
+            return ApiResponseHelper.error(
+                res,
+                e?.message || "Failed to record roadmap visit",
+                e.status || 500
+            );
+
+        }
+
+    }
+
 }
