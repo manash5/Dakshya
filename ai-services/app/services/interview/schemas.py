@@ -30,6 +30,10 @@ class GenerateQuestionsRequest(BaseModel):
 class InterviewQuestion(BaseModel):
     question: str
     type: str = Field(..., description='Exactly "coding" or "oral"')
+    skills: List[str] = Field(
+        default_factory=list,
+        description="1-3 relevant skills/technologies this question tests",
+    )
 
 
 class GenerateQuestionsAIResponse(BaseModel):

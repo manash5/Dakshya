@@ -42,6 +42,7 @@ export class PracticeAttemptService {
     const questions = generated.questions.map((q) => ({
       question: q.question,
       type: q.type,
+      skills: q.skills ?? [],
       expectedAnswer: "",
       userAnswer: "",
       userCode: "",

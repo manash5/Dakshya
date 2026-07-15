@@ -15,6 +15,7 @@ const PracticeQuestionSchema = new Schema(
   {
     question: { type: String, required: true },
     type: { type: String, required: true },
+    skills: [{ type: String }],
     expectedAnswer: { type: String, default: "" },
     userAnswer: { type: String, default: "" },
     userCode: { type: String, default: "" },

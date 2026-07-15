@@ -4,6 +4,7 @@ import { API } from "./endpoints";
 export interface PracticeQuestion {
     question: string;
     type: string;
+    skills: string[];
     expectedAnswer: string;
     userAnswer: string;
     userCode: string;

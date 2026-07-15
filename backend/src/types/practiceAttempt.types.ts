@@ -5,6 +5,9 @@ export const PracticeQuestionSchema = z.object({
   // Freeform (not a fixed enum) since question categories vary by mode/AI
   // generation (e.g. "technical", "behavioral", "coding", "system-design").
   type: z.string(),
+  // 1-3 skills/technologies this question tests, tagged by FastAPI at
+  // generation time. Empty for attempts generated before this field existed.
+  skills: z.array(z.string()).default([]),
   // Filled in at generation time for oral/theory questions where FastAPI can
   // draft one up front; coding questions instead have this filled in after
   // evaluation (see evaluate's idealAnswer), since a good implementation

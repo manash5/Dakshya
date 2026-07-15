@@ -99,6 +99,7 @@ export interface ResumeAnalysisAiResult {
 export interface GeneratedInterviewQuestion {
     question: string;
     type: string;
+    skills: string[];
 }
 
 export interface GenerateInterviewQuestionsResult {

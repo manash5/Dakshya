@@ -52,6 +52,9 @@ RULES:
 4. Vary difficulty appropriately for the level -- {difficulty.value} should get {_LEVEL_GUIDANCE[difficulty]}.
 5. {mix_instruction}
 6. Respond ONLY with data matching the provided schema -- exactly {question_count} questions, no more, no fewer.
+7. For every question, additionally tag it with 1-3 relevant skills or technologies it primarily tests, in the
+   "skills" field -- concise, specific, industry-standard names (e.g. ["React", "State Management"],
+   ["SQL", "Database Indexing"]) that would plausibly appear in this role's job description.
 """
 
 
