@@ -29,6 +29,10 @@ export const API = {
     DASHBOARD: {
         CAREER: "/api/v1/dashboard/career",
     },
+    OPPORTUNITY: {
+        GET_ALL: "/api/v1/opportunities",
+        GET_BY_ID: (id: string) => `/api/v1/opportunities/${id}`,
+    },
 
     ADMIN: {
         USERS: {
@@ -73,6 +77,12 @@ export const API = {
             SCRAPE: "/api/v1/admin/job-postings/scrape",
             UPDATE: (id: string) => `/api/v1/admin/job-postings/${id}`,
             DELETE: (id: string) => `/api/v1/admin/job-postings/${id}`,
+        },
+        OPPORTUNITY: {
+            CREATE: "/api/v1/admin/opportunities",
+            SCRAPE: "/api/v1/admin/opportunities/scrape",
+            UPDATE: (id: string) => `/api/v1/admin/opportunities/${id}`,
+            DELETE: (id: string) => `/api/v1/admin/opportunities/${id}`,
         }
     }
 }
