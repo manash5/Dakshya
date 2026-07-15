@@ -25,6 +25,7 @@ import projectRoute from './routes/project.route'
 import adminProjectRoute from './routes/admin/project.route'
 import practiceAttemptRoute from './routes/practiceAttempt.route'
 import resumeAnalysisRoute from './routes/resumeAnalysis.route'
+import skillPlannerRoute from './routes/skillPlanner.route'
 
 
 const app: Application = express();
@@ -65,6 +66,7 @@ app.use('/api/v1/projects', projectRoute);
 app.use('/api/v1/admin/projects', adminProjectRoute);
 app.use('/api/v1/practice-attempts', practiceAttemptRoute);
 app.use('/api/v1/resume-analysis', resumeAnalysisRoute);
+app.use('/api/v1/skill-planner', skillPlannerRoute);
 
 
 app.use(
