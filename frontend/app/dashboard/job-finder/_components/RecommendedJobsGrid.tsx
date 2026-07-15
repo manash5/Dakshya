@@ -9,6 +9,12 @@ export type RecommendedJob = {
   title: string;
   company: string;
   location: string;
+  salary?: string;
+  experience?: string | null;
+  employmentType?: string | null;
+  requiredSkills?: string[];
+  description?: string;
+  applyLink?: string;
 };
 
 const RECOMMENDED_JOBS: RecommendedJob[] = [
@@ -18,6 +24,13 @@ const RECOMMENDED_JOBS: RecommendedJob[] = [
     title: "Junior Frontend Developer",
     company: "Cloud Tech Nepal",
     location: "Kathmandu · $60k - $85k",
+    salary: "NPR 60k - 85k",
+    experience: "0-1 years",
+    employmentType: "Full-time",
+    requiredSkills: ["React", "TypeScript", "Tailwind CSS"],
+    description:
+      "Build and maintain customer-facing dashboards used by 50k+ monthly users. You'll pair closely with design and backend to ship new features every sprint.",
+    applyLink: "https://example.com/jobs/junior-frontend-developer",
   },
   {
     id: "2",
@@ -25,6 +38,13 @@ const RECOMMENDED_JOBS: RecommendedJob[] = [
     title: "React Engineer (Intern)",
     company: "Swift Innovations",
     location: "Lalitpur · Full-time",
+    salary: "NPR 35k - 45k",
+    experience: "Internship",
+    employmentType: "Internship",
+    requiredSkills: ["React", "JavaScript", "Git"],
+    description:
+      "6-month internship building internal tooling in React, with mentorship from senior engineers and a clear path to a full-time offer.",
+    applyLink: "https://example.com/jobs/react-engineer-intern",
   },
   {
     id: "3",
@@ -32,6 +52,13 @@ const RECOMMENDED_JOBS: RecommendedJob[] = [
     title: "UI/UX Designer",
     company: "DataMind Solutions",
     location: "Kathmandu · Senior Role",
+    salary: "NPR 80k - 110k",
+    experience: "3+ years",
+    employmentType: "Full-time",
+    requiredSkills: ["Figma", "Design Systems", "User Research"],
+    description:
+      "Own the end-to-end design process for our analytics product, from research through high-fidelity prototypes and handoff to engineering.",
+    applyLink: "https://example.com/jobs/ui-ux-designer",
   },
   {
     id: "4",
@@ -39,6 +66,13 @@ const RECOMMENDED_JOBS: RecommendedJob[] = [
     title: "UI/UX Designer",
     company: "DataMind Solutions",
     location: "Kathmandu · Senior Role",
+    salary: "NPR 80k - 110k",
+    experience: "3+ years",
+    employmentType: "Full-time",
+    requiredSkills: ["Figma", "Design Systems", "User Research"],
+    description:
+      "Own the end-to-end design process for our analytics product, from research through high-fidelity prototypes and handoff to engineering.",
+    applyLink: "https://example.com/jobs/ui-ux-designer-2",
   },
   {
     id: "5",
@@ -46,6 +80,13 @@ const RECOMMENDED_JOBS: RecommendedJob[] = [
     title: "Junior Frontend Developer",
     company: "Cloud Tech Nepal",
     location: "Kathmandu · $60k - $85k",
+    salary: "NPR 60k - 85k",
+    experience: "0-1 years",
+    employmentType: "Full-time",
+    requiredSkills: ["React", "TypeScript", "Tailwind CSS"],
+    description:
+      "Build and maintain customer-facing dashboards used by 50k+ monthly users. You'll pair closely with design and backend to ship new features every sprint.",
+    applyLink: "https://example.com/jobs/junior-frontend-developer-2",
   },
   {
     id: "6",
@@ -53,6 +94,13 @@ const RECOMMENDED_JOBS: RecommendedJob[] = [
     title: "React Engineer (Intern)",
     company: "Swift Innovations",
     location: "Lalitpur · Full-time",
+    salary: "NPR 35k - 45k",
+    experience: "Internship",
+    employmentType: "Internship",
+    requiredSkills: ["React", "JavaScript", "Git"],
+    description:
+      "6-month internship building internal tooling in React, with mentorship from senior engineers and a clear path to a full-time offer.",
+    applyLink: "https://example.com/jobs/react-engineer-intern-2",
   },
 ];
 
@@ -93,6 +141,12 @@ export default function RecommendedJobsGrid() {
             title={job.title}
             company={job.company}
             location={job.location}
+            salary={job.salary}
+            experience={job.experience}
+            employmentType={job.employmentType}
+            requiredSkills={job.requiredSkills}
+            description={job.description}
+            applyLink={job.applyLink}
             saved={savedIds.has(job.id)}
             onToggleSave={() => toggleSave(job.id)}
           />
