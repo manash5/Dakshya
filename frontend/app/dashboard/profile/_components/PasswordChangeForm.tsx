@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { LockKeyhole, Eye, EyeOff, Loader2, CheckCircle2 } from "lucide-react";
-import { changePassword } from "@/lib/api/auth";
+import { changePasswordAction } from "@/lib/actions/auth-action";
 
 type Status = "idle" | "loading" | "success" | "error";
 
@@ -33,16 +33,17 @@ export default function PasswordChangeForm() {
         setStatus("loading");
         setErrorMsg("");
 
-        try {
-            await changePassword({ currentPassword, newPassword });
+        const result = await changePasswordAction({ currentPassword, newPassword });
+
+        if (result.success) {
             setStatus("success");
             setTimeout(() => {
                 setOpen(false);
                 reset();
             }, 1800);
-        } catch (err: any) {
+        } else {
             setStatus("error");
-            setErrorMsg(err.message || "Password change failed.");
+            setErrorMsg(result.message || "Password change failed.");
         }
     };
 
