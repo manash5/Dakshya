@@ -21,7 +21,8 @@ Generate:
 8. interviewGuide - commonTopics, focusAreas, interviewTips, and importantConcepts, each as a
    list of short strings.
 9. learningResources - real, well-known, currently existing resources, each with a title, type,
-   and a real working url (must start with http:// or https://).
+   a real working url (must start with http:// or https://), and 1-3 skills (from requiredSkills)
+   that resource actually teaches.
 10. salary - realistic min and max salary as positive numbers, and the currency code (e.g. "USD").
 11. difficulty - overall difficulty to break into this role.
 12. futureDemand - future demand outlook for this role.

@@ -78,6 +78,10 @@ class LearningResource(BaseModel):
     title: str
     type: LearningResourceType
     url: HttpUrl
+    skills: List[str] = Field(
+        default_factory=list,
+        description="1-3 skills from requiredSkills this resource teaches",
+    )
 
 
 class Salary(BaseModel):

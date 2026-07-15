@@ -56,6 +56,11 @@ export const CareerKnowledgeSchema = z.object({
       type: z.enum(["Course", "Documentation", "Video", "Article"]),
 
       url: z.url(),
+
+      // 1-3 skills (from requiredSkills) this resource teaches, tagged by
+      // the AI at generation time. Empty for career knowledge generated
+      // before this field existed.
+      skills: z.array(z.string()).default([]),
     }),
   ),
 
