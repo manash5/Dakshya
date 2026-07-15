@@ -10,7 +10,7 @@ export function scheduleJobPostingRefresh() {
   cron.schedule("0 2 * * *", async () => {
     console.log(`[job-posting-cron] refresh started at ${new Date().toISOString()}`);
     try {
-      const stats = await jobPostingService.scrapeAndStoreAllActive();
+      const stats = await jobPostingService.scrapeAndStoreAll();
       console.log("[job-posting-cron] refresh completed", stats);
     } catch (error) {
       console.error("[job-posting-cron] refresh failed", error);
