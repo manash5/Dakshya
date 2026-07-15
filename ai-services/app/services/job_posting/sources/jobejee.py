@@ -93,7 +93,7 @@ async def _fetch_detail(client: httpx.AsyncClient, url: str) -> JobPosting | Non
 class JobejeeSource:
     name = "jobejee"
 
-    async def scrape(self, *, role_title: str, keywords: list[str], max_jobs: int) -> list[JobPosting]:
+    async def scrape(self, *, max_jobs: int) -> list[JobPosting]:
         # No working search/pagination endpoint found on this site — its
         # homepage lists the most recent postings server-rendered, same
         # "no search, scrape the general feed" approach as jobsnepal.py.
@@ -115,7 +115,7 @@ class JobejeeSource:
             oversample = max(max_jobs * 2, max_jobs + 20)
             urls = urls[:oversample]
 
-            semaphore = asyncio.Semaphore(5)
+            semaphore = asyncio.Semaphore(10)
 
             async def fetch_one(url: str) -> JobPosting | None:
                 async with semaphore:

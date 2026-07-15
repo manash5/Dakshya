@@ -6,15 +6,15 @@ from datetime import datetime, timezone
 from urllib.parse import urlparse
 
 from app.services.job_posting.models import JobPosting
-from app.services.job_posting.role_filter import filter_by_role
-from app.services.job_posting.schemas import (
-    JobRoleTarget,
-    RoleScrapeResult,
-    ScrapeRequest,
-    ScrapeResponse,
-    ScrapeStats,
-)
-from app.services.job_posting.sources import SOURCES
+from app.services.job_posting.schemas import ScrapeRequest, ScrapeResponse, ScrapeStats
+from app.services.job_posting.sources import ALL_SOURCES, SOURCES
+
+# Hard ceiling per source so one slow/hanging site can't stall the whole
+# run — sources run concurrently (see run_scrape), so this bounds total
+# wall-clock time regardless of how many sources are configured. The
+# default (bulk-API) sources measure well under 10s; this is a safety
+# margin above that, not a target.
+SOURCE_TIMEOUT_SECONDS = 20.0
 
 
 def _normalize_url(url: str) -> str:
@@ -47,9 +47,17 @@ def _dedupe(jobs: list[JobPosting]) -> list[JobPosting]:
     return [by_url[key] for key in order]
 
 
-async def _scrape_one_role(
-    role: JobRoleTarget, *, source_names: list[str], max_jobs: int
-) -> RoleScrapeResult:
+async def run_scrape(request: ScrapeRequest) -> ScrapeResponse:
+    """Scrapes every source exactly once and returns the full deduped pool
+    — no role filtering, no dropped jobs. Express stores all of it and
+    matches jobs to a user's target roles at query time instead (see
+    dashboard.service.ts / jobPosting.repository.ts).
+    """
+    source_names = request.sources or list(SOURCES)
+    unknown = [name for name in source_names if name not in ALL_SOURCES]
+    if unknown:
+        raise ValueError(f"Unknown source(s): {', '.join(unknown)}. Available: {', '.join(ALL_SOURCES)}")
+
     started_at = datetime.now(timezone.utc)
     started_perf = time.perf_counter()
 
@@ -57,82 +65,34 @@ async def _scrape_one_role(
     failed: dict[str, str] = {}
     all_jobs: list[JobPosting] = []
 
-    # No AI call here anymore — only ever use a cache from a previous run
-    # (see jobRole.model.ts on the Express side). Nothing generates new
-    # entries for this field, so brand-new roles just match on role_title
-    # alone until someone populates it another way.
-    title_synonyms = role.keywords or []
-    if title_synonyms:
-        print(f"[{role.job_role_title}] using cached similar titles: {title_synonyms}")
-
     async def run_source(name: str) -> None:
-        source = SOURCES[name]
+        source = ALL_SOURCES[name]
         try:
-            jobs = await source.scrape(role_title=role.job_role_title, keywords=title_synonyms, max_jobs=max_jobs)
+            jobs = await asyncio.wait_for(
+                source.scrape(max_jobs=request.pool_size_per_source),
+                timeout=SOURCE_TIMEOUT_SECONDS,
+            )
             all_jobs.extend(jobs)
             succeeded.append(name)
+        except asyncio.TimeoutError:
+            failed[name] = f"TimeoutError: exceeded {SOURCE_TIMEOUT_SECONDS}s"
         except Exception as exc:
             failed[name] = f"{type(exc).__name__}: {exc}"
 
     await asyncio.gather(*[run_source(name) for name in source_names])
 
-    total_scraped = len(all_jobs)
-
-    # role_filter.py is the only relevance decision now — no AI stage-2.
-    # It requires ALL significant words of role_title (or one of
-    # title_synonyms) to appear in the job title, which is what keeps this
-    # precise without a judge call.
-    matched = filter_by_role(all_jobs, role_title=role.job_role_title, title_synonyms=title_synonyms)
-    print(f"[{role.job_role_title}] word filter: {total_scraped} scraped -> {len(matched)} matched")
-
-    matched = _dedupe(matched)[:max_jobs]
-    print(f"[{role.job_role_title}] final: -> {len(matched)} after dedupe/cap")
-
+    pool = _dedupe(all_jobs)
     completed_at = datetime.now(timezone.utc)
+    duration_seconds = round(time.perf_counter() - started_perf, 2)
+    print(f"[scrape] {len(pool)} jobs from {succeeded} (failed: {failed or 'none'}) in {duration_seconds}s")
+
     stats = ScrapeStats(
         started_at=started_at.isoformat(),
         completed_at=completed_at.isoformat(),
-        duration_seconds=round(time.perf_counter() - started_perf, 2),
+        duration_seconds=duration_seconds,
         sources_attempted=source_names,
         sources_succeeded=succeeded,
         sources_failed=failed,
-        total_scraped=total_scraped,
-        matched_count=len(matched),
+        total_scraped=len(pool),
     )
-    return RoleScrapeResult(job_role_id=role.job_role_id, jobs=matched, stats=stats, keywords=title_synonyms)
-
-
-async def run_scrape(request: ScrapeRequest) -> ScrapeResponse:
-    source_names = request.sources or list(SOURCES)
-    unknown = [name for name in source_names if name not in SOURCES]
-    if unknown:
-        raise ValueError(f"Unknown source(s): {', '.join(unknown)}. Available: {', '.join(SOURCES)}")
-
-    async def run_role(role: JobRoleTarget) -> RoleScrapeResult:
-        try:
-            return await _scrape_one_role(
-                role,
-                source_names=source_names,
-                max_jobs=request.max_jobs_per_role,
-            )
-        except Exception as exc:
-
-            now = datetime.now(timezone.utc).isoformat()
-            return RoleScrapeResult(
-                job_role_id=role.job_role_id,
-                jobs=[],
-                stats=ScrapeStats(
-                    started_at=now,
-                    completed_at=now,
-                    duration_seconds=0.0,
-                    sources_attempted=source_names,
-                    sources_succeeded=[],
-                    sources_failed={},
-                    total_scraped=0,
-                    matched_count=0,
-                ),
-                error=f"{type(exc).__name__}: {exc}",
-            )
-
-    results = await asyncio.gather(*[run_role(role) for role in request.roles])
-    return ScrapeResponse(results=list(results))
+    return ScrapeResponse(jobs=pool, stats=stats)

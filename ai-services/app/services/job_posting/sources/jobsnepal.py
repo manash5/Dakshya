@@ -65,8 +65,8 @@ async def _fetch_detail(client: httpx.AsyncClient, url: str) -> JobPosting | Non
 class JobsNepalSource:
     name = "jobsnepal"
 
-    async def scrape(self, *, role_title: str, keywords: list[str], max_jobs: int) -> list[JobPosting]:
-        
+    async def scrape(self, *, max_jobs: int) -> list[JobPosting]:
+
         oversample = max(max_jobs * 4, max_jobs + 30)
         headers = {"User-Agent": BROWSER_UA}
 
@@ -84,7 +84,7 @@ class JobsNepalSource:
                     urls.append(href)
             urls = urls[:oversample]
 
-            semaphore = asyncio.Semaphore(5)
+            semaphore = asyncio.Semaphore(10)
 
             async def fetch_one(url: str) -> JobPosting | None:
                 async with semaphore:

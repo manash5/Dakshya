@@ -52,13 +52,16 @@ def _to_posting(item: dict) -> JobPosting | None:
 class RemotiveSource:
     """remotive's own ?search= param doesn't actually filter (verified —
     a nonsense query still returned every listing), so this just pulls the
-    current feed each run; role_filter.py does the real
-    matching downstream, same as every source with no working search.
+    current feed each run — no relevance filtering here, Express stores
+    everything and matches at query time. Remote by construction (this is
+    remotive's entire premise), so no separate remote-only check needed.
+    100% tech/dev roles — this is the dedicated tech-job supply that the
+    Nepal-only general job boards don't reliably provide for niche roles.
     """
 
     name = "remotive"
 
-    async def scrape(self, *, role_title: str, keywords: list[str], max_jobs: int) -> list[JobPosting]:
+    async def scrape(self, *, max_jobs: int) -> list[JobPosting]:
         headers = {"User-Agent": BROWSER_UA}
 
         async with httpx.AsyncClient(timeout=30.0, headers=headers) as client:

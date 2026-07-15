@@ -34,8 +34,7 @@ def _to_posting(item: dict) -> JobPosting | None:
         title=title,
         # WP REST API doesn't expose WP Job Manager's company/location meta
         # fields by default (only theme/layout meta is registered for REST).
-        # Same fallback jobsnepal.py uses when a source can't provide them —
-        # role_filter.py still works fine off title + description.
+        # Same fallback jobsnepal.py uses when a source can't provide them.
         company="Unknown",
         location="Nepal",
         salary="Not disclosed",
@@ -47,9 +46,15 @@ def _to_posting(item: dict) -> JobPosting | None:
 
 
 class MerorojgariSource:
-    name = "merorojgari"
+    """No working role-specific search worth trusting (same class of issue
+    as merojob's literal q= search — see merojob.py). Just pages through
+    the latest unfiltered listings — no relevance filtering here.
+    """
 
-    async def scrape(self, *, role_title: str, keywords: list[str], max_jobs: int) -> list[JobPosting]:
+    name = "merorojgari"
+    MAX_PAGES = 5
+
+    async def scrape(self, *, max_jobs: int) -> list[JobPosting]:
         headers = {"User-Agent": BROWSER_UA, "Accept": "application/json"}
         seen_ids: set[int] = set()
         jobs: list[JobPosting] = []
@@ -61,14 +66,17 @@ class MerorojgariSource:
                 response.raise_for_status()
                 return response.json()
 
-            # Targeted search per candidate title first.
-            for candidate in [role_title, *keywords]:
-                if len(jobs) >= max_jobs:
-                    break
+            page = 1
+            while len(jobs) < max_jobs and page <= self.MAX_PAGES:
                 try:
-                    items = await fetch({"search": candidate, "per_page": WP_MAX_PER_PAGE})
+                    items = await fetch(
+                        {"per_page": WP_MAX_PER_PAGE, "page": page, "orderby": "date", "order": "desc"}
+                    )
                 except httpx.HTTPError:
-                    continue
+                    break
+                if not items:
+                    break
+
                 for item in items:
                     if item.get("id") in seen_ids:
                         continue
@@ -78,24 +86,6 @@ class MerorojgariSource:
                         if len(jobs) >= max_jobs:
                             break
 
-            # merorojgari's search can miss genuine matches too (same class
-            # of issue as merojob's literal q= search) — fall back to the
-            # latest unfiltered listings so role_filter.py gets a
-            # fair shot at anything the search missed.
-            if len(jobs) < max_jobs:
-                try:
-                    items = await fetch(
-                        {"per_page": min(max_jobs * 2, WP_MAX_PER_PAGE), "orderby": "date", "order": "desc"}
-                    )
-                except httpx.HTTPError:
-                    items = []
-                for item in items:
-                    if item.get("id") in seen_ids:
-                        continue
-                    seen_ids.add(item.get("id"))
-                    if (posting := _to_posting(item)) is not None:
-                        jobs.append(posting)
-                        if len(jobs) >= max_jobs:
-                            break
+                page += 1
 
         return jobs[:max_jobs]

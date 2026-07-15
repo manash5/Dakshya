@@ -7,10 +7,12 @@ router = APIRouter(prefix="/api/v1/job-postings", tags=["job-postings"])
 
 
 @router.post("/scrape", response_model=ScrapeResponse)
-async def scrape_jobs(payload: ScrapeRequest) -> ScrapeResponse:
-    """Called by Express (admin-triggered or cron), one call per batch of
-    JobRole docs. Scrapes + filters + AI-matches, returns JSON per role —
-    never touches Express's MongoDB directly.
+async def scrape_jobs(payload: ScrapeRequest = ScrapeRequest()) -> ScrapeResponse:
+    """Called by Express (admin-triggered or cron). Always a full scrape —
+    no role targeting, no relevance filtering. Returns every job found
+    across all sources as JSON; never touches Express's MongoDB directly.
+    Express does role-matching itself, at query time, against whatever
+    gets stored.
     """
     try:
         return await run_scrape(payload)

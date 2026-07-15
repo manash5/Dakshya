@@ -14,11 +14,12 @@ USER_AGENT = (
 # merojob's own q= search is a literal, often-strict match — even a single
 # generic word like "Backend" can return zero hits while listings that
 # obviously belong to that function (e.g. "Full Stack Developer") sit right
-# there in the general feed. Rather than trust merojob's search to decide
-# relevance, we also scan its general/unfiltered feed (same approach
-# jobsnepal.py uses, which has no search at all) and let role_filter.py
-# do the actual matching.
-GENERAL_FEED_PAGES = 5
+# there in the general feed. Rather than trust merojob's search, we just
+# scan its general/unfiltered feed (same approach jobsnepal.py uses, which
+# has no search at all) — no relevance filtering happens here at all,
+# Express stores everything. This is a one-time cost per run (not per
+# role), so it can afford to crawl fairly deep.
+GENERAL_FEED_PAGES = 15
 
 
 def _format_salary(salary: dict | None, *, hidden: bool) -> str:
@@ -62,7 +63,7 @@ def _to_posting(item: dict) -> JobPosting:
 class MerojobSource:
     name = "merojob"
 
-    async def scrape(self, *, role_title: str, keywords: list[str], max_jobs: int) -> list[JobPosting]:
+    async def scrape(self, *, max_jobs: int) -> list[JobPosting]:
         headers = {
             "Accept": "application/json",
             "User-Agent": USER_AGENT,
@@ -71,44 +72,10 @@ class MerojobSource:
             "Accept-Language": "en-US,en;q=0.9",
         }
 
-        candidates = [role_title, *keywords]
         seen_ids: set[str] = set()
         jobs: list[JobPosting] = []
 
         async with httpx.AsyncClient(timeout=30.0, headers=headers) as client:
-            # Targeted searches first — cheap, and often already relevant
-            # when merojob's search actually returns something.
-            for candidate in candidates:
-                if len(jobs) >= max_jobs:
-                    break
-                page = 1
-                while len(jobs) < max_jobs:
-                    response = await client.get(
-                        API_URL, params={"page": page, "page_size": 20, "q": candidate}
-                    )
-                    response.raise_for_status()
-                    payload = response.json()
-                    results = payload.get("results") or []
-                    if not results:
-                        break
-
-                    for item in results:
-                        job_id = str(item.get("id"))
-                        if job_id in seen_ids:
-                            continue
-                        seen_ids.add(job_id)
-                        jobs.append(_to_posting(item))
-                        if len(jobs) >= max_jobs:
-                            break
-
-                    if not payload.get("next"):
-                        break
-                    page += 1
-
-            # Fallback: merojob's search regularly misses genuinely relevant
-            # listings (see GENERAL_FEED_PAGES comment above). Scan the
-            # general/unfiltered feed too, bounded by page count so this
-            # stays cheap — role_filter.py decides relevance from here.
             page = 1
             while len(jobs) < max_jobs and page <= GENERAL_FEED_PAGES:
                 response = await client.get(API_URL, params={"page": page, "page_size": 20})

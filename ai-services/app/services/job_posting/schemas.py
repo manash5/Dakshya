@@ -6,34 +6,25 @@ from pydantic.alias_generators import to_camel
 from app.services.job_posting.models import JobPosting
 
 
-class JobRoleTarget(BaseModel):
-    """One role to scrape for. ``job_role_id`` is the Mongo _id of the
-    JobRole doc — never stored or interpreted here, just echoed back so
-    Express can map results without guessing.
-
-    ``keywords`` is an optional cache hint — real alternate job titles for
-    this role, if Express has any cached on the JobRole doc from a previous
-    run. Purely additive input to role_filter.py's word matching; nothing
-    generates new values for this anymore (no AI in this pipeline).
-    """
-
-    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
-
-    job_role_id: str
-    job_role_title: str
-    keywords: list[str] = []
-
-
 class ScrapeRequest(BaseModel):
-    """Sent by Express — either a single admin-triggered role or the full
-    batch of active JobRole docs on a cron run.
+    """Sent by Express — admin-triggered or cron, always a full scrape now.
+    There's no per-role targeting anymore: every source has no working
+    per-role search anyway (see each source's docstring), so scraping used
+    to mean re-fetching the same data once per JobRole for no benefit, and
+    only ever kept jobs matching a role that already existed in Mongo.
+    Express now stores everything scraped and matches jobs to roles at
+    query time (dashboard, job listings) instead.
     """
 
     model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
 
-    roles: list[JobRoleTarget]
     sources: list[str] | None = None
-    max_jobs_per_role: int = 50
+    # Each source is scraped once per run, into a shared pool. This is that
+    # pool's cap per source. 300 measured at ~10s total (merorojgari and
+    # merojob were the only sources actually hitting the old 150 cap; the
+    # rest are bounded by their real feed size, not this number) — a good
+    # tradeoff between recall for niche roles and staying fast.
+    pool_size_per_source: int = 300
 
 
 class ScrapeStats(BaseModel):
@@ -44,24 +35,12 @@ class ScrapeStats(BaseModel):
     duration_seconds: float
     sources_attempted: list[str]
     sources_succeeded: list[str]
-    sources_failed: dict[str, str]  
-    total_scraped: int  
-    matched_count: int  
-
-
-class RoleScrapeResult(BaseModel):
-    """Result for a single role within a batch scrape."""
-
-    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
-
-    job_role_id: str
-    jobs: list[JobPosting]
-    stats: ScrapeStats
-    keywords: list[str] = []
-    error: str | None = None
+    sources_failed: dict[str, str]
+    total_scraped: int
 
 
 class ScrapeResponse(BaseModel):
     model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
 
-    results: list[RoleScrapeResult]
+    jobs: list[JobPosting]
+    stats: ScrapeStats

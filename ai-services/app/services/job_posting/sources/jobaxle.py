@@ -17,9 +17,6 @@ BROWSER_UA = (
 )
 JOB_URL_RE = re.compile(r"^https://jobaxle\.com/jobs/[a-z0-9\-]+$", re.I)
 
-_STOPWORDS = frozenset({"a", "an", "and", "for", "in", "of", "the", "to", "with", "or"})
-_WORD_RE = re.compile(r"[a-z0-9]+")
-
 _EMPLOYMENT_TYPE_MAP = {
     "full time": "Full-time",
     "part time": "Part-time",
@@ -27,10 +24,6 @@ _EMPLOYMENT_TYPE_MAP = {
     "contract": "Contract",
     "remote": "Remote",
 }
-
-
-def _significant_words(text: str) -> set[str]:
-    return {w for w in _WORD_RE.findall(text.casefold()) if w not in _STOPWORDS}
 
 
 def _extract_job_ld(html: str) -> dict | None:
@@ -95,23 +88,18 @@ async def _fetch_detail(client: httpx.AsyncClient, url: str) -> JobPosting | Non
 
 class JobaxleSource:
     """No working search endpoint found on this site (its ?search= param
-    is client-JS-only), but the sitemap lists every job with the title
-    readable right in the slug, e.g.
-    /jobs/full-stack-developer-laravel-vue-js-3. We pre-filter on that slug
-    text before fetching any detail pages — the sitemap has ~8000 entries,
-    fetching them all every scrape would be wasteful and slow. This is a
-    cost filter only; role_filter.py still makes the real
-    relevance call downstream, same as every other source.
+    is client-JS-only) and no relevance filtering here anymore — every
+    listing in the sitemap is a candidate. The only cap is ``max_jobs``
+    itself: the sitemap has ~8000 entries and fetching all of them as
+    individual detail-page requests every run would make this the slowest
+    source by far, so we still only fetch up to ``max_jobs`` detail pages
+    (in sitemap order), not the full 8000.
     """
 
     name = "jobaxle"
 
-    async def scrape(self, *, role_title: str, keywords: list[str], max_jobs: int) -> list[JobPosting]:
+    async def scrape(self, *, max_jobs: int) -> list[JobPosting]:
         headers = {"User-Agent": BROWSER_UA}
-
-        terms: set[str] = set()
-        for text in [role_title, *keywords]:
-            terms |= _significant_words(text)
 
         async with httpx.AsyncClient(timeout=30.0, headers=headers, follow_redirects=True) as client:
             response = await client.get(SITEMAP_URL)
@@ -119,14 +107,9 @@ class JobaxleSource:
             urls = re.findall(r"<loc>([^<]+)</loc>", response.text)
             job_urls = [u for u in urls if JOB_URL_RE.match(u)]
 
-            def slug_words(url: str) -> set[str]:
-                slug = url.rsplit("/", 1)[-1]
-                return _significant_words(slug.replace("-", " "))
+            candidates = job_urls[:max_jobs]
 
-            oversample = max(max_jobs * 3, max_jobs + 40)
-            candidates = [u for u in job_urls if slug_words(u) & terms][:oversample]
-
-            semaphore = asyncio.Semaphore(5)
+            semaphore = asyncio.Semaphore(10)
 
             async def fetch_one(url: str) -> JobPosting | None:
                 async with semaphore:

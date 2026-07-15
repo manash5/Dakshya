@@ -1,7 +1,14 @@
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict
+from bs4 import BeautifulSoup
+from pydantic import BaseModel, ConfigDict, field_validator
 from pydantic.alias_generators import to_camel
+
+
+def _strip_html(value: str) -> str:
+    if "<" not in value and "&" not in value:
+        return value
+    return BeautifulSoup(value, "html.parser").get_text(" ", strip=True)
 
 
 class JobPosting(BaseModel):
@@ -28,3 +35,13 @@ class JobPosting(BaseModel):
     apply_link: str
     source: str
     posted_date: str | None = None
+
+    @field_validator("description")
+    @classmethod
+    def _clean_description(cls, value: str) -> str:
+        # Belt-and-suspenders: most sources already strip HTML themselves
+        # (see each source's _clean_html), but jobejee/jobaxle/merojob pull
+        # descriptions straight from JSON-LD or API fields that can contain
+        # markup. This guarantees plain text regardless of which source
+        # populates it, present or future.
+        return _strip_html(value)

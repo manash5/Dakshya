@@ -6,13 +6,14 @@ from app.services.job_posting.models import JobPosting
 
 
 class JobSource(Protocol):
-    """Every adapter implements this. ``query`` is the role title/keyword to
-    search for when the site supports real search (e.g. merojob's ?q=).
-    Sites with no search endpoint should ignore ``query`` and just return
-    the general listing — role_filter.py does the narrowing afterward.
+    """Every adapter implements this. Scraping is role-agnostic: return a
+    broad general pool of the source's current listings, up to ``max_jobs``.
+    A source is hit exactly once per scrape run — no per-role filtering
+    happens here at all anymore. Express stores everything and matches
+    jobs to a user's target roles at query time instead.
     """
 
     name: str
 
-    async def scrape(self, *, role_title: str, keywords: list[str], max_jobs: int) -> list[JobPosting]:
+    async def scrape(self, *, max_jobs: int) -> list[JobPosting]:
         ...

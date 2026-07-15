@@ -8,14 +8,14 @@ Job Role: {job_role}
 
 Generate:
 1. careerDescription - a clear, informative description of what this role involves
-2. requiredSkills - core skills needed for this role
+2. requiredSkills - core skills needed for this role, as short atomic tags (see format rule below)
 3. tools - common tools used in this role
 4. frameworks - relevant frameworks/libraries used in this role
 5. certifications - recognized certifications relevant to this role (empty list if none genuinely apply)
 6. roadmap - an ordered, step-by-step learning roadmap from beginner to job-ready. Each step needs
    an order starting at 1 and increasing sequentially, a title, description, a realistic
-   estimatedWeeks, the requiredSkills for that step, completionCriteria, and resources
-   (plain-string names of things to study).
+   estimatedWeeks, the requiredSkills for that step (same atomic-tag format rule as above),
+   completionCriteria, and resources (plain-string names of things to study).
 7. projects - a mix of Beginner, Intermediate and Advanced project ideas (at least 2 of each),
    each with a title, description, difficulty, technologies used, and a realistic estimatedHours.
 8. interviewGuide - commonTopics, focusAreas, interviewTips, and importantConcepts, each as a
@@ -31,6 +31,12 @@ Generate:
 Rules:
 - Only describe skills, tools, frameworks, and resources that genuinely apply to this role.
   Do not invent certifications or resources that don't exist.
+- requiredSkills (top-level and inside each roadmap step) must be atomic tags: a single skill,
+  language, or concept per entry, 1-3 words, matching how it would appear in a job posting's
+  skill list (e.g. "Python", "REST APIs", "Git"). Never a descriptive sentence, never a
+  parenthetical list of examples, and never multiple skills joined by "and"/"or"/commas in one
+  entry (e.g. NOT "Programming languages like Java, Python, or JavaScript" — instead emit
+  "Java", "Python", and "JavaScript" as three separate entries).
 - Learning resource URLs must be real, currently existing pages you are confident about
   (official docs, well-known platforms like Coursera/Udemy/freeCodeCamp/MDN, etc).
 - Keep descriptions concise and free of marketing language.

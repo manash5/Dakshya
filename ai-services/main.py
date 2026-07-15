@@ -14,6 +14,7 @@ from app.core.config import AI_SERVICE_PORT
 from app.api import course_generator
 from app.api import career_knowledge
 from app.api import job_poster
+from app.api import opportunities
 
 app = FastAPI(title="Dakshya")
 
@@ -38,6 +39,7 @@ app.add_middleware(
 app.include_router(course_generator.router)
 app.include_router(career_knowledge.router)
 app.include_router(job_poster.router)
+app.include_router(opportunities.router)
 
 if __name__ == "__main__":
     import uvicorn

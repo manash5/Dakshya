@@ -51,13 +51,14 @@ class RemoteokSource:
     the current listings (element 0 is an API-terms metadata blob, not a
     job). Their own terms just ask for attribution when using the API
     (see 'legal' field on that first element), which we already do via
-    source="remoteok" on every posting. role_filter.py does the
-    actual relevance matching downstream.
+    source="remoteok" on every posting. No relevance filtering here —
+    Express stores everything and matches at query time. Remote by
+    construction, same as remotive — no separate remote-only check needed.
     """
 
     name = "remoteok"
 
-    async def scrape(self, *, role_title: str, keywords: list[str], max_jobs: int) -> list[JobPosting]:
+    async def scrape(self, *, max_jobs: int) -> list[JobPosting]:
         headers = {"User-Agent": BROWSER_UA}
 
         async with httpx.AsyncClient(timeout=30.0, headers=headers) as client:

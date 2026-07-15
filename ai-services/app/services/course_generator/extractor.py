@@ -29,7 +29,14 @@ Rules:
   not one confirmed on the website.
 - "credits" must be a whole number; if unstated, use a reasonable estimate based
   on the rest of the curriculum.
-- "skills" should be 2-5 short skill/topic tags relevant to that subject.
+- "skills" should be 2-5 concrete, atomic, market-relevant skill tags for that subject — the
+  kind of terms that appear in a job posting's required-skills list (e.g. "Python", "SQL",
+  "React", "Docker"). Never a course-topic label, soft descriptor, or broad field name (e.g.
+  NOT "Problem Solving", "Logic", "Computer Science", "Hardware", "History of Computing")
+  unless it is a literal, commonly-recognized professional skill (e.g. "Agile", "Teamwork" are
+  fine for a professional-practice subject). If a subject is purely theoretical/orientation
+  with no concrete tech skill to extract, a short list — or even an empty list — is correct;
+  do not pad it with vague topic words just to reach the 2-5 range.
 - Respond ONLY with data matching the provided schema.
 
 WEBSITE TEXT:
