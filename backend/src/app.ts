@@ -17,6 +17,9 @@ import adminCareerKnowledgeRouter from './routes/admin/careerKnowledge.route'
 import jobPostingRoute from './routes/jobPosting.route'
 import adminJobPostingRoute from './routes/admin/jobPosting.route'
 import dashboardRoute from './routes/dashboard.route'
+import opportunityRoute from './routes/opportunity.route'
+import adminOpportunityRoute from './routes/admin/opportunity.route'
+import userProgressRoute from './routes/userProgress.route'
 
 
 const app: Application = express();
@@ -49,6 +52,9 @@ app.use("/api/v1/admin/users", adminUserRoutes);
 app.use('/api/v1/job-postings', jobPostingRoute);
 app.use('/api/v1/admin/job-postings', adminJobPostingRoute);
 app.use('/api/v1/dashboard', dashboardRoute);
+app.use('/api/v1/opportunities', opportunityRoute);
+app.use('/api/v1/admin/opportunities', adminOpportunityRoute);
+app.use('/api/v1/userProgress', userProgressRoute);
 
 
 app.use(

@@ -39,4 +39,35 @@ export class UserProgressController {
 
     }
 
+    async refreshProgress(
+        req: Request,
+        res: Response
+    ) {
+
+        try {
+
+            const userId = req.user._id.toString();
+
+            const progress =
+                await userProgressService.refreshAcademicProgress(userId);
+
+            return ApiResponseHelper.success(
+                res,
+                progress,
+                200,
+                "Progress refreshed successfully"
+            );
+
+        } catch (e: any) {
+
+            return ApiResponseHelper.error(
+                res,
+                e?.message || "Failed to refresh progress",
+                e.status || 500
+            );
+
+        }
+
+    }
+
 }

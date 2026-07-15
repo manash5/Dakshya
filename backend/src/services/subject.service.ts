@@ -1,11 +1,15 @@
 import { SubjectMongoRepository } from "../repository/subject.repository";
 import { CourseMongoRepository } from "../repository/course.repository";
+import { UserMongoRepository } from "../repository/user.repository";
 import { CreateSubjectDto, UpdateSubjectDto } from "../dtos/subject.dto";
 import { HttpException } from "../exceptions/http-exceptions";
 import { ISubject } from "../models/subject.model";
+import { UserProgressService } from "./userProgress.service";
 
 const subjectRepository = new SubjectMongoRepository();
 const courseRepository = new CourseMongoRepository();
+const userRepository = new UserMongoRepository();
+const userProgressService = new UserProgressService();
 
 export class SubjectService {
   async createSubject(data: CreateSubjectDto): Promise<ISubject> {
@@ -24,6 +28,7 @@ export class SubjectService {
       throw new HttpException(400, "Semester exceeds course duration");
     }
     const createdSubject = await subjectRepository.create(data as any);
+    await this.refreshAffectedUsers(data.courseId);
     return createdSubject;
   }
 
@@ -63,6 +68,14 @@ export class SubjectService {
 
     if (!updatedSubject) {
       throw new HttpException(404, "Subject not found");
+    }
+
+    await this.refreshAffectedUsers(courseId);
+    // Subject moved to a different course — the old course's enrolled
+    // students no longer have this subject, so their acquiredSkills need
+    // refreshing too, not just the new course's students.
+    if (data.courseId && data.courseId !== subject.courseId.toString()) {
+      await this.refreshAffectedUsers(subject.courseId.toString());
     }
 
     return updatedSubject;
@@ -131,6 +144,7 @@ export class SubjectService {
     if (!deleted) {
       throw new HttpException(500, "Failed to delete subject");
     }
+    await this.refreshAffectedUsers(existingSubject.courseId.toString());
     return deleted;
   }
 
@@ -160,5 +174,27 @@ export class SubjectService {
         total,
       },
     };
+  }
+
+  // Subject content (skills, semester placement) feeds directly into every
+  // enrolled student's acquiredSkills/readiness (see
+  // UserProgressService.updateAcquiredSkills) — a subject changing must
+  // refresh everyone in that course immediately, not wait for whoever
+  // happens to next trigger a semester/target-role change themselves.
+  private async refreshAffectedUsers(courseId: string): Promise<void> {
+    const users = await userRepository.findByCourseId(courseId);
+    for (const user of users) {
+      try {
+        await userProgressService.refreshAcademicProgress(user._id.toString());
+      } catch (e) {
+        // Most commonly: no progress doc yet (user hasn't onboarded) —
+        // nothing to refresh. Logged rather than swallowed outright so a
+        // genuine failure here doesn't silently masquerade as that case.
+        console.warn(
+          `[subject] Failed to refresh progress for user ${user._id}:`,
+          (e as Error).message,
+        );
+      }
+    }
   }
 }

@@ -151,6 +151,7 @@ export class UserService {
     const previousTargetRoles = user.targetRoles.map((role) => role.toString());
     const previousUniversity = user.universityId?.toString();
     const previousCourse = user.courseId?.toString();
+    const wasOnboarded = user.onboardingCompleted;
 
     if (updateData.email && updateData.email !== user.email) {
       const existingUserByEmail = await userRepository.findByEmail(
@@ -182,25 +183,36 @@ export class UserService {
       throw new HttpException(404, "User not found");
     }
 
-    if (
-      updateData.currentSemester !== undefined &&
-      updateData.currentSemester !== previousSemester
-    ) {
-      await userProgressService.changeCurrentSemester(
-        id,
-        updateData.currentSemester,
+    // UserProgress tracks student career readiness — it has no meaning for
+    // admin accounts, and admin CRUD on a user must never depend on it
+    // existing. Gate every sync call on the (post-update) role so editing
+    // an admin never touches this subsystem at all.
+    if (updatedUser.role === "user") {
+      if (
+        updateData.currentSemester !== undefined &&
+        updateData.currentSemester !== previousSemester
+      ) {
+        await userProgressService.changeCurrentSemester(
+          id,
+          updateData.currentSemester,
+        );
+      }
+
+      const newRoles = (updateData.targetRoles ?? []).map((role) =>
+        role.toString(),
       );
-    }
-    console.log(id)
+      const targetRolesChanged =
+        !!updateData.targetRoles &&
+        (newRoles.length !== previousTargetRoles.length ||
+          newRoles.some((role) => !previousTargetRoles.includes(role)));
 
-    if (updateData.targetRoles) {
-      const newRoles = updateData.targetRoles.map((role) => role.toString());
+      // Admins can flip onboardingCompleted directly (bypassing the real
+      // onboarding flow, which is what initializeUserProgress normally
+      // does) — if that just happened, make sure the progress doc actually
+      // gets created instead of leaving the account onboarded-but-broken.
+      const justOnboarded = updateData.onboardingCompleted === true && !wasOnboarded;
 
-      const changed =
-        newRoles.length !== previousTargetRoles.length ||
-        newRoles.some((role) => !previousTargetRoles.includes(role));
-
-      if (changed) {
+      if (targetRolesChanged || justOnboarded) {
         await userProgressService.syncTargetRoles(id);
       }
     }
@@ -235,7 +247,7 @@ export class UserService {
     if (!updatedUser) {
       throw new HttpException(404, "user not found");
     }
-    await userProgressService.initializeUserProgress(id);
+    await userProgressService.initializeUserProgress(id, onboardingData.currentSemester);
     await userProgressService.syncTargetRoles(id);
 
     await userProgressService.refreshAcademicProgress(id);

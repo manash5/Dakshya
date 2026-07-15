@@ -14,8 +14,12 @@ import {
 
 import { UserMongoRepository } from "../repository/user.repository";
 import { SubjectMongoRepository } from "../repository/subject.repository";
-import { JobRoleMongoRepository } from "../repository/jobRole.repository";
 import { CareerKnowledgeMongoRepository } from "../repository/careerKnowledge.repository";
+import {
+  extractRequiredSkills,
+  calculateMissingSkills,
+  calculateReadinessScore,
+} from "../lib/readiness";
 import mongoose from "mongoose";
 
 const progressRepository = new UserProgressMongoRepository();
@@ -24,12 +28,10 @@ const userRepository = new UserMongoRepository();
 
 const subjectRepository = new SubjectMongoRepository();
 
-const jobRoleRepository = new JobRoleMongoRepository();
-
 const careerKnowledgeRepository = new CareerKnowledgeMongoRepository();
 
 export interface IUserProgressService {
-  initializeUserProgress(userId: string): Promise<IUserProgress>;
+  initializeUserProgress(userId: string, currentSemester?: number): Promise<IUserProgress>;
 
   getUserProgress(userId: string): Promise<IUserProgress>;
 
@@ -54,11 +56,16 @@ export interface IUserProgressService {
   refreshUserReadiness(userId: string): Promise<IUserProgress>;
 
   refreshAcademicProgress(userId: string): Promise<IUserProgress>;
+
+  refreshReadinessForRole(jobRoleId: string): Promise<void>;
 }
 
 export class UserProgressService implements IUserProgressService {
   // initilze user progress
-  async initializeUserProgress(userId: string): Promise<IUserProgress> {
+  async initializeUserProgress(
+    userId: string,
+    currentSemester: number = 1,
+  ): Promise<IUserProgress> {
     const existing = await progressRepository.findByUserId(userId);
 
     if (existing) {
@@ -67,7 +74,7 @@ export class UserProgressService implements IUserProgressService {
 
     const createUserProgressData: CreateUserProgressDto = {
       userId,
-      currentSemester: 1,
+      currentSemester,
       completedSubjects: [],
       acquiredSkills: [],
       targetRoleProgress: [],
@@ -88,7 +95,7 @@ export class UserProgressService implements IUserProgressService {
 
   // change current semester
   async changeCurrentSemester(userId: string, semester: number): Promise<void> {
-    const progress = await this.getUserProgress(userId);
+    const progress = await this.getOrCreateProgress(userId);
     progress.currentSemester = semester;
     await progressRepository.update(progress._id.toString(), {
       currentSemester: semester,
@@ -102,17 +109,14 @@ export class UserProgressService implements IUserProgressService {
     if (!user) {
       throw new HttpException(404, "User not found");
     }
-    console.log("came here before");
-    const progress = await this.getUserProgress(userId);
-    console.log("after this ");
+
+    const progress = await this.getOrCreateProgress(userId);
     const selectedRoles = user.targetRoles.map((id) => id.toString());
     const existingRoles = progress.targetRoleProgress.map((role) =>
       role.jobRoleId._id.toString(),
     );
-    console.log("Selected Roles:", selectedRoles);
 
     for (const roleId of selectedRoles) {
-      console.log("Role:", roleId);
       if (!existingRoles.includes(roleId)) {
         progress.targetRoleProgress.push({
           jobRoleId: new mongoose.Types.ObjectId(roleId),
@@ -128,26 +132,16 @@ export class UserProgressService implements IUserProgressService {
     progress.targetRoleProgress = progress.targetRoleProgress.filter((role) =>
       selectedRoles.includes(role.jobRoleId._id.toString()),
     );
-    console.log("Before update");
 
     await progressRepository.update(progress._id.toString(), {
       targetRoleProgress: progress.targetRoleProgress,
     });
 
-    console.log("After update");
-
-    console.log("Before refresh readiness");
-
-    try {
-      await this.refreshUserReadiness(userId);
-    } catch (err) {
-      console.error("Refresh readiness failed");
-      console.error(err);
-      console.error((err as Error).stack);
-      throw err;
-    }
-
-    console.log("After refresh readiness");
+    // A role with no CareerKnowledge yet no longer aborts this — see
+    // refreshUserReadiness — so this shouldn't throw in the common case
+    // anymore, but a genuine failure (e.g. DB write error) still should
+    // surface to the caller.
+    await this.refreshUserReadiness(userId);
   }
 
   // updates our academic progress
@@ -257,21 +251,26 @@ export class UserProgressService implements IUserProgressService {
     const progress = await this.getUserProgress(userId);
 
     for (const role of progress.targetRoleProgress) {
-      console.log("role.jobRoleId =", role.jobRoleId);
-      console.log("typeof =", typeof role.jobRoleId);
-      console.log("constructor =", role.jobRoleId?.constructor?.name);
-      console.log("toString =", role.jobRoleId.toString());
-      console.log("JSON =", JSON.stringify(role.jobRoleId));
-      role.readinessScore = await this.calculateReadiness(
-        progress,
-        role.jobRoleId._id.toString(),
-      );
+      const jobRoleId = role.jobRoleId._id.toString();
+      const knowledge = await careerKnowledgeRepository.findByJobRoleId(jobRoleId);
 
-      role.missingSkills = await this.calculateMissingSkills(
-        progress,
-        role.jobRoleId._id.toString(),
-      );
+      if (!knowledge) {
+        // No CareerKnowledge generated for this role yet. Leave its score
+        // as-is and move on — this used to throw and abort the whole loop,
+        // which meant one role missing its data silently zeroed out every
+        // OTHER role's score too, since the batch update below never ran.
+        console.warn(
+          `[readiness] No CareerKnowledge for job role ${jobRoleId} yet — skipping`,
+        );
+        continue;
+      }
 
+      const requiredSkills = extractRequiredSkills(knowledge);
+      const acquiredSkills = progress.acquiredSkills.map((skill) => skill.skill);
+      const missingSkills = calculateMissingSkills(requiredSkills, acquiredSkills);
+
+      role.readinessScore = calculateReadinessScore(requiredSkills, missingSkills);
+      role.missingSkills = missingSkills;
       role.lastAnalyzed = new Date();
     }
 
@@ -287,6 +286,25 @@ export class UserProgressService implements IUserProgressService {
     }
 
     return updatedProgress;
+  }
+
+  // Push-refresh readiness for every user currently tracking this job role,
+  // so admin generating/regenerating a role's CareerKnowledge is reflected
+  // immediately instead of waiting for checkForKnowledgeUpdates to run at
+  // the user's next login.
+  async refreshReadinessForRole(jobRoleId: string): Promise<void> {
+    const userIds = await progressRepository.findUserIdsByTargetRole(jobRoleId);
+
+    for (const userId of userIds) {
+      try {
+        await this.refreshUserReadiness(userId);
+      } catch (e) {
+        console.warn(
+          `[readiness] Failed to refresh user ${userId} for role ${jobRoleId}:`,
+          (e as Error).message,
+        );
+      }
+    }
   }
 
   async deleteUserProgress(userId: string): Promise<boolean> {
@@ -321,16 +339,12 @@ export class UserProgressService implements IUserProgressService {
       }
 
       if (knowledge.aiGeneratedDate > role.lastAnalyzed) {
-        role.readinessScore = await this.calculateReadiness(
-          progress,
-          role.jobRoleId._id.toString(),
-        );
+        const requiredSkills = extractRequiredSkills(knowledge);
+        const acquiredSkills = progress.acquiredSkills.map((skill) => skill.skill);
+        const missingSkills = calculateMissingSkills(requiredSkills, acquiredSkills);
 
-        role.missingSkills = await this.calculateMissingSkills(
-          progress,
-          role.jobRoleId._id.toString(),
-        );
-
+        role.readinessScore = calculateReadinessScore(requiredSkills, missingSkills);
+        role.missingSkills = missingSkills;
         role.lastAnalyzed = new Date();
 
         hasChanges = true;
@@ -353,6 +367,29 @@ export class UserProgressService implements IUserProgressService {
   }
 
   // ====================== Private Methods ===============================
+
+  // Callers like admin user edits shouldn't have to know or care whether a
+  // student has a UserProgress doc yet (e.g. an account whose
+  // onboardingCompleted flag was set directly rather than through the real
+  // onboarding flow — see completeOnboarding). Lazily creating it here keeps
+  // changeCurrentSemester/syncTargetRoles safe to call unconditionally
+  // instead of throwing 404 and aborting the caller's own update.
+  private async getOrCreateProgress(userId: string): Promise<IUserProgress> {
+    const existing = await progressRepository.findByUserId(userId);
+    if (existing) {
+      return existing;
+    }
+
+    const createUserProgressData: CreateUserProgressDto = {
+      userId,
+      currentSemester: 1,
+      completedSubjects: [],
+      acquiredSkills: [],
+      targetRoleProgress: [],
+    };
+    return await progressRepository.create(createUserProgressData);
+  }
+
   private async updateCompletedSubjects(progress: IUserProgress) {
     const user = await userRepository.findById(progress.userId._id.toString());
     if (!user) {
@@ -389,88 +426,5 @@ export class UserProgressService implements IUserProgressService {
       skill,
       lastUpdated: new Date(),
     }));
-  }
-
-  private async extractRequiredSkills(jobRoleId: string): Promise<string[]> {
-    const knowledge =
-      await careerKnowledgeRepository.findByJobRoleId(jobRoleId);
-
-    if (!knowledge) {
-      throw new HttpException(404, "Career knowledge not found");
-    }
-
-    const skills = new Set<string>();
-
-    // Required Skills
-    knowledge.requiredSkills.forEach((skill) =>
-      skills.add(skill.toLowerCase()),
-    );
-
-    // Roadmap Skills
-    knowledge.roadmap.forEach((step) => {
-      step.requiredSkills.forEach((skill) => skills.add(skill.toLowerCase()));
-    });
-
-    return [...skills];
-  }
-
-  private async calculateMissingSkills(
-    progress: IUserProgress,
-    jobRoleId: string,
-  ): Promise<string[]> {
-    const requiredSkills = await this.extractRequiredSkills(jobRoleId);
-
-    const acquiredSkills = progress.acquiredSkills.map((skill) =>
-      skill.skill.toLowerCase(),
-    );
-
-    return requiredSkills.filter((skill) => !acquiredSkills.includes(skill));
-  }
-
-  private async calculateReadiness(
-    progress: IUserProgress,
-    jobRoleId: string,
-  ): Promise<number> {
-    const requiredSkills = await this.extractRequiredSkills(jobRoleId);
-
-    if (requiredSkills.length === 0) {
-      return 0;
-    }
-
-    const missingSkills = await this.calculateMissingSkills(
-      progress,
-      jobRoleId,
-    );
-
-    const matchedSkills = requiredSkills.length - missingSkills.length;
-
-    return Math.round((matchedSkills / requiredSkills.length) * 100);
-  }
-
-  private async ensureProgressIsUpToDate(
-    progress: IUserProgress,
-  ): Promise<IUserProgress> {
-    let requiresRefresh = false;
-
-    for (const role of progress.targetRoleProgress) {
-      const knowledge = await careerKnowledgeRepository.findByJobRoleId(
-        role.jobRoleId._id.toString(),
-      );
-
-      if (!knowledge) {
-        continue;
-      }
-
-      if (knowledge.aiGeneratedDate > role.lastAnalyzed) {
-        requiresRefresh = true;
-        break;
-      }
-    }
-
-    if (!requiresRefresh) {
-      return progress;
-    }
-
-    return await this.refreshUserReadiness(progress.userId._id.toString());
   }
 }

@@ -18,4 +18,10 @@ router.get(
   controller.getUserProgress.bind(controller),
 );
 
+router.post(
+  "/refresh",
+  authorizedMiddleware,
+  controller.refreshProgress.bind(controller),
+);
+
 export default router;

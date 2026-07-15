@@ -13,9 +13,11 @@ import {
 import { fastApiClient } from "../clients/fastapi.client";
 import mongoose from "mongoose";
 import { ICareerKnowledge } from "../models/careerKnowledge.model";
+import { UserProgressService } from "./userProgress.service";
 
 const careerRepository = new CareerKnowledgeMongoRepository();
 const jobRoleRepository = new JobRoleMongoRepository();
+const userProgressService = new UserProgressService();
 
 export class CareerKnowledgeService {
   private fastApiUrl =
@@ -96,7 +98,14 @@ export class CareerKnowledgeService {
       estimatedCompletionMonths: ai.estimatedCompletionMonths,
     };
 
-    return await careerRepository.create(payload);
+    const created = await careerRepository.create(payload);
+
+    // Users may already have this role as a target from before knowledge
+    // existed for it — their readiness was skipped (see
+    // UserProgressService.refreshUserReadiness) and stuck at 0 until now.
+    await userProgressService.refreshReadinessForRole(jobRoleId);
+
+    return created;
   }
 
   async regenerateCareerKnowledge(jobRoleId: string) {
@@ -155,7 +164,14 @@ export class CareerKnowledgeService {
         isUpdating: false,
       };
 
-      return await careerRepository.updateByJobRoleId(jobRoleId, payload);
+      const updated = await careerRepository.updateByJobRoleId(jobRoleId, payload);
+
+      // Push the new skills/roadmap into every user currently tracking this
+      // role immediately, instead of waiting for checkForKnowledgeUpdates to
+      // run at their next login.
+      await userProgressService.refreshReadinessForRole(jobRoleId);
+
+      return updated;
     } catch (error: any) {
       await careerRepository.updateByJobRoleId(jobRoleId, {
         isUpdating: false,

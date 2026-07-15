@@ -24,6 +24,8 @@ export interface IUserProgressRepository {
 
   exists(userId: string): Promise<boolean>;
 
+  findUserIdsByTargetRole(jobRoleId: string): Promise<string[]>;
+
   getAllPaginated(
     page: number,
     limit: number,
@@ -112,6 +114,15 @@ export class UserProgressMongoRepository implements IUserProgressRepository {
     });
 
     return !!exists;
+  }
+
+  async findUserIdsByTargetRole(jobRoleId: string): Promise<string[]> {
+    const docs = await UserProgress.find(
+      { "targetRoleProgress.jobRoleId": toObjectId(jobRoleId) },
+      { userId: 1 },
+    );
+
+    return docs.map((doc) => doc.userId.toString());
   }
 
   async getAllPaginated(

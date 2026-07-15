@@ -7,6 +7,7 @@ export interface IUserRepository {
     create(user: IUser): Promise<IUser>;
     findById(id: string): Promise<IUser | null>;
     findAll(): Promise<IUser[]>;
+    findByCourseId(courseId: string): Promise<IUser[]>;
     update(id: string, user: UpdateQuery<IUser>)
         : Promise<IUser | null>;
     delete(id: string): Promise<boolean>;
@@ -32,6 +33,10 @@ export class UserMongoRepository implements IUserRepository {
 
     async findAll(): Promise<IUser[]> {
         const users = await User.find();
+        return users;
+    }
+    async findByCourseId(courseId: string): Promise<IUser[]> {
+        const users = await User.find({ courseId: new mongoose.Types.ObjectId(courseId) });
         return users;
     }
     async update(id: string, user: UpdateQuery<IUser>)

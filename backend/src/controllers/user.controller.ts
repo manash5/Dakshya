@@ -11,7 +11,6 @@ import {
 import { ApiResponseHelper } from "../utils/api-response";
 import { Request, Response } from "express";
 import { baseUrl } from "../config/constant";
-import { updateUser } from "../../../frontend/lib/api/admin/user";
 
 const userService = new UserService();
 
