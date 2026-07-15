@@ -9,11 +9,10 @@ const service = new JobPostingService();
 export class AdminJobPostingController {
   async scrapeJobPostings(req: Request, res: Response) {
     try {
-      const { jobRoleId } = req.body as { jobRoleId?: string };
-
-      const stats = jobRoleId
-        ? [await service.scrapeAndStoreForRole(jobRoleId)]
-        : await service.scrapeAndStoreAllActive();
+      // Always a full scrape now — there's no more per-role scraping (see
+      // jobPosting.service.ts), so any jobRoleId the client still sends is
+      // ignored.
+      const stats = await service.scrapeAndStoreAll();
 
       return ApiResponseHelper.success(
         res,

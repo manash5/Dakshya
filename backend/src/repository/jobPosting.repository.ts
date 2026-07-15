@@ -3,12 +3,58 @@ import JobPosting, { IJobPosting } from "../models/jobPosting.model";
 import { CreateJobPostingDto, UpdateJobPostingDto } from "../dtos/jobPosting.dto";
 
 export interface JobPostingFilters {
-  jobRole?: string;
   location?: string;
   skill?: string;
   experience?: string;
   search?: string;
 }
+
+const escapeRegExp = (value: string): string =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const STOPWORDS = new Set([
+  "a", "an", "and", "for", "in", "of", "the", "to", "with", "or",
+  // Seniority qualifiers are never required for a match — a "Senior
+  // Backend Developer" role should still match a plain "Backend Developer"
+  // posting, since postings don't always spell out seniority. Mirrors
+  // role_filter.py's old behavior on the ai-services side (now removed).
+  "senior", "junior", "lead", "principal", "staff", "associate", "sr", "jr",
+]);
+
+const significantWords = (phrase: string): string[] =>
+  Array.from(
+    new Set(
+      phrase
+        .toLowerCase()
+        .split(/[^a-z0-9]+/)
+        .filter((word) => word.length > 0 && !STOPWORDS.has(word)),
+    ),
+  );
+
+// Jobs aren't tagged to a role at scrape time anymore (see
+// jobPosting.model.ts) — role relevance is decided here, at query time, by
+// matching a role's title (plus any cached keyword synonyms — see
+// jobRole.model.ts) against the job posting's title. A candidate phrase
+// matches when ALL of its significant words appear (as whole words, any
+// order/position) in the job title — not a literal phrase/substring match,
+// so "Senior Backend Developer" still matches a posting titled just
+// "Backend Developer", and "Full-Stack Developer" still matches the
+// "Full Stack Developer" role. Coarser than the old Python role_filter.py
+// (no stemming, no generic-word handling), but a meaningful step up from a
+// plain substring match.
+export const buildRoleTitleMatch = (roleTitle: string, keywords: string[] = []) => {
+  const candidates = [roleTitle, ...keywords]
+    .map(significantWords)
+    .filter((words) => words.length > 0);
+
+  return {
+    $or: candidates.map((words) => ({
+      $and: words.map((word) => ({
+        title: { $regex: `\\b${escapeRegExp(word)}\\b`, $options: "i" },
+      })),
+    })),
+  };
+};
 
 export interface IJobPostingRepository {
   upsert(
@@ -30,12 +76,14 @@ export interface IJobPostingRepository {
     total: number;
   }>;
 
-  deactivateStale(jobRoleId: string, seenApplyLinks: string[]): Promise<number>;
+  deactivateStale(seenApplyLinks: string[]): Promise<number>;
 
-  getMarketPulseByRole(jobRoleId: string): Promise<{
-    jobCount: number;
-    topLocations: string[];
-    topCompanies: string[];
+  getSkillDemand(
+    roles: { title: string; keywords: string[] }[],
+    skills: string[],
+  ): Promise<{
+    totalJobs: number;
+    skillDemand: Record<string, number>;
   }>;
 }
 
@@ -69,7 +117,7 @@ export class JobPostingMongoRepository implements IJobPostingRepository {
 
     const created = await JobPosting.create({
       ...data,
-      jobRole: new mongoose.Types.ObjectId(data.jobRole),
+      jobRole: data.jobRole ? new mongoose.Types.ObjectId(data.jobRole) : null,
       isActive: true,
     });
 
@@ -100,10 +148,6 @@ export class JobPostingMongoRepository implements IJobPostingRepository {
     filters: JobPostingFilters,
   ) {
     const query: any = { isActive: true };
-
-    if (filters.jobRole) {
-      query.jobRole = new mongoose.Types.ObjectId(filters.jobRole);
-    }
 
     if (filters.location) {
       query.location = { $regex: filters.location, $options: "i" };
@@ -139,13 +183,12 @@ export class JobPostingMongoRepository implements IJobPostingRepository {
     };
   }
 
-  async deactivateStale(
-    jobRoleId: string,
-    seenApplyLinks: string[],
-  ): Promise<number> {
+  async deactivateStale(seenApplyLinks: string[]): Promise<number> {
+    // Scraping is one global run now (see jobPosting.service.ts), not
+    // per-role, so staleness is global too: anything active that wasn't
+    // seen in this run is stale.
     const result = await JobPosting.updateMany(
       {
-        jobRole: new mongoose.Types.ObjectId(jobRoleId),
         applyLink: { $nin: seenApplyLinks },
         isActive: true,
       },
@@ -155,43 +198,64 @@ export class JobPostingMongoRepository implements IJobPostingRepository {
     return result.modifiedCount ?? 0;
   }
 
-  async getMarketPulseByRole(jobRoleId: string): Promise<{
-    jobCount: number;
-    topLocations: string[];
-    topCompanies: string[];
+  // Demand for each of a user's acquired skills, scoped to the combined
+  // pool of live postings across every one of their target roles at once
+  // (not per-role) — "out of the N jobs matching your target roles, how
+  // many need this skill".
+  async getSkillDemand(
+    roles: { title: string; keywords: string[] }[],
+    skills: string[],
+  ): Promise<{
+    totalJobs: number;
+    skillDemand: Record<string, number>;
   }> {
+    if (roles.length === 0 || skills.length === 0) {
+      return { totalJobs: 0, skillDemand: {} };
+    }
+
+    const roleMatch = {
+      $or: roles.flatMap(
+        (role) => buildRoleTitleMatch(role.title, role.keywords).$or,
+      ),
+    };
+
+    // requiredSkills is free-text from scrapers, so demand is matched
+    // case-insensitively against the acquired skill strings (same
+    // exact-token limitation as everywhere else skills are compared — see
+    // readiness.ts).
+    const lowerToOriginal = new Map(
+      skills.map((skill) => [skill.toLowerCase(), skill]),
+    );
+
     const [result] = await JobPosting.aggregate([
-      {
-        $match: {
-          jobRole: new mongoose.Types.ObjectId(jobRoleId),
-          isActive: true,
-        },
-      },
+      { $match: { ...roleMatch, isActive: true } },
       {
         $facet: {
-          count: [{ $count: "total" }],
-          locations: [
-            { $group: { _id: "$location", count: { $sum: 1 } } },
-            { $sort: { count: -1 } },
-            { $limit: 3 },
-          ],
-          companies: [
-            { $group: { _id: "$company", count: { $sum: 1 } } },
-            { $sort: { count: -1 } },
-            { $limit: 3 },
+          total: [{ $count: "count" }],
+          skillCounts: [
+            { $unwind: "$requiredSkills" },
+            {
+              $group: {
+                _id: { $toLower: "$requiredSkills" },
+                count: { $sum: 1 },
+              },
+            },
+            { $match: { _id: { $in: [...lowerToOriginal.keys()] } } },
           ],
         },
       },
     ]);
 
-    return {
-      jobCount: result?.count?.[0]?.total ?? 0,
-      topLocations: (result?.locations ?? [])
-        .map((entry: { _id: string | null }) => entry._id)
-        .filter((location: string | null): location is string => !!location),
-      topCompanies: (result?.companies ?? [])
-        .map((entry: { _id: string | null }) => entry._id)
-        .filter((company: string | null): company is string => !!company),
-    };
+    const totalJobs = result?.total?.[0]?.count ?? 0;
+
+    const skillDemand: Record<string, number> = {};
+    for (const entry of result?.skillCounts ?? []) {
+      const original = lowerToOriginal.get(entry._id);
+      if (original) {
+        skillDemand[original] = entry.count;
+      }
+    }
+
+    return { totalJobs, skillDemand };
   }
 }

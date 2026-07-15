@@ -2,153 +2,93 @@ import {
   JobPostingMongoRepository,
   JobPostingFilters,
 } from "../repository/jobPosting.repository";
-import { JobRoleMongoRepository } from "../repository/jobRole.repository";
-import { fastApiClient, RoleScrapeResult } from "../clients/fastapi.client";
+import { fastApiClient } from "../clients/fastapi.client";
 import { HttpException } from "../exceptions/http-exceptions";
 import { CreateJobPostingDto, UpdateJobPostingDto } from "../dtos/jobPosting.dto";
-import { IJobRole } from "../models/jobRole.model";
 
 const jobPostingRepository = new JobPostingMongoRepository();
-const jobRoleRepository = new JobRoleMongoRepository();
 
 export interface ScrapeRunStats {
-  jobRoleId: string;
-  jobRoleTitle: string;
   startedAt: string;
   completedAt: string;
   durationSeconds: number;
+  sourcesAttempted: string[];
+  sourcesSucceeded: string[];
+  sourcesFailed: Record<string, string>;
   totalScraped: number;
   created: number;
   updated: number;
   skipped: number;
   deactivated: number;
-  keywords: string[];
-  error: string | null;
 }
 
 // NOTE:
 // Scraping never runs on a user request. It only runs from the admin-triggered
 // endpoint or the cron job (see cron/jobPosting.cron.ts). Users only ever
 // read from MongoDB via getJobPostingsPaginated.
+//
+// Scraping is one global run now, not per-role — ai-services returns every
+// job it found across all sources, unfiltered. Role relevance (which jobs
+// belong to "Frontend Developer" vs "ML Engineer") is decided here, at
+// query time, by title/keyword matching (see jobPosting.repository.ts and
+// dashboard.service.ts), not baked into what gets stored.
 export class JobPostingService {
-  async scrapeAndStoreForRole(jobRoleId: string): Promise<ScrapeRunStats> {
-    const jobRole = await jobRoleRepository.findById(jobRoleId);
+  async scrapeAndStoreAll(): Promise<ScrapeRunStats> {
+    const { jobs, stats } = await fastApiClient.scrapeJobPostings();
 
-    if (!jobRole) {
-      throw new HttpException(404, "Job role not found");
-    }
-
-    const { results } = await fastApiClient.scrapeJobPostings([
-      {
-        jobRoleId: jobRole._id.toString(),
-        jobRoleTitle: jobRole.title,
-        keywords: jobRole.keywords,
-      },
-    ]);
-
-    return await this.persistRoleResult(results[0], jobRole);
-  }
-
-  async scrapeAndStoreAllActive(): Promise<ScrapeRunStats[]> {
-    const jobRoles = await jobRoleRepository.findAll();
-
-    if (jobRoles.length === 0) {
-      return [];
-    }
-
-    const jobRoleById = new Map(jobRoles.map((role) => [role._id.toString(), role]));
-
-    const { results } = await fastApiClient.scrapeJobPostings(
-      jobRoles.map((role) => ({
-        jobRoleId: role._id.toString(),
-        jobRoleTitle: role.title,
-        keywords: role.keywords,
-      })),
-    );
-
-    const stats: ScrapeRunStats[] = [];
-
-    for (const result of results) {
-      const jobRole = jobRoleById.get(result.jobRoleId);
-      stats.push(await this.persistRoleResult(result, jobRole));
-    }
-
-    return stats;
-  }
-
-  private async persistRoleResult(
-    result: RoleScrapeResult,
-    jobRole: IJobRole | undefined,
-  ): Promise<ScrapeRunStats> {
     let created = 0;
     let updated = 0;
     let skipped = 0;
     const seenApplyLinks: string[] = [];
 
-    if (!result.error) {
-      for (const job of result.jobs) {
-        if (!job.title || !job.applyLink) {
-          skipped++;
-          continue;
-        }
+    for (const job of jobs) {
+      if (!job.title || !job.applyLink) {
+        skipped++;
+        continue;
+      }
 
-        seenApplyLinks.push(job.applyLink);
+      seenApplyLinks.push(job.applyLink);
 
-        const payload: CreateJobPostingDto = {
-          title: job.title,
-          company: job.company,
-          location: job.location,
-          salary: job.salary,
-          experience: job.experience,
-          employmentType: job.employmentType,
-          requiredSkills: job.requiredSkills,
-          description: job.description,
-          jobRole: result.jobRoleId,
-          applyLink: job.applyLink,
-          source: job.source,
-          postedDate: job.postedDate,
-        };
+      const payload: CreateJobPostingDto = {
+        title: job.title,
+        company: job.company,
+        location: job.location,
+        salary: job.salary,
+        experience: job.experience,
+        employmentType: job.employmentType,
+        requiredSkills: job.requiredSkills,
+        description: job.description,
+        applyLink: job.applyLink,
+        source: job.source,
+        postedDate: job.postedDate,
+      };
 
-        const { created: wasCreated } = await jobPostingRepository.upsert(payload);
+      const { created: wasCreated } = await jobPostingRepository.upsert(payload);
 
-        if (wasCreated) {
-          created++;
-        } else {
-          updated++;
-        }
+      if (wasCreated) {
+        created++;
+      } else {
+        updated++;
       }
     }
 
-    // Anything for this role not seen in this run is stale — mark inactive
-    // instead of deleting, so links that come back later are simply
-    // reactivated by the next successful upsert.
-    const deactivated = result.error
-      ? 0
-      : await jobPostingRepository.deactivateStale(result.jobRoleId, seenApplyLinks);
-
-    // Cache newly-generated keywords onto the JobRole so the next scrape
-    // sends them back to ai-services instead of paying for another Gemini
-    // call. Only writes when we didn't already have a cached value — this
-    // is a cache, not a refresh mechanism.
-    if (jobRole && jobRole.keywords.length === 0 && result.keywords?.length) {
-      await jobRoleRepository.update(jobRole._id.toString(), {
-        keywords: result.keywords,
-      });
-    }
+    // Anything not seen in this run is stale — mark inactive instead of
+    // deleting, so links that come back later are simply reactivated by
+    // the next successful upsert.
+    const deactivated = await jobPostingRepository.deactivateStale(seenApplyLinks);
 
     return {
-      jobRoleId: result.jobRoleId,
-      jobRoleTitle: jobRole?.title ?? "",
-      startedAt: result.stats.startedAt,
-      completedAt: result.stats.completedAt,
-      durationSeconds: result.stats.durationSeconds,
-      totalScraped: result.stats.totalScraped,
+      startedAt: stats.startedAt,
+      completedAt: stats.completedAt,
+      durationSeconds: stats.durationSeconds,
+      sourcesAttempted: stats.sourcesAttempted,
+      sourcesSucceeded: stats.sourcesSucceeded,
+      sourcesFailed: stats.sourcesFailed,
+      totalScraped: stats.totalScraped,
       created,
       updated,
       skipped,
       deactivated,
-      keywords: result.keywords ?? [],
-      error: result.error,
     };
   }
 

@@ -8,13 +8,13 @@ import ScrapeLoading from "./ScrapeLoading";
 import { handleDeleteJobPosting, handleScrapeJobPostings } from "@/lib/actions/admin/jobPosting-action";
 
 interface ScrapeStat {
-    jobRoleId: string;
-    jobRoleTitle: string;
+    totalScraped: number;
     created: number;
     updated: number;
     skipped: number;
     deactivated: number;
-    error: string | null;
+    sourcesSucceeded: string[];
+    sourcesFailed: Record<string, string>;
 }
 
 export default function JobPostingTable({
@@ -31,7 +31,7 @@ export default function JobPostingTable({
     const [isDeleting, startDelete] = useTransition();
     const [isScraping, startScrape] = useTransition();
     const [target, setTarget] = useState<any | null>(null);
-    const [scrapeStats, setScrapeStats] = useState<ScrapeStat[] | null>(null);
+    const [scrapeStats, setScrapeStats] = useState<ScrapeStat | null>(null);
 
     const page = pagination?.page ?? 1;
     const limit = pagination?.limit ?? 10;
@@ -70,7 +70,7 @@ export default function JobPostingTable({
             const result = await handleScrapeJobPostings();
             if (result.success) {
                 toast.success("Job postings refreshed");
-                setScrapeStats(result.data ?? []);
+                setScrapeStats(result.data ?? null);
                 router.refresh();
             } else {
                 toast.error(result.message || "Failed to scrape job postings");
@@ -102,25 +102,21 @@ export default function JobPostingTable({
                         <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">
                             Scrape results
                         </p>
-                        {scrapeStats.length === 0 ? (
-                            <p className="text-sm text-gray-500">No active job roles to scrape.</p>
-                        ) : (
-                            scrapeStats.map((stat) => (
-                                <div
-                                    key={stat.jobRoleId}
-                                    className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-gray-50 px-4 py-2.5 text-sm"
-                                >
-                                    <span className="font-medium text-gray-900">{stat.jobRoleTitle}</span>
-                                    {stat.error ? (
-                                        <span className="text-red-500">{stat.error}</span>
-                                    ) : (
-                                        <span className="text-gray-500">
-                                            {stat.created} created, {stat.updated} updated, {stat.skipped} skipped,{" "}
-                                            {stat.deactivated} deactivated
-                                        </span>
-                                    )}
-                                </div>
-                            ))
+                        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-gray-50 px-4 py-2.5 text-sm">
+                            <span className="font-medium text-gray-900">
+                                {scrapeStats.totalScraped} jobs from {scrapeStats.sourcesSucceeded.join(", ") || "no sources"}
+                            </span>
+                            <span className="text-gray-500">
+                                {scrapeStats.created} created, {scrapeStats.updated} updated, {scrapeStats.skipped} skipped,{" "}
+                                {scrapeStats.deactivated} deactivated
+                            </span>
+                        </div>
+                        {Object.keys(scrapeStats.sourcesFailed).length > 0 && (
+                            <div className="rounded-lg bg-red-50 px-4 py-2.5 text-sm text-red-500">
+                                Failed: {Object.entries(scrapeStats.sourcesFailed)
+                                    .map(([name, err]) => `${name} (${err})`)
+                                    .join(", ")}
+                            </div>
                         )}
                     </div>
                 )}

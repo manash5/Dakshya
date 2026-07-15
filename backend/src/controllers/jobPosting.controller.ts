@@ -5,7 +5,6 @@ import { ApiResponseHelper } from "../utils/api-response";
 interface QueryParams {
   page?: string;
   limit?: string;
-  jobRole?: string;
   location?: string;
   skill?: string;
   experience?: string;
@@ -41,7 +40,6 @@ export class JobPostingController {
       const {
         page,
         limit,
-        jobRole,
         location,
         skill,
         experience,
@@ -51,7 +49,7 @@ export class JobPostingController {
       const { data, pagination } = await service.getJobPostingsPaginated(
         page,
         limit,
-        { jobRole, location, skill, experience, search }
+        { location, skill, experience, search }
       );
 
       return ApiResponseHelper.success(
