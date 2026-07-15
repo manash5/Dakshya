@@ -1,3 +1,4 @@
+import Link from "next/link";
 import JobCard from "./JobCard";
 import type { CareerHero } from "@/lib/api/dashboard";
 
@@ -6,7 +7,17 @@ export interface RecommendedJob {
   title: string;
   company: string;
   location: string;
-  jobRole: { _id: string; title?: string } | string;
+  salary?: string;
+  experience?: string | null;
+  employmentType?: string | null;
+  requiredSkills?: string[];
+  description?: string;
+  applyLink?: string;
+  createdAt: string;
+  // Jobs aren't tagged to a role in storage anymore — this is attached by
+  // the page when it fetches, based on which role's title it searched for
+  // (see dashboard/page.tsx).
+  matchedRoleId: string;
 }
 
 interface RecommendedJobsSectionProps {
@@ -23,9 +34,12 @@ export default function RecommendedJobsSection({ jobs, hero }: RecommendedJobsSe
         <h2 className="text-[18px] font-semibold text-zinc-900">
           Recommended Jobs
         </h2>
-        <button className="text-[12px] font-semibold tracking-wide text-zinc-900 underline decoration-zinc-900/80 underline-offset-4">
-          SEE ALL MATCHES
-        </button>
+        <Link
+          href="/dashboard/job-finder"
+          className="text-[12px] font-semibold tracking-wide text-zinc-900 underline decoration-zinc-900/80 underline-offset-4"
+        >
+          VIEW MORE
+        </Link>
       </div>
 
       {jobs.length === 0 ? (
@@ -35,8 +49,7 @@ export default function RecommendedJobsSection({ jobs, hero }: RecommendedJobsSe
       ) : (
         <div className="grid gap-5 lg:grid-cols-3">
           {jobs.map((job) => {
-            const jobRoleId = typeof job.jobRole === "string" ? job.jobRole : job.jobRole._id;
-            const score = readinessByRole.get(jobRoleId);
+            const score = readinessByRole.get(job.matchedRoleId);
 
             return (
               <JobCard
@@ -45,6 +58,12 @@ export default function RecommendedJobsSection({ jobs, hero }: RecommendedJobsSe
                 title={job.title}
                 company={job.company}
                 location={(job.location ?? "").toUpperCase()}
+                salary={job.salary}
+                experience={job.experience}
+                employmentType={job.employmentType}
+                requiredSkills={job.requiredSkills}
+                description={job.description}
+                applyLink={job.applyLink}
               />
             );
           })}

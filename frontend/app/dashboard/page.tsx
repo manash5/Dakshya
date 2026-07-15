@@ -1,14 +1,15 @@
 import DashboardHeroCard from "./_components/DashboardHeroCard";
 import MarketPulseCard from "./_components/MarketPulseCard";
 import RecommendedJobsSection, { type RecommendedJob } from "./_components/RecommendedJobsSection";
-import { IndustryNewsCard, SalaryRangeCard } from "./_components/SalaryAndNewsCards";
+import { OpportunitiesCard, SalaryRangeCard } from "./_components/SalaryAndNewsCards";
 import { getCareerDashboardData } from "@/lib/actions/dashboard-action";
 import { handleGetAllJobPostings } from "@/lib/actions/admin/jobPosting-action";
+import { handleGetAllOpportunities } from "@/lib/actions/opportunity-action";
 import type { CareerDashboard } from "@/lib/api/dashboard";
 
 const EMPTY_DASHBOARD: CareerDashboard = {
   hero: [],
-  marketPulse: [],
+  marketPulse: { totalJobs: 0, skills: [] },
   salaryRange: {
     min: null,
     max: null,
@@ -19,25 +20,42 @@ const EMPTY_DASHBOARD: CareerDashboard = {
   },
 };
 
-const RECOMMENDED_JOBS_LIMIT = 6;
+const RECOMMENDED_JOBS_LIMIT = 3;
+const OPPORTUNITIES_LIMIT = 4;
 
 export default async function Page() {
-  const dashboardResult = await getCareerDashboardData();
+  const [dashboardResult, opportunitiesResult] = await Promise.all([
+    getCareerDashboardData(),
+    handleGetAllOpportunities({ limit: OPPORTUNITIES_LIMIT }),
+  ]);
+
   const dashboard: CareerDashboard = dashboardResult.success
     ? dashboardResult.data
     : EMPTY_DASHBOARD;
 
+  const opportunities = opportunitiesResult.success ? opportunitiesResult.data : [];
+
   // Recommended Jobs deliberately reuses the existing public job-postings
   // endpoint (filtered per target role) instead of a dedicated dashboard
   // endpoint — the job-finder page already lists from the same source.
+  // Jobs aren't tagged to a role in storage anymore (see
+  // jobPosting.model.ts), so this searches by the role's title text and
+  // tags each result with that role's id itself, client-side.
   const jobResultsByRole = await Promise.all(
-    dashboard.hero.map((role) =>
-      handleGetAllJobPostings({ jobRole: role.jobRoleId, limit: 4 }),
-    ),
+    dashboard.hero.map(async (role) => ({
+      role,
+      result: await handleGetAllJobPostings({ search: role.jobRole, limit: 4 }),
+    })),
   );
 
+  const seenJobIds = new Set<string>();
   const jobs: RecommendedJob[] = jobResultsByRole
-    .flatMap((result) => (result.success ? (result.data as RecommendedJob[]) : []))
+    .flatMap(({ role, result }) =>
+      result.success
+        ? (result.data as any[]).map((job) => ({ ...job, matchedRoleId: role.jobRoleId }))
+        : [],
+    )
+    .filter((job) => (seenJobIds.has(job._id) ? false : (seenJobIds.add(job._id), true)))
     .sort(
       (a: any, b: any) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
@@ -56,7 +74,7 @@ export default async function Page() {
         <section className="grid gap-5 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.7fr)]">
           <SalaryRangeCard salaryRange={dashboard.salaryRange} />
 
-          <IndustryNewsCard />
+          <OpportunitiesCard opportunities={opportunities} />
         </section>
 
         <RecommendedJobsSection jobs={jobs} hero={dashboard.hero} />
