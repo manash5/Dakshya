@@ -5,6 +5,7 @@ import {
   University,
   GraduationCap,
   BookText,
+  Trophy,
   LucideIcon,
 } from "lucide-react";
 
@@ -57,6 +58,12 @@ export const NAV_ITEMS: NavItem[] = [
     href: "/admin/job-postings",
     icon: BriefcaseBusiness,
     description: "Scrape, edit and manage job postings.",
+  },
+  {
+    name: "Opportunities",
+    href: "/admin/opportunities",
+    icon: Trophy,
+    description: "Scrape, edit and manage opportunities.",
   },
 ];
 
