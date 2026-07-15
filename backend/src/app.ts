@@ -20,6 +20,11 @@ import dashboardRoute from './routes/dashboard.route'
 import opportunityRoute from './routes/opportunity.route'
 import adminOpportunityRoute from './routes/admin/opportunity.route'
 import userProgressRoute from './routes/userProgress.route'
+import savedJobRoute from './routes/savedJob.route'
+import projectRoute from './routes/project.route'
+import adminProjectRoute from './routes/admin/project.route'
+import practiceAttemptRoute from './routes/practiceAttempt.route'
+import resumeAnalysisRoute from './routes/resumeAnalysis.route'
 
 
 const app: Application = express();
@@ -55,6 +60,11 @@ app.use('/api/v1/dashboard', dashboardRoute);
 app.use('/api/v1/opportunities', opportunityRoute);
 app.use('/api/v1/admin/opportunities', adminOpportunityRoute);
 app.use('/api/v1/userProgress', userProgressRoute);
+app.use('/api/v1/saved-jobs', savedJobRoute);
+app.use('/api/v1/projects', projectRoute);
+app.use('/api/v1/admin/projects', adminProjectRoute);
+app.use('/api/v1/practice-attempts', practiceAttemptRoute);
+app.use('/api/v1/resume-analysis', resumeAnalysisRoute);
 
 
 app.use(

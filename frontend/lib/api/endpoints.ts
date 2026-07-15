@@ -33,6 +33,21 @@ export const API = {
         GET_ALL: "/api/v1/opportunities",
         GET_BY_ID: (id: string) => `/api/v1/opportunities/${id}`,
     },
+    PRACTICE_ATTEMPT: {
+        START: "/api/v1/practice-attempts",
+        GET_ALL: "/api/v1/practice-attempts",
+        GET_BY_ID: (id: string) => `/api/v1/practice-attempts/${id}`,
+        SUBMIT_ANSWER: (id: string) => `/api/v1/practice-attempts/${id}/answer`,
+        COMPLETE: (id: string) => `/api/v1/practice-attempts/${id}/complete`,
+        TRANSCRIBE: "/api/v1/practice-attempts/transcribe",
+    },
+    RESUME_ANALYSIS: {
+        ANALYZE: "/api/v1/resume-analysis",
+        GET_ALL: "/api/v1/resume-analysis",
+        GET_LATEST: "/api/v1/resume-analysis/latest",
+        GET_BY_ID: (id: string) => `/api/v1/resume-analysis/${id}`,
+        DELETE: (id: string) => `/api/v1/resume-analysis/${id}`,
+    },
 
     ADMIN: {
         USERS: {
