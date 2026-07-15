@@ -4,14 +4,10 @@ const DIAMETER = 176;
 const VIEWBOX_SIZE = 100;
 const RADIUS = 42;
 const STROKE_WIDTH = 8;
-const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
 const READINESS_SCORE = 85;
 
 export default function FlutterReadinessCard() {
-  const progressFraction = READINESS_SCORE / 100;
-  const progressDashoffset = CIRCUMFERENCE * (1 - progressFraction);
-
   return (
     <div className="flex flex-col items-center rounded-2xl border border-zinc-100 bg-white p-8 text-center shadow-sm">
       <RingGauge
@@ -23,8 +19,7 @@ export default function FlutterReadinessCard() {
         strokeWidth={STROKE_WIDTH}
         trackStroke="#EFF1EA"
         progressStroke="#A3E635"
-        progressDasharray={`${CIRCUMFERENCE} ${CIRCUMFERENCE}`}
-        progressDashoffset={progressDashoffset}
+        progress={READINESS_SCORE}
       />
 
       <h3 className="mt-5 text-lg font-bold text-zinc-900">Flutter Readiness</h3>

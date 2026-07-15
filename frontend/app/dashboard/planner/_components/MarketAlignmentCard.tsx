@@ -27,8 +27,7 @@ export default function MarketAlignmentCard({
           strokeWidth={16}
           trackStroke="#EBECE6"
           progressStroke="#C6EA5D"
-          progressDasharray={`${2 * Math.PI * 80}`}
-          progressDashoffset={2 * Math.PI * 80 * (1 - matchScore / 100)}
+          progress={matchScore}
           valueClassName="text-4xl font-bold text-neutral-900"
           labelClassName="mt-1 text-xs font-medium tracking-wide text-neutral-400"
         />
