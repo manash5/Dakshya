@@ -9,12 +9,17 @@ export interface CareerHero {
     missingSkills: string[];
 }
 
-export interface MarketPulse {
-    jobRoleId: string;
-    jobRole: string;
+export interface SkillDemand {
+    skill: string;
+    // How many of totalJobs (below) require this skill.
     jobCount: number;
-    topLocations: string[];
-    topCompanies: string[];
+}
+
+export interface MarketPulse {
+    // Size of the combined live-posting pool across every target role at once.
+    totalJobs: number;
+    // The user's acquired skills, sorted by jobCount descending.
+    skills: SkillDemand[];
 }
 
 export interface SalaryRange {
@@ -28,7 +33,7 @@ export interface SalaryRange {
 
 export interface CareerDashboard {
     hero: CareerHero[];
-    marketPulse: MarketPulse[];
+    marketPulse: MarketPulse;
     salaryRange: SalaryRange;
 }
 

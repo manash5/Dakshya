@@ -9,12 +9,18 @@ export interface CareerHeroDto {
   missingSkills: string[];
 }
 
-export interface MarketPulseDto {
-  jobRoleId: string;
-  jobRole: string;
+export interface SkillDemandDto {
+  skill: string;
+  // How many of totalJobs (below) require this skill.
   jobCount: number;
-  topLocations: string[];
-  topCompanies: string[];
+}
+
+export interface MarketPulseDto {
+  // Size of the combined live-posting pool across every one of the user's
+  // target roles at once (not per role).
+  totalJobs: number;
+  // The user's acquired skills, sorted by jobCount descending.
+  skills: SkillDemandDto[];
 }
 
 export interface SalaryRangeDto {
@@ -28,6 +34,6 @@ export interface SalaryRangeDto {
 
 export interface CareerDashboardDto {
   hero: CareerHeroDto[];
-  marketPulse: MarketPulseDto[];
+  marketPulse: MarketPulseDto;
   salaryRange: SalaryRangeDto;
 }
