@@ -1,41 +1,36 @@
-"use client";
+import Link from "next/link";
+import { Target } from "lucide-react";
+import type { CareerHero } from "@/lib/api/dashboard";
 
-import { ChevronRight } from "lucide-react";
-import { useState } from "react";
-
-interface FocusCategory {
-  id: string;
-  label: string;
-  active?: boolean;
-  hasChevron?: boolean;
+interface FocusCategoriesCardProps {
+  roles: CareerHero[];
+  selectedRoleId: string;
 }
 
-const CATEGORIES: FocusCategory[] = [
-  { id: "product-design", label: "Product Design", active: true },
-  { id: "frontend-dev", label: "Frontend Dev", hasChevron: true },
-  { id: "ux-research", label: "UX Research", hasChevron: true },
-  { id: "design-systems", label: "Design Systems", hasChevron: true },
-];
-
-export default function FocusCategoriesCard() {
-  const [activeId, setActiveId] = useState("product-design");
-
+export default function FocusCategoriesCard({ roles, selectedRoleId }: FocusCategoriesCardProps) {
   return (
-    <div className="rounded-2xl border border-black/5 bg-white p-5">
-      <p className="mb-4 text-xs font-medium tracking-wide text-neutral-400">
-        FOCUS CATEGORIES
-      </p>
+    <div className="rounded-2xl border border-black/5 bg-white p-5 shadow-sm transition-shadow duration-200 hover:shadow-md">
+      <div className="mb-4 flex items-center gap-2">
+        <span className="flex h-6 w-6 items-center justify-center rounded-md bg-[#F2F3EE] text-neutral-500">
+          <Target className="h-3.5 w-3.5" />
+        </span>
+        <p className="text-xs font-semibold tracking-wide text-neutral-400">
+          TARGET ROLES
+        </p>
+      </div>
 
       <div className="flex flex-col gap-1">
-        {CATEGORIES.map((category) => {
-          const isActive = category.id === activeId;
+        {roles.map((role) => {
+          const isActive = role.jobRoleId === selectedRoleId;
 
           return (
-            <button
-              key={category.id}
-              onClick={() => setActiveId(category.id)}
+            <Link
+              key={role.jobRoleId}
+              href={`/dashboard/planner?role=${role.jobRoleId}`}
               className={`flex items-center justify-between rounded-xl px-3 py-3 text-left transition-colors ${
-                isActive ? "bg-[#F2F3EE]" : "hover:bg-[#F7F8F5]"
+                isActive
+                  ? "bg-[#F2F9E4] ring-1 ring-inset ring-[#C6EA5D]"
+                  : "hover:bg-[#F7F8F5]"
               }`}
             >
               <span className="flex items-center gap-2.5">
@@ -45,18 +40,20 @@ export default function FocusCategoriesCard() {
                   }`}
                 />
                 <span className="text-[15px] font-semibold text-neutral-900">
-                  {category.label}
+                  {role.jobRole}
                 </span>
               </span>
 
-              {isActive ? (
-                <span className="text-xs font-medium text-[#7FB519]">
-                  Active
-                </span>
-              ) : category.hasChevron ? (
-                <ChevronRight className="h-4 w-4 text-neutral-300" />
-              ) : null}
-            </button>
+              <span
+                className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                  isActive
+                    ? "bg-[#7FB519] text-white"
+                    : "bg-[#F2F3EE] text-neutral-400"
+                }`}
+              >
+                {role.readinessScore}%
+              </span>
+            </Link>
           );
         })}
       </div>

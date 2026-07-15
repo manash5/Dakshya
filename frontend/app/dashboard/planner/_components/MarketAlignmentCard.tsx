@@ -1,21 +1,29 @@
+import { TrendingUp } from "lucide-react";
 import RingGauge from "../../_components/RingGauge";
 
 interface MarketAlignmentCardProps {
-  matchScore?: number;
-  vacancies?: number;
-  location?: string;
+  matchScore: number;
+  matchedSkillsCount: number;
+  requiredSkillsCount: number;
+  roleTitle: string;
 }
 
 export default function MarketAlignmentCard({
-  matchScore = 75,
-  vacancies = 142,
-  location = "Kathmandu valley",
+  matchScore,
+  matchedSkillsCount,
+  requiredSkillsCount,
+  roleTitle,
 }: MarketAlignmentCardProps) {
   return (
-    <div className="rounded-2xl border border-black/5 bg-white p-5">
-      <p className="mb-6 text-xs font-medium tracking-wide text-neutral-400">
-        MARKET ALIGNMENT
-      </p>
+    <div className="rounded-2xl border border-black/5 bg-white p-5 shadow-sm transition-shadow duration-200 hover:shadow-md">
+      <div className="mb-6 flex items-center gap-2">
+        <span className="flex h-6 w-6 items-center justify-center rounded-md bg-[#F2F3EE] text-neutral-500">
+          <TrendingUp className="h-3.5 w-3.5" />
+        </span>
+        <p className="text-xs font-semibold tracking-wide text-neutral-400">
+          MARKET ALIGNMENT
+        </p>
+      </div>
 
       <div className="flex justify-center">
         <RingGauge
@@ -36,9 +44,9 @@ export default function MarketAlignmentCard({
       <p className="mt-6 text-center text-sm leading-relaxed text-neutral-500">
         Your skills align with{" "}
         <span className="font-semibold text-neutral-900">
-          {vacancies} vacancies
+          {matchedSkillsCount} of {requiredSkillsCount}
         </span>{" "}
-        in {location}.
+        market-required skills for {roleTitle}.
       </p>
     </div>
   );

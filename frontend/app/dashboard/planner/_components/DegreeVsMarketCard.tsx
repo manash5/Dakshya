@@ -1,180 +1,134 @@
-"use client";
+import { Check, GraduationCap, X } from "lucide-react";
+import RingGauge from "../../_components/RingGauge";
+import type { SkillPlannerSkill } from "@/lib/api/skillPlanner";
 
-import { useState } from "react";
+const MAX_VISIBLE_PER_COLUMN = 6;
 
-type IntegrationStatus = "in-degree" | "gap-identified";
-
-interface Skill {
-  id: string;
-  name: string;
-  subtitle: string;
-  proficiency: number; // 0-100
-  status: IntegrationStatus;
-  semester?: string;
-  gapPercent: number;
-  gapSeverity: "low" | "high";
+interface DegreeVsMarketCardProps {
+  skills: SkillPlannerSkill[];
+  curriculumCoveragePercent: number;
 }
 
-const SKILLS: Skill[] = [
-  {
-    id: "visual-craft",
-    name: "Visual Craft",
-    subtitle: "Layout, Color, Typo",
-    proficiency: 85,
-    status: "in-degree",
-    semester: "Semester 2",
-    gapPercent: 5,
-    gapSeverity: "low",
-  },
-  {
-    id: "interaction-design",
-    name: "Interaction Design",
-    subtitle: "Prototyping, Motion",
-    proficiency: 20,
-    status: "in-degree",
-    semester: "Semester 4",
-    gapPercent: 35,
-    gapSeverity: "high",
-  },
-  {
-    id: "product-strategy",
-    name: "Product Strategy",
-    subtitle: "Metrics, Business ROI",
-    proficiency: 8,
-    status: "gap-identified",
-    gapPercent: 50,
-    gapSeverity: "high",
-  },
-  {
-    id: "data-analysis",
-    name: "Data Analysis",
-    subtitle: "Amplitude, SQL",
-    proficiency: 65,
-    status: "in-degree",
-    semester: "Semester 3",
-    gapPercent: 10,
-    gapSeverity: "low",
-  },
-];
-
-const TABS = [
-  { id: "all", label: "All Skills" },
-  { id: "critical", label: "Critical Gaps" },
-] as const;
-
-type TabId = (typeof TABS)[number]["id"];
-
-export default function SkillsCoreCard() {
-  const [activeTab, setActiveTab] = useState<TabId>("critical");
-
-  const visibleSkills =
-    activeTab === "critical"
-      ? SKILLS.filter((s) => s.gapSeverity === "high")
-      : SKILLS;
+export default function DegreeVsMarketCard({
+  skills,
+  curriculumCoveragePercent,
+}: DegreeVsMarketCardProps) {
+  const taught = skills.filter((s) => s.curriculum.taught);
+  const notTaught = skills.filter((s) => !s.curriculum.taught);
 
   return (
-    <div className="rounded-2xl border border-black/5 bg-white p-5">
-      <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-xl font-bold text-neutral-900">My Skills Core</h2>
-
-        <div className="flex items-center gap-2">
-          {TABS.map((tab) => {
-            const isActive = tab.id === activeTab;
-
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
-                  isActive
-                    ? "bg-[#C6EA5D] text-neutral-900"
-                    : "bg-[#F2F3EE] text-neutral-500 hover:bg-neutral-200"
-                }`}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
+    <div className="rounded-2xl border border-black/5 bg-white p-5 shadow-sm transition-shadow duration-200 hover:shadow-md">
+      <div className="mb-5 flex items-center gap-2">
+        <span className="flex h-6 w-6 items-center justify-center rounded-md bg-[#F2F3EE] text-neutral-500">
+          <GraduationCap className="h-3.5 w-3.5" />
+        </span>
+        <p className="text-xs font-semibold tracking-wide text-neutral-400">
+          DEGREE VS MARKET
+        </p>
       </div>
 
-      <div className="mb-3 grid grid-cols-[1.3fr_1.6fr_0.7fr] gap-4 px-1">
-        <span className="text-xs font-medium tracking-wide text-neutral-400">
-          SKILLSET NAME
-        </span>
-        <span className="text-xs font-medium tracking-wide text-neutral-400">
-          PROFICIENCY &amp; DEGREE INTEGRATION
-        </span>
-        <span className="text-xs font-medium tracking-wide text-neutral-400">
-          MARKET GAP
-        </span>
-      </div>
+      {skills.length === 0 ? (
+        <p className="py-6 text-center text-sm text-neutral-400">
+          No required skills found for this role yet.
+        </p>
+      ) : (
+        <>
+          <div className="flex items-center gap-4 rounded-xl bg-[#FAFBF6] p-4">
+            <RingGauge
+              value={`${curriculumCoveragePercent}%`}
+              label="COVERAGE"
+              diameter={92}
+              viewBoxSize={200}
+              radius={80}
+              strokeWidth={20}
+              trackStroke="#EBECE6"
+              progressStroke="#7FB519"
+              progress={curriculumCoveragePercent}
+              valueClassName="text-base font-bold text-neutral-900"
+              labelClassName="text-[8px] font-medium tracking-wide text-neutral-400"
+            />
+            <p className="text-sm leading-relaxed text-neutral-500">
+              Your degree teaches{" "}
+              <span className="font-semibold text-neutral-900">
+                {taught.length} of {skills.length}
+              </span>{" "}
+              skills the market requires for this role.
+            </p>
+          </div>
 
-      <div className="flex flex-col">
-        {visibleSkills.map((skill, i) => (
-          <div
-            key={skill.id}
-            className={`grid grid-cols-[1.3fr_1.6fr_0.7fr] items-center gap-4 px-1 py-5 ${
-              i !== 0 ? "border-t border-neutral-100" : ""
-            }`}
-          >
-            <div>
-              <p className="text-[15px] font-semibold text-neutral-900">
-                {skill.name}
-              </p>
-              <p className="mt-0.5 text-sm text-neutral-400">
-                {skill.subtitle}
-              </p>
-            </div>
-
-            <div>
-              <div className="flex items-center gap-3">
-                <div className="h-1.5 w-full max-w-[140px] overflow-hidden rounded-full bg-neutral-100">
-                  <div
-                    className="h-full rounded-full bg-[#5C8A1C]"
-                    style={{ width: `${skill.proficiency}%` }}
-                  />
+          <div className="mt-5 grid grid-cols-2 divide-x divide-neutral-100">
+            <div className="pr-4">
+              <div className="mb-3 flex items-center gap-1.5">
+                <Check className="h-3.5 w-3.5 text-[#5C8A1C]" />
+                <p className="text-xs font-semibold tracking-wide text-neutral-500">
+                  IN DEGREE ({taught.length})
+                </p>
+              </div>
+              {taught.length === 0 ? (
+                <p className="text-sm text-neutral-400">None yet.</p>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {taught.slice(0, MAX_VISIBLE_PER_COLUMN).map((skill) => (
+                    <div
+                      key={skill.skill}
+                      className="flex items-center justify-between gap-2 text-sm"
+                    >
+                      <span className="truncate font-medium text-neutral-700">
+                        {skill.displayName}
+                      </span>
+                      <span className="shrink-0 text-xs text-neutral-400">
+                        Sem {skill.curriculum.semester}
+                      </span>
+                    </div>
+                  ))}
+                  {taught.length > MAX_VISIBLE_PER_COLUMN && (
+                    <p className="text-xs text-neutral-400">
+                      +{taught.length - MAX_VISIBLE_PER_COLUMN} more
+                    </p>
+                  )}
                 </div>
-
-                <button className="shrink-0 rounded-lg bg-neutral-900 px-3.5 py-1.5 text-xs font-semibold text-white">
-                  PRACTICE
-                </button>
-              </div>
-
-              <div className="mt-2">
-                {skill.status === "in-degree" ? (
-                  <span className="inline-flex items-center gap-2 text-xs">
-                    <span className="rounded-md bg-[#F2F3EE] px-2 py-1 font-medium text-neutral-500">
-                      In Degree
-                    </span>
-                    <span className="text-neutral-400">{skill.semester}</span>
-                  </span>
-                ) : (
-                  <span className="inline-block rounded-md bg-[#FDF0D5] px-2 py-1 text-xs font-medium text-[#B8860B]">
-                    Gap Identified
-                  </span>
-                )}
-              </div>
+              )}
             </div>
 
-            <div>
-              <span
-                className={`inline-block rounded-lg px-3 py-1.5 text-sm font-semibold ${
-                  skill.gapSeverity === "high"
-                    ? "bg-[#FCE8E6] text-[#D0362A]"
-                    : "bg-[#F2F3EE] text-neutral-500"
-                }`}
-              >
-                -{skill.gapPercent}% Gap
-              </span>
+            <div className="pl-4">
+              <div className="mb-3 flex items-center gap-1.5">
+                <X className="h-3.5 w-3.5 text-[#D0362A]" />
+                <p className="text-xs font-semibold tracking-wide text-neutral-500">
+                  GAP ({notTaught.length})
+                </p>
+              </div>
+              {notTaught.length === 0 ? (
+                <p className="text-sm text-neutral-400">Fully covered.</p>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {notTaught.slice(0, MAX_VISIBLE_PER_COLUMN).map((skill) => (
+                    <div
+                      key={skill.skill}
+                      className="flex items-center justify-between gap-2 text-sm"
+                    >
+                      <span className="truncate font-medium text-neutral-700">
+                        {skill.displayName}
+                      </span>
+                      <span
+                        className={`shrink-0 text-xs ${
+                          skill.sources.length > 0 ? "text-[#5C8A1C]" : "text-[#B8860B]"
+                        }`}
+                      >
+                        {skill.sources.length > 0 ? "Self-taught" : "Gap"}
+                      </span>
+                    </div>
+                  ))}
+                  {notTaught.length > MAX_VISIBLE_PER_COLUMN && (
+                    <p className="text-xs text-neutral-400">
+                      +{notTaught.length - MAX_VISIBLE_PER_COLUMN} more
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
-        ))}
-      </div>
-
-      <button className="mt-4 w-full rounded-xl border border-dashed border-neutral-300 py-4 text-sm font-medium text-neutral-400 transition-colors hover:border-neutral-400 hover:text-neutral-500">
-        + Add Benchmark Career Path
-      </button>
+        </>
+      )}
     </div>
   );
 }
