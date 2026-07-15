@@ -14,7 +14,11 @@ export interface IOpportunityRepository {
     data: CreateOpportunityDto,
   ): Promise<{ doc: IOpportunity; created: boolean }>;
 
+  create(data: CreateOpportunityDto): Promise<IOpportunity>;
+
   findById(id: string): Promise<IOpportunity | null>;
+
+  findByRegistrationLink(registrationLink: string): Promise<IOpportunity | null>;
 
   update(id: string, data: UpdateOpportunityDto): Promise<IOpportunity | null>;
 
@@ -66,8 +70,19 @@ export class OpportunityMongoRepository implements IOpportunityRepository {
     return { doc: created, created: true };
   }
 
+  async create(data: CreateOpportunityDto): Promise<IOpportunity> {
+    return await Opportunity.create({
+      ...data,
+      isActive: true,
+    });
+  }
+
   async findById(id: string): Promise<IOpportunity | null> {
     return await Opportunity.findById(id);
+  }
+
+  async findByRegistrationLink(registrationLink: string): Promise<IOpportunity | null> {
+    return await Opportunity.findOne({ registrationLink });
   }
 
   async update(

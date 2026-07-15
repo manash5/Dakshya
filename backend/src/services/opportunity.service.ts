@@ -84,6 +84,21 @@ export class OpportunityService {
     };
   }
 
+  async createOpportunity(data: CreateOpportunityDto) {
+    const existing = await opportunityRepository.findByRegistrationLink(
+      data.registrationLink,
+    );
+
+    if (existing) {
+      throw new HttpException(
+        400,
+        "An opportunity with this registration link already exists.",
+      );
+    }
+
+    return await opportunityRepository.create(data);
+  }
+
   async getOpportunitiesPaginated(
     page?: string,
     limit?: string,
