@@ -48,6 +48,12 @@ export const API = {
         GET_BY_ID: (id: string) => `/api/v1/resume-analysis/${id}`,
         DELETE: (id: string) => `/api/v1/resume-analysis/${id}`,
     },
+    SKILL_PLANNER: {
+        GET_BY_ROLE: (jobRoleId: string) => `/api/v1/skill-planner/${jobRoleId}`,
+    },
+    USER_PROGRESS: {
+        TOUCH_ROADMAP_VISIT: (jobRoleId: string) => `/api/v1/userProgress/roadmap/${jobRoleId}/visit`,
+    },
 
     ADMIN: {
         USERS: {
