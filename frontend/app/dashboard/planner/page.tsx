@@ -145,7 +145,7 @@ export default async function Page({
 
           <div className="flex flex-col gap-5">
             <StaggerItem>
-              <SkillsScoreCard skills={planner.skills} />
+              <SkillsScoreCard skills={planner.skills} jobRoleId={selectedRoleId} />
             </StaggerItem>
             <StaggerItem>
               <DegreeVsMarketCard
@@ -157,7 +157,7 @@ export default async function Page({
 
           <div className="flex flex-col gap-5">
             <StaggerItem>
-              <PracticeCard selectedSkill={selectedSkill} />
+              <PracticeCard selectedSkill={selectedSkill} jobRoleId={selectedRoleId} />
             </StaggerItem>
             <StaggerItem>
               <ResourceLibraryCard resources={planner.resources} />

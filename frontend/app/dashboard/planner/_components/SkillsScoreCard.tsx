@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { FileText, FolderGit2, MessageSquare } from "lucide-react";
+import { ArrowRight, FileText, FolderGit2, MessageSquare } from "lucide-react";
 import type { SkillPlannerSkill, SkillSourceTag } from "@/lib/api/skillPlanner";
 
 const TABS = [
@@ -70,9 +71,10 @@ const SOURCE_ICONS: Partial<Record<SkillSourceTag, typeof FileText>> = {
 
 interface SkillsScoreCardProps {
   skills: SkillPlannerSkill[];
+  jobRoleId: string;
 }
 
-export default function SkillsScoreCard({ skills }: SkillsScoreCardProps) {
+export default function SkillsScoreCard({ skills, jobRoleId }: SkillsScoreCardProps) {
   const [activeTab, setActiveTab] = useState<TabId>("priority");
   const [showAll, setShowAll] = useState(false);
 
@@ -220,7 +222,7 @@ export default function SkillsScoreCard({ skills }: SkillsScoreCardProps) {
                         </div>
                       </div>
 
-                      <div>
+                      <div className="flex flex-col items-start gap-2">
                         <span
                           className={`inline-block rounded-lg px-3 py-1.5 text-sm font-semibold ${
                             skill.gapSeverity === "high"
@@ -230,6 +232,13 @@ export default function SkillsScoreCard({ skills }: SkillsScoreCardProps) {
                         >
                           {skill.gapSeverity === "high" ? "High Priority" : "Low Priority"}
                         </span>
+                        <Link
+                          href={`/dashboard/practice/interview?jobRoleId=${jobRoleId}&skill=${encodeURIComponent(skill.skill)}&skillLabel=${encodeURIComponent(skill.displayName)}`}
+                          className="inline-flex items-center gap-1 text-xs font-semibold text-neutral-500 transition-colors hover:text-neutral-900"
+                        >
+                          Practice
+                          <ArrowRight className="h-3 w-3" />
+                        </Link>
                       </div>
                     </div>
                   </motion.div>

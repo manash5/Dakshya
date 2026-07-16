@@ -5,9 +5,14 @@ import type { SkillPlannerSkill } from "@/lib/api/skillPlanner";
 
 interface PracticeCardProps {
   selectedSkill: SkillPlannerSkill | null;
+  jobRoleId: string;
 }
 
-export default function PracticeCard({ selectedSkill }: PracticeCardProps) {
+export default function PracticeCard({ selectedSkill, jobRoleId }: PracticeCardProps) {
+  const interviewHref = selectedSkill
+    ? `/dashboard/practice/interview?jobRoleId=${jobRoleId}&skill=${encodeURIComponent(selectedSkill.skill)}&skillLabel=${encodeURIComponent(selectedSkill.displayName)}`
+    : `/dashboard/practice/interview?jobRoleId=${jobRoleId}`;
+
   return (
     <div className="rounded-2xl border border-black/5 bg-white p-5 shadow-sm transition-shadow duration-200 hover:shadow-md">
       <div className="mb-5 flex items-center justify-between">
@@ -45,7 +50,7 @@ export default function PracticeCard({ selectedSkill }: PracticeCardProps) {
             {selectedSkill.practice.attemptCount === 1 ? "" : "s"}
           </p>
           <Link
-            href="/dashboard/practice"
+            href={interviewHref}
             className="mt-5 flex items-center justify-center gap-2 rounded-xl bg-neutral-900 py-3 text-sm font-semibold text-white transition-colors hover:bg-neutral-800"
           >
             <MessageSquare className="h-4 w-4" />
@@ -63,7 +68,7 @@ export default function PracticeCard({ selectedSkill }: PracticeCardProps) {
             an interview yet.
           </p>
           <Link
-            href="/dashboard/practice"
+            href={interviewHref}
             className="mt-1 flex items-center gap-2 rounded-xl bg-neutral-900 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-neutral-800"
           >
             <MessageSquare className="h-4 w-4" />
