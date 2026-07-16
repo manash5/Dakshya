@@ -23,6 +23,7 @@ export interface PracticeAttempt {
     _id: string;
     userId: string;
     jobRoleId: PracticeAttemptJobRole;
+    skill: string | null;
     difficulty: "Beginner" | "Intermediate" | "Advanced";
     mode: "Oral" | "Coding" | "Mixed";
     questionCount: number;
@@ -41,6 +42,7 @@ export interface PracticeAttempt {
 
 export const startAttempt = async (data: {
     jobRoleId: string;
+    skill?: string;
     difficulty: "Beginner" | "Intermediate" | "Advanced";
     mode: "Oral" | "Coding" | "Mixed";
     questionCount: number;
@@ -57,6 +59,7 @@ export const getAttemptHistory = async (params: {
     page?: number;
     limit?: number;
     jobRoleId?: string;
+    skill?: string;
     mode?: string;
     difficulty?: string;
 }) => {

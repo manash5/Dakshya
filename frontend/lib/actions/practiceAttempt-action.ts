@@ -10,6 +10,7 @@ import {
 
 export const handleStartAttempt = async (data: {
     jobRoleId: string;
+    skill?: string;
     difficulty: "Beginner" | "Intermediate" | "Advanced";
     mode: "Oral" | "Coding" | "Mixed";
     questionCount: number;
@@ -29,12 +30,14 @@ export const handleGetAttemptHistory = async ({
     page,
     limit,
     jobRoleId,
+    skill,
     mode,
     difficulty,
 }: {
     page?: number;
     limit?: number;
     jobRoleId?: string;
+    skill?: string;
     mode?: string;
     difficulty?: string;
 } = {}) => {
@@ -45,6 +48,7 @@ export const handleGetAttemptHistory = async ({
             page: currentPage,
             limit: currentLimit,
             jobRoleId,
+            skill,
             mode,
             difficulty,
         });
