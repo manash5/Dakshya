@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { ScanSearch, UploadCloud } from "lucide-react";
+import type { ResumeAnalysis } from "@/lib/api/resumeAnalysis";
 
-export default function CvAnalyzerCard() {
+interface CvAnalyzerCardProps {
+  analysis: ResumeAnalysis | null;
+}
+
+export default function CvAnalyzerCard({ analysis }: CvAnalyzerCardProps) {
   return (
     <Link
       href="/dashboard/resume-analysis"
@@ -12,16 +17,39 @@ export default function CvAnalyzerCard() {
         <h3 className="text-base font-semibold">CV Analyzer</h3>
       </div>
 
-      <p className="mt-3 text-sm leading-relaxed text-zinc-400">
-        Upload your resume for instant AI matching, ATS scoring, and skill gap analysis.
-      </p>
+      {analysis ? (
+        <>
+          <div className="mt-4 flex items-baseline gap-2">
+            <p className="text-3xl font-bold text-[#D9F24A]">{analysis.atsScore}%</p>
+            <p className="text-xs text-zinc-400">ATS Score</p>
+          </div>
+          {analysis.strengths[0] && (
+            <p className="mt-2 text-sm leading-relaxed text-zinc-400">
+              Top strength: {analysis.strengths[0]}
+            </p>
+          )}
+          <div className="mt-6 flex h-11 items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-zinc-700 bg-zinc-900/40 transition group-hover:border-[#D9F24A]/60">
+            <span className="text-xs font-semibold tracking-wide text-[#D9F24A]">
+              RE-ANALYZE RESUME
+            </span>
+          </div>
+        </>
+      ) : (
+        <>
+          <p className="mt-3 text-sm leading-relaxed text-zinc-400">
+            Upload your resume for instant AI matching, ATS scoring, and skill gap analysis.
+          </p>
 
-      <div className="mt-6 flex h-20 items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-zinc-700 bg-zinc-900/40 transition group-hover:border-[#D9F24A]/60">
-        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#D9F24A] text-zinc-900 transition group-hover:scale-105">
-          <UploadCloud size={16} />
-        </span>
-        <span className="text-xs font-semibold tracking-wide text-[#D9F24A]">ANALYZE MY RESUME</span>
-      </div>
+          <div className="mt-6 flex h-20 items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-zinc-700 bg-zinc-900/40 transition group-hover:border-[#D9F24A]/60">
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#D9F24A] text-zinc-900 transition group-hover:scale-105">
+              <UploadCloud size={16} />
+            </span>
+            <span className="text-xs font-semibold tracking-wide text-[#D9F24A]">
+              ANALYZE MY RESUME
+            </span>
+          </div>
+        </>
+      )}
     </Link>
   );
 }
