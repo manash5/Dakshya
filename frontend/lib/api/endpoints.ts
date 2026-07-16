@@ -53,6 +53,16 @@ export const API = {
     },
     USER_PROGRESS: {
         TOUCH_ROADMAP_VISIT: (jobRoleId: string) => `/api/v1/userProgress/roadmap/${jobRoleId}/visit`,
+        COMPLETE_PROJECT: (jobRoleId: string) => `/api/v1/userProgress/roadmap/${jobRoleId}/project`,
+    },
+    PROJECT: {
+        GET_ALL: "/api/v1/projects",
+        GET_BY_ID: (id: string) => `/api/v1/projects/${id}`,
+    },
+    SAVED_JOB: {
+        SAVE: "/api/v1/saved-jobs",
+        GET_ALL: "/api/v1/saved-jobs",
+        UNSAVE: (jobPostingId: string) => `/api/v1/saved-jobs/${jobPostingId}`,
     },
 
     ADMIN: {
