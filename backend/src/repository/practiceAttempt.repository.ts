@@ -4,6 +4,7 @@ import PracticeAttempt, {
 
 export interface PracticeAttemptFilters {
   jobRoleId?: string;
+  skill?: string;
   mode?: "Oral" | "Coding" | "Mixed";
   difficulty?: "Beginner" | "Intermediate" | "Advanced";
 }
@@ -69,6 +70,10 @@ export class PracticeAttemptMongoRepository
 
     if (filters.jobRoleId) {
       query.jobRoleId = filters.jobRoleId;
+    }
+
+    if (filters.skill) {
+      query.skill = filters.skill;
     }
 
     if (filters.mode) {

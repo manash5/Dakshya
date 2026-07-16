@@ -13,6 +13,7 @@ interface QueryParams {
   page?: string;
   limit?: string;
   jobRoleId?: string;
+  skill?: string;
   mode?: "Oral" | "Coding" | "Mixed";
   difficulty?: "Beginner" | "Intermediate" | "Advanced";
 }
@@ -106,10 +107,11 @@ export class PracticeAttemptController {
   async getHistory(req: Request, res: Response) {
     try {
       const userId = req.user._id.toString();
-      const { page, limit, jobRoleId, mode, difficulty }: QueryParams = req.query;
+      const { page, limit, jobRoleId, skill, mode, difficulty }: QueryParams = req.query;
 
       const { data, pagination } = await service.getHistory(userId, page, limit, {
         jobRoleId,
+        skill,
         mode,
         difficulty,
       });
