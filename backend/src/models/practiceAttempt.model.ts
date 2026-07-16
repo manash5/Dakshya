@@ -30,6 +30,7 @@ const PracticeAttemptModelSchema: Schema = new Schema<IPracticeAttempt>(
   {
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
     jobRoleId: { type: Schema.Types.ObjectId, ref: "JobRole", required: true },
+    skill: { type: String, default: null },
     difficulty: {
       type: String,
       enum: ["Beginner", "Intermediate", "Advanced"],
@@ -52,6 +53,7 @@ const PracticeAttemptModelSchema: Schema = new Schema<IPracticeAttempt>(
 
 PracticeAttemptModelSchema.index({ userId: 1, createdAt: -1 });
 PracticeAttemptModelSchema.index({ userId: 1, jobRoleId: 1 });
+PracticeAttemptModelSchema.index({ userId: 1, skill: 1 });
 
 export default mongoose.model<IPracticeAttempt>(
   "PracticeAttempt",

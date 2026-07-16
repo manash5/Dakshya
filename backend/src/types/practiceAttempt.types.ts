@@ -30,6 +30,11 @@ export const PracticeQuestionSchema = z.object({
 export const PracticeAttemptSchema = z.object({
   userId: z.string(),
   jobRoleId: z.string(),
+  // Optional single-skill focus for this attempt -- when set, every
+  // generated question was constrained to this skill (see
+  // fastApiClient.generateInterviewQuestions). Null/absent for attempts
+  // started before this field existed, or for whole-role attempts.
+  skill: z.string().trim().min(1).nullable().optional(),
   difficulty: z.enum(["Beginner", "Intermediate", "Advanced"]),
   mode: z.enum(["Oral", "Coding", "Mixed"]),
   questionCount: z.number().int().positive(),

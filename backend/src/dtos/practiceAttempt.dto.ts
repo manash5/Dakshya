@@ -6,6 +6,7 @@ import { PracticeAttemptSchema, PracticeQuestionSchema } from "../types/practice
 // rather than supplied by the client.
 export const StartPracticeAttemptDtoSchema = PracticeAttemptSchema.pick({
   jobRoleId: true,
+  skill: true,
   difficulty: true,
   mode: true,
   questionCount: true,
