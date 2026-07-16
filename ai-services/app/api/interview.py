@@ -22,7 +22,7 @@ def generate_questions_endpoint(
 ) -> GenerateQuestionsAIResponse:
     try:
         return generate_interview_questions(
-            payload.jobRole, payload.difficulty, payload.mode, payload.questionCount
+            payload.jobRole, payload.difficulty, payload.mode, payload.questionCount, payload.skill
         )
     except HTTPException:
         raise

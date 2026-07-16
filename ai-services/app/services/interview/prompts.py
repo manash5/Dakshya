@@ -15,6 +15,7 @@ def build_generate_questions_prompt(
     difficulty: DifficultyLevel,
     mode: InterviewMode,
     question_count: int,
+    skill: Optional[str] = None,
 ) -> str:
     if mode == InterviewMode.CODING:
         mix_instruction = (
@@ -36,25 +37,50 @@ def build_generate_questions_prompt(
             f"of one type together."
         )
 
+    rules = [
+        "Questions must reflect what is realistically asked in real interviews for this role and level.",
+        'For coding questions: specify the exact problem type (e.g. "sliding window", "dynamic programming", '
+        '"system design") within the question text itself, with a clear problem statement.',
+        'For oral questions: ask scenario-based questions ("How would you...", "What happens when...", '
+        '"Debug this scenario...") rather than pure trivia.',
+        f"Vary difficulty appropriately for the level -- {difficulty.value} should get "
+        f"{_LEVEL_GUIDANCE[difficulty]}.",
+        mix_instruction,
+        f"Respond ONLY with data matching the provided schema -- exactly {question_count} questions, no more, "
+        f"no fewer.",
+    ]
+
+    if skill:
+        rules.append(
+            f'CRITICAL CONSTRAINT: every single question must require real, hands-on knowledge of "{skill}" to '
+            f"answer well -- do not generate generic role trivia or a question primarily about a different skill "
+            f'that only tangentially touches "{skill}". If a fully realistic question can\'t be built centered on '
+            f'"{skill}", make it a narrower/simpler question about "{skill}" rather than drifting to another topic.'
+        )
+        rules.append(
+            f'For every question, tag it with 1-3 relevant skills in the "skills" field, and ALWAYS include '
+            f'"{skill}" itself as one of them, since every question is scoped to it.'
+        )
+    else:
+        rules.append(
+            'For every question, additionally tag it with 1-3 relevant skills or technologies it primarily tests, '
+            'in the "skills" field -- concise, specific, industry-standard names (e.g. ["React", "State '
+            'Management"], ["SQL", "Database Indexing"]) that would plausibly appear in this role\'s job '
+            "description."
+        )
+
+    numbered_rules = "\n".join(f"{i}. {rule}" for i, rule in enumerate(rules, start=1))
+    focus_line = f"Focus skill (MANDATORY for every question): {skill}\n" if skill else ""
+
     return f"""You are a senior technical interviewer at a top-tier tech company, generating REAL, high-signal
 interview questions that reflect what is currently being asked in the industry for this exact role and level.
 
 Role: {job_role}
 Seniority level: {difficulty.value}
 Number of questions: {question_count}
-
+{focus_line}
 RULES:
-1. Questions must reflect what is realistically asked in real interviews for this role and level.
-2. For coding questions: specify the exact problem type (e.g. "sliding window", "dynamic programming",
-   "system design") within the question text itself, with a clear problem statement.
-3. For oral questions: ask scenario-based questions ("How would you...", "What happens when...",
-   "Debug this scenario...") rather than pure trivia.
-4. Vary difficulty appropriately for the level -- {difficulty.value} should get {_LEVEL_GUIDANCE[difficulty]}.
-5. {mix_instruction}
-6. Respond ONLY with data matching the provided schema -- exactly {question_count} questions, no more, no fewer.
-7. For every question, additionally tag it with 1-3 relevant skills or technologies it primarily tests, in the
-   "skills" field -- concise, specific, industry-standard names (e.g. ["React", "State Management"],
-   ["SQL", "Database Indexing"]) that would plausibly appear in this role's job description.
+{numbered_rules}
 """
 
 

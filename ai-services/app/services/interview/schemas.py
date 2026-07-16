@@ -25,6 +25,11 @@ class GenerateQuestionsRequest(BaseModel):
     difficulty: DifficultyLevel
     mode: InterviewMode
     questionCount: int = Field(..., ge=1, le=20)
+    skill: Optional[str] = Field(
+        None,
+        description="Optional single skill to constrain every generated question to. "
+        "Omitted/None means unconstrained generation across the whole role (today's behavior).",
+    )
 
 
 class InterviewQuestion(BaseModel):
