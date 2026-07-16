@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
+import { z } from "zod";
 import { UserProgressService } from "../services/userProgress.service";
 import { ApiResponseHelper } from "../utils/api-response";
+import { CompleteProjectDtoSchema } from "../dtos/userProgress.dto";
 
 const userProgressService =
     new UserProgressService();
@@ -127,6 +129,46 @@ export class UserProgressController {
             return ApiResponseHelper.error(
                 res,
                 e?.message || "Failed to record roadmap visit",
+                e.status || 500
+            );
+
+        }
+
+    }
+
+    async completeProject(
+        req: Request,
+        res: Response
+    ) {
+
+        try {
+
+            const userId = req.user._id.toString();
+            const { jobRoleId } = req.params;
+
+            const parsed = CompleteProjectDtoSchema.safeParse(req.body);
+
+            if (!parsed.success) {
+                return ApiResponseHelper.error(res, z.prettifyError(parsed.error), 400);
+            }
+
+            const progress =
+                await userProgressService.completeProject(
+                    userId, jobRoleId as string, parsed.data.projectTitle,
+                );
+
+            return ApiResponseHelper.success(
+                res,
+                progress,
+                200,
+                "Project marked as completed successfully"
+            );
+
+        } catch (e: any) {
+
+            return ApiResponseHelper.error(
+                res,
+                e?.message || "Failed to mark project as completed",
                 e.status || 500
             );
 

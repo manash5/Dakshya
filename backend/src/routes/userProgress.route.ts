@@ -36,4 +36,10 @@ router.post(
   controller.touchRoadmapVisit.bind(controller),
 );
 
+router.post(
+  "/roadmap/:jobRoleId/project",
+  authorizedMiddleware,
+  controller.completeProject.bind(controller),
+);
+
 export default router;

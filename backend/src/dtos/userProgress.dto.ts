@@ -70,3 +70,9 @@ export interface RoadmapProgressDto {
   totalProjects: number;
   lastVisited: Date | null;
 }
+
+export const CompleteProjectDtoSchema = z.object({
+  projectTitle: z.string().min(1, "projectTitle is required"),
+});
+
+export type CompleteProjectDto = z.infer<typeof CompleteProjectDtoSchema>;
