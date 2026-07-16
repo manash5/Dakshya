@@ -37,6 +37,7 @@ export class PracticeAttemptService {
       data.difficulty,
       data.mode,
       data.questionCount,
+      data.skill,
     );
 
     const questions = generated.questions.map((q) => ({
@@ -54,6 +55,7 @@ export class PracticeAttemptService {
     return await practiceAttemptRepository.create({
       userId: new mongoose.Types.ObjectId(userId),
       jobRoleId: new mongoose.Types.ObjectId(data.jobRoleId),
+      skill: data.skill ?? null,
       difficulty: data.difficulty,
       mode: data.mode,
       questionCount: data.questionCount,

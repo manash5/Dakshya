@@ -220,11 +220,12 @@ export class FastApiClient {
         jobRole: string,
         difficulty: "Beginner" | "Intermediate" | "Advanced",
         mode: "Oral" | "Coding" | "Mixed",
-        questionCount: number
+        questionCount: number,
+        skill?: string | null
     ): Promise<GenerateInterviewQuestionsResult> {
         const response = await axios.post(
             `${this.baseUrl}/api/v1/interview/generate-questions`,
-            { jobRole, difficulty, mode, questionCount }
+            { jobRole, difficulty, mode, questionCount, skill: skill ?? null }
         );
         return response.data;
     }
