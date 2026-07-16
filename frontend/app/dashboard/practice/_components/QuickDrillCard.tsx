@@ -1,10 +1,12 @@
+import Link from "next/link";
 import { Settings, Zap } from "lucide-react";
 
 type QuickDrillCardProps = {
-  onStartDrill?: () => void;
+  href: string;
+  skillLabel: string | null;
 };
 
-export default function QuickDrillCard({ onStartDrill }: QuickDrillCardProps) {
+export default function QuickDrillCard({ href, skillLabel }: QuickDrillCardProps) {
   return (
     <div className="relative overflow-hidden rounded-[24px] bg-zinc-900 p-6 text-white shadow-[0_20px_40px_rgba(15,23,42,0.15)]">
       <div className="flex items-center gap-2">
@@ -18,16 +20,17 @@ export default function QuickDrillCard({ onStartDrill }: QuickDrillCardProps) {
 
       <h3 className="mt-4 text-xl font-semibold">Knowledge Check</h3>
       <p className="mt-2 text-sm leading-relaxed text-zinc-400">
-        10 rapid-fire questions to sharpen your current path focus.
+        {skillLabel
+          ? `A focused interview on ${skillLabel} — your current top gap.`
+          : "A quick interview to sharpen your current path focus."}
       </p>
 
-      <button
-        type="button"
-        onClick={onStartDrill}
+      <Link
+        href={href}
         className="mt-6 flex h-12 w-full items-center justify-center rounded-full bg-[#D9F24A] text-sm font-semibold text-zinc-900 transition hover:brightness-95"
       >
         Start Drill Now
-      </button>
+      </Link>
 
       <Settings
         size={72}
