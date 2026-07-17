@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 
 from app.services.career_knowledge.schemas import DifficultyLevel
 from app.services.interview.schemas import InterviewMode
@@ -16,6 +16,7 @@ def build_generate_questions_prompt(
     mode: InterviewMode,
     question_count: int,
     skill: Optional[str] = None,
+    skills: Optional[List[str]] = None,
 ) -> str:
     if mode == InterviewMode.CODING:
         mix_instruction = (
@@ -61,6 +62,17 @@ def build_generate_questions_prompt(
             f'For every question, tag it with 1-3 relevant skills in the "skills" field, and ALWAYS include '
             f'"{skill}" itself as one of them, since every question is scoped to it.'
         )
+    elif skills:
+        skills_list = ", ".join(f'"{s}"' for s in skills)
+        rules.append(
+            f"CRITICAL CONSTRAINT: distribute the {question_count} questions across these skills: {skills_list} -- "
+            f"roughly evenly, with every skill in the list covered by at least one question. Do not generate "
+            f"generic role trivia unrelated to this list."
+        )
+        rules.append(
+            'For every question, tag it with 1-3 relevant skills in the "skills" field, and ALWAYS include '
+            f"whichever of {skills_list} that specific question is actually testing."
+        )
     else:
         rules.append(
             'For every question, additionally tag it with 1-3 relevant skills or technologies it primarily tests, '
@@ -70,7 +82,12 @@ def build_generate_questions_prompt(
         )
 
     numbered_rules = "\n".join(f"{i}. {rule}" for i, rule in enumerate(rules, start=1))
-    focus_line = f"Focus skill (MANDATORY for every question): {skill}\n" if skill else ""
+    if skill:
+        focus_line = f"Focus skill (MANDATORY for every question): {skill}\n"
+    elif skills:
+        focus_line = f"Focus skills (MANDATORY, distributed across questions): {', '.join(skills)}\n"
+    else:
+        focus_line = ""
 
     return f"""You are a senior technical interviewer at a top-tier tech company, generating REAL, high-signal
 interview questions that reflect what is currently being asked in the industry for this exact role and level.

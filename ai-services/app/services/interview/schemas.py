@@ -30,6 +30,12 @@ class GenerateQuestionsRequest(BaseModel):
         description="Optional single skill to constrain every generated question to. "
         "Omitted/None means unconstrained generation across the whole role (today's behavior).",
     )
+    skills: Optional[List[str]] = Field(
+        None,
+        description="Optional list of 2+ skills to distribute questions across (roughly evenly, "
+        "each covered at least once). Mutually exclusive with `skill` -- used for auto-generated "
+        "multi-skill practice sessions rather than a single skill-scoped drill.",
+    )
 
 
 class InterviewQuestion(BaseModel):
