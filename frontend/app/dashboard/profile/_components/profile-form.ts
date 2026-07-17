@@ -9,6 +9,8 @@ export const updateUserSchema = z.object({
     email: z.string().trim().email({ message: "Enter a valid email address" }),
     username: z.string().trim().min(3, { message: "Minimum 3 characters" }),
     phoneNumber: z.string().trim().optional(),
+    targetRoles: z.array(z.string()).optional(),
+    currentSemester: z.number().int().min(1).max(8).optional(),
     image: z
         .instanceof(File)
         .optional()

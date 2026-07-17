@@ -6,14 +6,25 @@ import { useRef, useState } from "react";
 import { toast } from "react-toastify";
 
 import { handleUpdateProfile } from "@/lib/actions/auth-action";
+import type { JobRole } from "@/lib/api/onboarding";
 
 import AccountSettingsCard from "./AccountSettingsCard";
+import CareerGoalsCard, { type RoadmapSnapshot } from "./CareerGoalsCard";
+import ProfileFooter from "./ProfileFooter";
 import ProfileHeader from "./ProfileHeader";
-import ProfileSideCards from "./ProfileSideCards";
+import SecurityCard from "./SecurityCard";
 import { updateUserSchema, type UpdateUserData } from "./profile-form";
 import { type ProfileUser, resolveProfileImageSrc } from "./profile-types";
 
-export default function UpdateUserForm({ user }: { user: ProfileUser }) {
+export default function UpdateUserForm({
+    user,
+    jobRoles,
+    roadmapSnapshots,
+}: {
+    user: ProfileUser;
+    jobRoles: JobRole[];
+    roadmapSnapshots: RoadmapSnapshot[];
+}) {
     const methods = useForm<UpdateUserData>({
         resolver: zodResolver(updateUserSchema),
         values: {
@@ -22,15 +33,13 @@ export default function UpdateUserForm({ user }: { user: ProfileUser }) {
             email: user?.email || "",
             username: user?.username || "",
             phoneNumber: user?.phoneNumber || "",
+            targetRoles: user?.targetRoles || [],
+            currentSemester: user?.currentSemester,
         },
     });
 
     const [error, setError] = useState<string | null>(null);
     const [previewImage, setPreviewImage] = useState<string | null>(null);
-    const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
-    const [mockInterviewsEnabled, setMockInterviewsEnabled] = useState(true);
-    const [jobMatchesEnabled, setJobMatchesEnabled] = useState(true);
-    const [roadmapUpdatesEnabled, setRoadmapUpdatesEnabled] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const resolvedImage = previewImage || resolveProfileImageSrc(user?.profilePicture);
@@ -112,6 +121,14 @@ export default function UpdateUserForm({ user }: { user: ProfileUser }) {
                 formData.append("phoneNumber", phoneNumber);
             }
 
+            if (data.targetRoles) {
+                formData.append("targetRoles", JSON.stringify(data.targetRoles));
+            }
+
+            if (data.currentSemester) {
+                formData.append("currentSemester", String(data.currentSemester));
+            }
+
             if (data.image) {
                 formData.append("profilePicture", data.image);
             }
@@ -160,18 +177,12 @@ export default function UpdateUserForm({ user }: { user: ProfileUser }) {
 
                     <AccountSettingsCard />
 
-                    <ProfileSideCards
-                        profileScore={profileScore}
-                        twoFactorEnabled={twoFactorEnabled}
-                        setTwoFactorEnabled={setTwoFactorEnabled}
-                        mockInterviewsEnabled={mockInterviewsEnabled}
-                        setMockInterviewsEnabled={setMockInterviewsEnabled}
-                        jobMatchesEnabled={jobMatchesEnabled}
-                        setJobMatchesEnabled={setJobMatchesEnabled}
-                        roadmapUpdatesEnabled={roadmapUpdatesEnabled}
-                        setRoadmapUpdatesEnabled={setRoadmapUpdatesEnabled}
-                        updatedAt={user?.updatedAt}
-                    />
+                    <div className="grid gap-6 lg:grid-cols-2">
+                        <CareerGoalsCard jobRoles={jobRoles} roadmapSnapshots={roadmapSnapshots} />
+                        <SecurityCard />
+                    </div>
+
+                    <ProfileFooter updatedAt={user?.updatedAt} />
                 </form>
             </FormProvider>
         </div>
