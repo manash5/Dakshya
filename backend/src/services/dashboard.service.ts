@@ -1,6 +1,5 @@
 import { IJobRole } from "../models/jobRole.model";
 import { IUserProgress } from "../models/userProgress.model";
-import { ICareerKnowledge } from "../models/careerKnowledge.model";
 import { UserProgressService } from "./userProgress.service";
 import { JobPostingMongoRepository } from "../repository/jobPosting.repository";
 import { CareerKnowledgeMongoRepository } from "../repository/careerKnowledge.repository";
@@ -15,12 +14,6 @@ import {
 const userProgressService = new UserProgressService();
 const jobPostingRepository = new JobPostingMongoRepository();
 const careerKnowledgeRepository = new CareerKnowledgeMongoRepository();
-
-const DIFFICULTY_LEVEL_LABELS: Record<string, string> = {
-  Beginner: "Entry Level",
-  Intermediate: "Mid Level",
-  Advanced: "Senior Level",
-};
 
 const formatSalaryValue = (value: number): string =>
   value >= 1000 ? `${Math.round(value / 1000)}k` : `${value}`;
@@ -127,17 +120,29 @@ export class DashboardService {
 
     const { min, max, currency } = knowledge.salary;
 
+    // Scale the shown ceiling to the user's actual readiness instead of
+    // always showing the role's full senior-level top end -- someone at 60%
+    // readiness with no real experience in this role yet shouldn't see the
+    // same expected salary as someone who's actually interview-ready. Floor
+    // of 0.3 keeps the range meaningful even at very low readiness rather
+    // than collapsing to ~min. The floor (min) stays the role's real entry
+    // point regardless of readiness -- that's already the honest bottom.
+    const readinessFactor = 0.3 + 0.7 * (primaryRole.readinessScore / 100);
+    const adjustedMax = Math.round(min + (max - min) * readinessFactor);
+
     return {
       min,
-      max,
+      max: adjustedMax,
       currency,
-      formatted: `${currency} ${formatSalaryValue(min)} - ${formatSalaryValue(max)}`,
+      formatted: `${currency} ${formatSalaryValue(min)} - ${formatSalaryValue(adjustedMax)}`,
       jobRole: jobRole.title,
-      levelLabel: this.getLevelLabel(knowledge),
+      levelLabel: this.getLevelLabel(primaryRole.readinessScore),
     };
   }
 
-  private getLevelLabel(knowledge: ICareerKnowledge): string {
-    return DIFFICULTY_LEVEL_LABELS[knowledge.difficulty] ?? knowledge.difficulty;
+  private getLevelLabel(readinessScore: number): string {
+    if (readinessScore < 40) return "Entry Level";
+    if (readinessScore < 75) return "Mid Level";
+    return "Senior Level";
   }
 }
