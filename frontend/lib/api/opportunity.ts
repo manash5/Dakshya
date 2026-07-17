@@ -13,6 +13,7 @@ export interface Opportunity {
     source: string;
     postedDate: string | null;
     createdAt: string;
+    jobRoles: string[];
 }
 
 export const getAllOpportunities = async (params: {
@@ -20,6 +21,7 @@ export const getAllOpportunities = async (params: {
     limit?: number;
     category?: string;
     search?: string;
+    jobRoleIds?: string;
 }) => {
     try {
         const response = await axiosInstance.get(API.OPPORTUNITY.GET_ALL, { params });

@@ -6,11 +6,13 @@ export const handleGetAllOpportunities = async ({
     limit,
     category,
     search,
+    jobRoleIds,
 }: {
     page?: number;
     limit?: number;
     category?: string;
     search?: string;
+    jobRoleIds?: string[];
 } = {}) => {
     try {
         const currentPage = page ? page > 0 ? page : 1 : 1;
@@ -20,6 +22,7 @@ export const handleGetAllOpportunities = async ({
             limit: currentLimit,
             category,
             search,
+            jobRoleIds: jobRoleIds && jobRoleIds.length > 0 ? jobRoleIds.join(",") : undefined,
         });
         if (result.success) {
             return { success: true, message: result.message, data: result.data, pagination: result.meta };

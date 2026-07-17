@@ -24,29 +24,33 @@ const RECOMMENDED_JOBS_LIMIT = 3;
 const OPPORTUNITIES_LIMIT = 4;
 
 export default async function Page() {
-  const [dashboardResult, opportunitiesResult] = await Promise.all([
-    getCareerDashboardData(),
-    handleGetAllOpportunities({ limit: OPPORTUNITIES_LIMIT }),
-  ]);
+  const dashboardResult = await getCareerDashboardData();
 
   const dashboard: CareerDashboard = dashboardResult.success
     ? dashboardResult.data
     : EMPTY_DASHBOARD;
 
-  const opportunities = opportunitiesResult.success ? opportunitiesResult.data : [];
+  const targetRoleIds = dashboard.hero.map((role) => role.jobRoleId);
 
   // Recommended Jobs deliberately reuses the existing public job-postings
   // endpoint (filtered per target role) instead of a dedicated dashboard
   // endpoint — the job-finder page already lists from the same source.
   // Jobs aren't tagged to a role in storage anymore (see
   // jobPosting.model.ts), so this searches by the role's title text and
-  // tags each result with that role's id itself, client-side.
-  const jobResultsByRole = await Promise.all(
-    dashboard.hero.map(async (role) => ({
-      role,
-      result: await handleGetAllJobPostings({ search: role.jobRole, limit: 4 }),
-    })),
-  );
+  // tags each result with that role's id itself, client-side. Opportunities
+  // ARE tagged with jobRoles now (AI-classified at scrape time), so that one
+  // filters server-side by the same target-role ids instead.
+  const [jobResultsByRole, opportunitiesResult] = await Promise.all([
+    Promise.all(
+      dashboard.hero.map(async (role) => ({
+        role,
+        result: await handleGetAllJobPostings({ search: role.jobRole, limit: 4 }),
+      })),
+    ),
+    handleGetAllOpportunities({ limit: OPPORTUNITIES_LIMIT, jobRoleIds: targetRoleIds }),
+  ]);
+
+  const opportunities = opportunitiesResult.success ? opportunitiesResult.data : [];
 
   const seenJobIds = new Set<string>();
   const jobs: RecommendedJob[] = jobResultsByRole
