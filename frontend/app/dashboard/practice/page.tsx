@@ -1,8 +1,8 @@
 import Link from "next/link";
+import ContinuePracticeHero from "./_components/ContinuePracticeHero";
 import PracticeHistoryTable from './_components/PracticeHistoryTable';
-import PracticeTopBar from "./_components/PracticeTopBar";
 import ProjectLearningSection from "./_components/ProjectLearningSection";
-import QuickDrillCard from "./_components/QuickDrillCard";
+import MockInterviewCard from "./_components/MockInterviewCard";
 import PracticeStreakCard from "./_components/PracticeStreakCard";
 import SkillMasterySection from "./_components/SkillMasterySection";
 import { getCareerDashboardData } from "@/lib/actions/dashboard-action";
@@ -10,6 +10,8 @@ import { getSkillPlannerData } from "@/lib/actions/skillPlanner-action";
 import { handleGetAttemptHistory } from "@/lib/actions/practiceAttempt-action";
 import { handleGetAllProjects } from "@/lib/actions/project-action";
 import { computePracticeStats } from "@/lib/utils/practiceStats";
+import { buildPracticeRecommendation } from "@/lib/utils/practiceRecommendation";
+import { buildProjectRecommendations } from "@/lib/utils/projectRecommendation";
 import type { CareerDashboard } from "@/lib/api/dashboard";
 import type { SkillPlanner } from "@/lib/api/skillPlanner";
 
@@ -87,57 +89,74 @@ export default async function Page({
 
   // Pure reads, nothing mutates -> parallel (unlike the Skill Planner page's
   // plannerResult+touchRoadmapVisit pairing, which has to be sequential).
-  const [plannerResult, historyResult, projectsResult] = await Promise.all([
-    getSkillPlannerData(selectedRoleId),
+  // Planners and projects are fetched for every target role (not just the
+  // selected one) so Project-Based Learning can show projects across all of
+  // the user's target roles instead of only whichever one is selected.
+  const [plannerResults, historyResult, projectResults] = await Promise.all([
+    Promise.all(dashboard.hero.map((role) => getSkillPlannerData(role.jobRoleId))),
     handleGetAttemptHistory({ limit: 60 }),
-    handleGetAllProjects({ careerRole: selectedRoleId, limit: 6 }),
+    Promise.all(
+      dashboard.hero.map((role) => handleGetAllProjects({ careerRole: role.jobRoleId, limit: 20 })),
+    ),
   ]);
 
-  const planner: SkillPlanner = plannerResult.success
-    ? plannerResult.data
-    : emptyPlanner(selectedRoleId, selectedHero.jobRole);
+  const planners: SkillPlanner[] = dashboard.hero.map((role, i) => {
+    const result = plannerResults[i];
+    return result.success ? result.data : emptyPlanner(role.jobRoleId, role.jobRole);
+  });
+
+  const planner: SkillPlanner =
+    planners.find((p) => p.role.jobRoleId === selectedRoleId) ?? planners[0];
   const attempts = historyResult.success ? historyResult.data : [];
-  const projects = projectsResult.success ? projectsResult.data : [];
+  const projects = projectResults.flatMap((result) => (result.success ? result.data : []));
 
-  const topGapSkill = planner.skills[0] ?? null;
   const stats = computePracticeStats(attempts);
+  const recommendation = buildPracticeRecommendation(planner.skills);
   const completedProjectTitles = Array.from(
-    new Set(planner.skills.flatMap((s) => s.project.projectTitles)),
+    new Set(planners.flatMap((p) => p.skills.flatMap((s) => s.project.projectTitles))),
   );
-
-  const generalInterviewHref = `/dashboard/practice/interview?jobRoleId=${selectedRoleId}`;
-  const quickDrillHref = topGapSkill
-    ? `${generalInterviewHref}&skill=${encodeURIComponent(topGapSkill.skill)}&skillLabel=${encodeURIComponent(topGapSkill.displayName)}`
-    : generalInterviewHref;
+  const projectRecommendations = buildProjectRecommendations(planners, projects, completedProjectTitles);
 
   return (
     <div className="bg-[#F7F8F5] px-6 py-6 sm:px-8 lg:px-10 lg:py-8">
       <div className="mx-auto flex w-full max-w-[1000px] flex-col gap-8">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <PracticeTopBar />
-          <Link
-            href={generalInterviewHref}
-            className="flex h-11 items-center rounded-full bg-zinc-900 px-6 text-sm font-semibold text-white transition hover:bg-zinc-800"
-          >
-            Start AI Interview
-          </Link>
+        <div>
+          <h1 className="bg-gradient-to-r from-neutral-900 to-neutral-600 bg-clip-text text-3xl font-bold text-transparent">
+            Practice
+          </h1>
+          <p className="mt-2 text-sm text-neutral-500">
+            What to work on next, based on your real skill gaps.
+          </p>
         </div>
 
-        <SkillMasterySection jobRoleId={selectedRoleId} skills={planner.skills} />
+        <ContinuePracticeHero
+          roleTitle={planner.role.jobRole}
+          readinessScore={planner.readinessScore}
+          readinessLabel={planner.readinessLabel}
+          recommendation={recommendation}
+          jobRoleId={selectedRoleId}
+          stats={stats}
+        />
+
+        <div>
+          <h2 className="mb-4 text-xl font-bold text-neutral-900">Skill Practice</h2>
+          <SkillMasterySection planners={planners} />
+        </div>
 
         <section className="grid gap-5 xl:grid-cols-[minmax(0,1.8fr)_minmax(300px,0.9fr)]">
           <PracticeHistoryTable attempts={attempts} />
 
           <div className="flex flex-col gap-5">
-            <QuickDrillCard href={quickDrillHref} skillLabel={topGapSkill?.displayName ?? null} />
+            <MockInterviewCard jobRoleId={selectedRoleId} />
             <PracticeStreakCard stats={stats} />
           </div>
         </section>
 
         <ProjectLearningSection
-          jobRoleId={selectedRoleId}
+          heroRoles={dashboard.hero}
           projects={projects}
           completedProjectTitles={completedProjectTitles}
+          recommendations={projectRecommendations}
         />
       </div>
     </div>
