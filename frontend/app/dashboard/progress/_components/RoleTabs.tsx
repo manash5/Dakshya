@@ -1,31 +1,29 @@
-"use client";
+import Link from "next/link";
+import type { CareerHero } from "@/lib/api/dashboard";
 
-import { useState } from "react";
+interface RoleTabsProps {
+  roles: CareerHero[];
+  selectedRoleId: string;
+}
 
-const ROLES = ["Flutter Developer", "Frontend Developer", "Data Analyst", "Backend Engineer"] as const;
-
-export default function RoleTabs() {
-  const [active, setActive] = useState<(typeof ROLES)[number]>("Flutter Developer");
-
+export default function RoleTabs({ roles, selectedRoleId }: RoleTabsProps) {
   return (
-    <div className="flex flex-wrap items-center gap-2.5">
-      {ROLES.map((role) => {
-        const isActive = role === active;
+    <div className="inline-flex flex-wrap items-center gap-1 rounded-xl border border-neutral-200 bg-white p-1">
+      {roles.map((role) => {
+        const isActive = role.jobRoleId === selectedRoleId;
 
         return (
-          <button
-            key={role}
-            type="button"
-            onClick={() => setActive(role)}
-            className={[
-              "rounded-full px-5 py-2.5 text-sm font-medium transition-colors",
+          <Link
+            key={role.jobRoleId}
+            href={`/dashboard/progress?role=${role.jobRoleId}`}
+            className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
               isActive
-                ? "bg-zinc-900 text-white"
-                : "border border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300",
-            ].join(" ")}
+                ? "bg-neutral-900 text-white"
+                : "text-neutral-600 hover:bg-neutral-100"
+            }`}
           >
-            {role}
-          </button>
+            {role.jobRole}
+          </Link>
         );
       })}
     </div>
