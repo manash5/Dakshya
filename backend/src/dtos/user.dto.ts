@@ -21,6 +21,12 @@ export const LoginUserDto = UserSchema.pick({
 }); 
 export type LoginUserDto = z.infer<typeof LoginUserDto> 
 
+// This DTO is parsed from a multipart/form-data body (see uploads.single()
+// in user.route.ts), where every field arrives as a string regardless of
+// its logical type -- currentSemester needs coercion, and targetRoles is
+// sent as a JSON-stringified array (a single repeated form field would
+// collapse to a plain string instead of an array when exactly one role is
+// selected) and needs parsing back out.
 export const UpdateUserDto = z.object({
   firstName: z.string().optional(),
   lastName: z.string().optional(),
@@ -30,9 +36,18 @@ export const UpdateUserDto = z.object({
   phoneNumber: z.string().optional(),
   profilePicture: z.string().optional(),
 
-  currentSemester: z.number().int().min(1).max(8).optional(),
+  currentSemester: z.coerce.number().int().min(1).max(8).optional(),
 
-  targetRoles: z.array(z.string()).optional(),
+  targetRoles: z.preprocess((value) => {
+    if (typeof value === "string") {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return [value];
+      }
+    }
+    return value;
+  }, z.array(z.string())).optional(),
 });
 
 export type UpdateUserDto = z.infer<typeof UpdateUserDto>;
