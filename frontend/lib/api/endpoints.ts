@@ -50,10 +50,14 @@ export const API = {
     },
     SKILL_PLANNER: {
         GET_BY_ROLE: (jobRoleId: string) => `/api/v1/skill-planner/${jobRoleId}`,
+        GENERATE_RESOURCES: (jobRoleId: string) => `/api/v1/skill-planner/${jobRoleId}/generate-resources`,
     },
     USER_PROGRESS: {
         TOUCH_ROADMAP_VISIT: (jobRoleId: string) => `/api/v1/userProgress/roadmap/${jobRoleId}/visit`,
         COMPLETE_PROJECT: (jobRoleId: string) => `/api/v1/userProgress/roadmap/${jobRoleId}/project`,
+        COMPLETE_ROADMAP_STEP: (jobRoleId: string) => `/api/v1/userProgress/roadmap/${jobRoleId}/step`,
+        MARK_RESOURCE_WATCHED: (jobRoleId: string) => `/api/v1/userProgress/roadmap/${jobRoleId}/resource`,
+        SUBMIT_SELF_REPORTED_SKILL: (jobRoleId: string) => `/api/v1/userProgress/skills/${jobRoleId}/report`,
     },
     PROJECT: {
         GET_ALL: "/api/v1/projects",
@@ -114,6 +118,18 @@ export const API = {
             SCRAPE: "/api/v1/admin/opportunities/scrape",
             UPDATE: (id: string) => `/api/v1/admin/opportunities/${id}`,
             DELETE: (id: string) => `/api/v1/admin/opportunities/${id}`,
-        }
+        },
+        PROJECT: {
+            CREATE: "/api/v1/admin/projects",
+            UPDATE: (id: string) => `/api/v1/admin/projects/${id}`,
+            DELETE: (id: string) => `/api/v1/admin/projects/${id}`,
+        },
+        CAREER_KNOWLEDGE: {
+            GET_ALL: "/api/v1/admin/careerKnowledge",
+            GET_BY_ROLE: (jobRoleId: string) => `/api/v1/admin/careerKnowledge/${jobRoleId}`,
+            GENERATE: (jobRoleId: string) => `/api/v1/admin/careerKnowledge/${jobRoleId}`,
+            REGENERATE: (jobRoleId: string) => `/api/v1/admin/careerKnowledge/${jobRoleId}`,
+            DELETE: (jobRoleId: string) => `/api/v1/admin/careerKnowledge/${jobRoleId}`,
+        },
     }
 }

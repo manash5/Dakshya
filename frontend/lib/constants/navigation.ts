@@ -6,6 +6,8 @@ import {
   GraduationCap,
   BookText,
   Trophy,
+  FolderKanban,
+  Sparkles,
   LucideIcon,
 } from "lucide-react";
 
@@ -64,6 +66,18 @@ export const NAV_ITEMS: NavItem[] = [
     href: "/admin/opportunities",
     icon: Trophy,
     description: "Scrape, edit and manage opportunities.",
+  },
+  {
+    name: "Projects",
+    href: "/admin/project",
+    icon: FolderKanban,
+    description: "Create, edit and manage practice projects.",
+  },
+  {
+    name: "Career Knowledge",
+    href: "/admin/career-knowledge",
+    icon: Sparkles,
+    description: "Generate and regenerate AI career knowledge per role.",
   },
 ];
 
