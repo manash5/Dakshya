@@ -9,9 +9,6 @@ export const JobPostingSchema = z.object({
   employmentType: z.string().nullable().optional(),
   requiredSkills: z.array(z.string()).default([]),
   description: z.string().default(""),
-  // No longer assigned during scrape — jobs are stored role-agnostic and
-  // matched to a user's target roles at query time (title/keyword match,
-  // see jobPosting.repository.ts). Left optional for admin manual tagging.
   jobRole: z.string().nullable().optional(),
   applyLink: z.string(),
   source: z.string(),
