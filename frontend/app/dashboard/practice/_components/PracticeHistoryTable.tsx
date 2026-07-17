@@ -29,12 +29,12 @@ export default function PracticeHistoryTable({ attempts }: PracticeHistoryTableP
   return (
     <div className="flex flex-col rounded-[24px] border border-zinc-200 bg-white shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
       <div className="flex items-center justify-between px-6 py-5">
-        <h2 className="text-lg font-semibold text-zinc-900">Practice History</h2>
+        <h2 className="text-lg font-semibold text-zinc-900">Recent Sessions</h2>
       </div>
 
       {rows.length === 0 ? (
         <p className="px-6 pb-6 text-sm text-zinc-400">
-          No practice attempts yet — start an interview above.
+          No practice attempts yet — start a session above.
         </p>
       ) : (
         <>
@@ -48,7 +48,11 @@ export default function PracticeHistoryTable({ attempts }: PracticeHistoryTableP
           <div className="flex flex-col">
             {rows.map((attempt) => {
               const status = statusFor(attempt);
-              const skillLabel = attempt.skill ?? attempt.questions[0]?.skills[0] ?? null;
+              const skillLabel =
+                attempt.skill ??
+                (attempt.skills.length > 0 ? attempt.skills.join(", ") : null) ??
+                attempt.questions[0]?.skills[0] ??
+                null;
               const isViewable = !!attempt.completedAt;
 
               return (

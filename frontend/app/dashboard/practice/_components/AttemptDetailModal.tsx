@@ -19,6 +19,8 @@ export default function AttemptDetailModal({ attempt, onClose }: AttemptDetailMo
 
   if (!attempt) return null;
 
+  const isPureInterview = !attempt.skill && (!attempt.skills || attempt.skills.length === 0);
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
@@ -32,7 +34,7 @@ export default function AttemptDetailModal({ attempt, onClose }: AttemptDetailMo
       >
         <div className="flex items-start justify-between gap-4">
           <h2 className="text-[20px] font-semibold leading-tight text-zinc-900">
-            Interview Results
+            {isPureInterview ? "Interview Results" : "Practice Results"}
           </h2>
           <button
             type="button"

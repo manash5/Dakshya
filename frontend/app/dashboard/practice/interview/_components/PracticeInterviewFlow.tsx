@@ -26,6 +26,8 @@ interface PracticeInterviewFlowProps {
     jobRoleTitle: string;
     skill: string | null;
     skillLabel: string | null;
+    skills?: string[] | null;
+    initialQuestionCount?: number | null;
 }
 
 export default function PracticeInterviewFlow({
@@ -33,12 +35,20 @@ export default function PracticeInterviewFlow({
     jobRoleTitle,
     skill,
     skillLabel,
+    skills,
+    initialQuestionCount,
 }: PracticeInterviewFlowProps) {
     const [stage, setStage] = useState<Stage>("setup");
 
+    const hasMultiSkill = !!skills && skills.length > 0;
+    // Deliberately separate framing from the general (no skill/skills)
+    // interview flow: Practice says "let's learn", Interview says "let's
+    // evaluate" -- same underlying flow, different mindset/copy.
+    const isPureInterview = !skill && !hasMultiSkill;
+
     const [difficulty, setDifficulty] = useState<(typeof DIFFICULTIES)[number]>("Intermediate");
     const [mode, setMode] = useState<(typeof MODES)[number]>("Mixed");
-    const [questionCount, setQuestionCount] = useState(5);
+    const [questionCount, setQuestionCount] = useState(initialQuestionCount ?? 5);
 
     const [attempt, setAttempt] = useState<PracticeAttempt | null>(null);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -53,7 +63,8 @@ export default function PracticeInterviewFlow({
 
         const result = await handleStartAttempt({
             jobRoleId,
-            skill: skill ?? undefined,
+            skill: hasMultiSkill ? undefined : skill ?? undefined,
+            skills: hasMultiSkill ? (skills as string[]) : undefined,
             difficulty,
             mode,
             questionCount,
@@ -132,12 +143,23 @@ export default function PracticeInterviewFlow({
         <AnimatePresence mode="wait">
             {stage === "setup" && (
                 <motion.div key="setup" {...fadeSlide}>
+                    <Link
+                        href="/dashboard/practice"
+                        className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-zinc-500 transition hover:text-zinc-900"
+                    >
+                        <ArrowLeft size={14} /> Back to Practice
+                    </Link>
+
                     <div className="rounded-[24px] bg-white p-8 shadow-[0_20px_40px_rgba(15,23,42,0.06)]">
-                        <h2 className="text-2xl font-semibold text-zinc-900">Start a Practice Interview</h2>
+                        <h2 className="text-2xl font-semibold text-zinc-900">
+                            {isPureInterview ? "Start a Mock Interview" : "Start a Practice Session"}
+                        </h2>
                         <p className="mt-1 text-sm text-zinc-500">
-                            {skillLabel
-                                ? `Focused on ${skillLabel} for ${jobRoleTitle}.`
-                                : `General interview for ${jobRoleTitle}.`}
+                            {hasMultiSkill
+                                ? `Practicing: ${skillLabel} for ${jobRoleTitle}.`
+                                : skillLabel
+                                    ? `Focused on ${skillLabel} for ${jobRoleTitle}.`
+                                    : `General interview for ${jobRoleTitle}.`}
                         </p>
 
                         <div className="mt-6 flex flex-col gap-5">
@@ -183,7 +205,11 @@ export default function PracticeInterviewFlow({
                             whileTap={{ scale: 0.98 }}
                             className="mt-8 flex h-12 w-full items-center justify-center rounded-full bg-zinc-900 text-sm font-semibold text-white transition-colors duration-150 hover:bg-zinc-800 disabled:opacity-50"
                         >
-                            {starting ? "Generating questions…" : "Start Interview"}
+                            {starting
+                                ? "Generating questions…"
+                                : isPureInterview
+                                    ? "Start Interview"
+                                    : "Start Practice"}
                         </motion.button>
                     </div>
                 </motion.div>
@@ -198,7 +224,11 @@ export default function PracticeInterviewFlow({
                             </p>
                             <p className="text-xs text-zinc-400">
                                 {attempt.jobRoleId.title}
-                                {attempt.skill ? ` · ${attempt.skill}` : ""} · {attempt.difficulty}
+                                {attempt.skill ? ` · ${attempt.skill}` : ""}
+                                {attempt.skills && attempt.skills.length > 0
+                                    ? ` · ${attempt.skills.join(", ")}`
+                                    : ""}{" "}
+                                · {attempt.difficulty}
                             </p>
                         </div>
 
@@ -266,7 +296,7 @@ export default function PracticeInterviewFlow({
                                         "Evaluating…"
                                     )
                                 ) : isLast ? (
-                                    "Finish Interview"
+                                    isPureInterview ? "Finish Interview" : "Finish Session"
                                 ) : (
                                     <>
                                         Next <ChevronRight size={16} />
@@ -291,7 +321,9 @@ export default function PracticeInterviewFlow({
             {stage === "results" && attempt && (
                 <motion.div key="results" {...fadeSlide}>
                     <div className="rounded-[24px] bg-white p-8 shadow-[0_20px_40px_rgba(15,23,42,0.06)]">
-                        <h2 className="text-2xl font-semibold text-zinc-900">Interview Results</h2>
+                        <h2 className="text-2xl font-semibold text-zinc-900">
+                            {isPureInterview ? "Interview Results" : "Practice Results"}
+                        </h2>
 
                         <div className="mt-1">
                             <AttemptResults attempt={attempt} />
@@ -303,7 +335,8 @@ export default function PracticeInterviewFlow({
                                 onClick={resetToSetup}
                                 className="flex items-center gap-2 rounded-full bg-zinc-900 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-zinc-800"
                             >
-                                <RotateCcw size={14} /> Start Another Interview
+                                <RotateCcw size={14} />{" "}
+                                {isPureInterview ? "Start Another Interview" : "Start Another Session"}
                             </button>
                             <Link
                                 href="/dashboard/practice"

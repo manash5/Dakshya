@@ -11,6 +11,7 @@ import {
 export const handleStartAttempt = async (data: {
     jobRoleId: string;
     skill?: string;
+    skills?: string[];
     difficulty: "Beginner" | "Intermediate" | "Advanced";
     mode: "Oral" | "Coding" | "Mixed";
     questionCount: number;

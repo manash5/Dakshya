@@ -5,9 +5,18 @@ import PracticeInterviewFlow from "./_components/PracticeInterviewFlow";
 export default async function Page({
   searchParams,
 }: {
-  searchParams: Promise<{ jobRoleId?: string; skill?: string; skillLabel?: string }>;
+  searchParams: Promise<{
+    jobRoleId?: string;
+    skill?: string;
+    skillLabel?: string;
+    skills?: string;
+    questionCount?: string;
+  }>;
 }) {
-  const { jobRoleId, skill, skillLabel } = await searchParams;
+  const { jobRoleId, skill, skillLabel, skills: skillsParam, questionCount } = await searchParams;
+  const skills = skillsParam
+    ? skillsParam.split(",").map((s) => s.trim()).filter(Boolean)
+    : null;
 
   if (!jobRoleId) {
     return (
@@ -40,6 +49,8 @@ export default async function Page({
           jobRoleTitle={jobRole?.title ?? "this role"}
           skill={skill ?? null}
           skillLabel={skillLabel ?? skill ?? null}
+          skills={skills}
+          initialQuestionCount={questionCount ? Number(questionCount) : null}
         />
       </div>
     </div>
