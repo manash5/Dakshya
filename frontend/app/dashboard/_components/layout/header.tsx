@@ -1,9 +1,15 @@
 "use client"
 
 import { useState } from "react";
-import { Bell } from "lucide-react";
 import Image from "next/image";
 import { useAuth } from "@/lib/context/AuthContext";
+
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
+}
 
 export default function DashboardHeader() {
   const { user, loading } = useAuth();
@@ -22,11 +28,6 @@ export default function DashboardHeader() {
       <div className="flex h-[52px] items-center justify-end px-8">
         <div className="flex items-center gap-6">
 
-          {/* Notification Bell */}
-          <button className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900">
-            <Bell size={16} strokeWidth={1.8} />
-          </button>
-
           {/* User Profile Info & Avatar */}
           <div className="flex items-center gap-3">
             <div className="text-right leading-tight">
@@ -34,7 +35,7 @@ export default function DashboardHeader() {
                 {name}
               </p>
               <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">
-                software engineer
+                {getGreeting()}
               </p>
             </div>
 

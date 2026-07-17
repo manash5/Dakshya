@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -55,9 +56,14 @@ export default function Sidebar() {
   return (
     <aside className="flex h-screen w-[202px] shrink-0 flex-col border-r border-slate-200/70 bg-white">
       <div className="px-6 pt-8 pb-6">
-        <h1 className="text-base font-semibold tracking-tight text-slate-900 suppressHydrationWarning">
-          Dakshya AI
-        </h1>
+        <Image
+          src="/dakshya_main.png"
+          alt="Dakshya AI"
+          width={110}
+          height={36}
+          priority
+          className="h-9 w-auto object-contain"
+        />
       </div>
 
       <nav className="flex-1 px-3">
