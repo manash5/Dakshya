@@ -128,6 +128,8 @@ export class UserProgressService implements IUserProgressService {
           readinessScore: 0,
           missingSkills: [],
           completedRoadmapSteps: [],
+          roadmapStepProgress: [],
+          selfReportedSkills: [],
           completedProjects: [],
           lastAnalyzed: new Date(),
           lastVisited: null,
@@ -210,11 +212,107 @@ export class UserProgressService implements IUserProgressService {
     return await this.refreshUserReadiness(userId);
   }
 
+  // records that the user watched a given resource while working on a roadmap step
+  async markRoadmapStepResourceWatched(
+    userId: string,
+    jobRoleId: string,
+    stepOrder: number,
+    resourceUrl: string,
+  ): Promise<IUserProgress> {
+    const progress = await this.getUserProgress(userId);
+
+    const role = progress.targetRoleProgress.find(
+      (r) => r.jobRoleId._id.toString() === jobRoleId,
+    );
+
+    if (!role) {
+      throw new HttpException(404, "Target role not found");
+    }
+
+    let stepProgress = role.roadmapStepProgress.find(
+      (s) => s.stepOrder === stepOrder,
+    );
+
+    if (!stepProgress) {
+      stepProgress = { stepOrder, watchedResourceUrls: [] };
+      role.roadmapStepProgress.push(stepProgress);
+    }
+
+    if (!stepProgress.watchedResourceUrls.includes(resourceUrl)) {
+      stepProgress.watchedResourceUrls.push(resourceUrl);
+    }
+
+    const updatedProgress = await progressRepository.update(
+      progress._id.toString(),
+      {
+        targetRoleProgress: progress.targetRoleProgress,
+      },
+    );
+
+    if (!updatedProgress) {
+      throw new HttpException(500, "Failed to update roadmap step resource progress");
+    }
+
+    return await this.refreshUserReadiness(userId);
+  }
+
+  // records a free-text self-report of how the user used a skill -- no AI
+  // evaluation, just flags the skill as self-reported evidence (one entry
+  // per skill; resubmitting updates the existing entry rather than growing
+  // the array)
+  async submitSelfReportedSkill(
+    userId: string,
+    jobRoleId: string,
+    skill: string,
+    description: string,
+  ): Promise<IUserProgress> {
+    const progress = await this.getUserProgress(userId);
+
+    const role = progress.targetRoleProgress.find(
+      (r) => r.jobRoleId._id.toString() === jobRoleId,
+    );
+
+    if (!role) {
+      throw new HttpException(404, "Target role not found");
+    }
+
+    const normalizedSkill = skill.toLowerCase().trim();
+
+    const existing = role.selfReportedSkills.find(
+      (s) => s.skill === normalizedSkill,
+    );
+
+    if (existing) {
+      existing.description = description;
+      existing.reportedAt = new Date();
+    } else {
+      role.selfReportedSkills.push({
+        skill: normalizedSkill,
+        description,
+        reportedAt: new Date(),
+      });
+    }
+
+    const updatedProgress = await progressRepository.update(
+      progress._id.toString(),
+      {
+        targetRoleProgress: progress.targetRoleProgress,
+      },
+    );
+
+    if (!updatedProgress) {
+      throw new HttpException(500, "Failed to save self-reported skill");
+    }
+
+    return await this.refreshUserReadiness(userId);
+  }
+
   // udpates the project we just completed
   async completeProject(
     userId: string,
     jobRoleId: string,
     projectTitle: string,
+    githubLink?: string,
   ): Promise<IUserProgress> {
     const progress = await this.getUserProgress(userId);
 
@@ -235,6 +333,7 @@ export class UserProgressService implements IUserProgressService {
       role.completedProjects.push({
         projectTitle,
         completedAt: new Date(),
+        githubLink: githubLink ?? null,
       });
     }
 

@@ -73,6 +73,27 @@ export interface RoadmapProgressDto {
 
 export const CompleteProjectDtoSchema = z.object({
   projectTitle: z.string().min(1, "projectTitle is required"),
+  githubLink: z.string().url("githubLink must be a valid URL").optional(),
 });
 
 export type CompleteProjectDto = z.infer<typeof CompleteProjectDtoSchema>;
+
+export const CompleteRoadmapStepDtoSchema = z.object({
+  stepOrder: z.number().int().min(1, "stepOrder is required"),
+});
+
+export type CompleteRoadmapStepDto = z.infer<typeof CompleteRoadmapStepDtoSchema>;
+
+export const MarkResourceWatchedDtoSchema = z.object({
+  stepOrder: z.number().int().min(1, "stepOrder is required"),
+  resourceUrl: z.string().url("resourceUrl must be a valid URL"),
+});
+
+export type MarkResourceWatchedDto = z.infer<typeof MarkResourceWatchedDtoSchema>;
+
+export const SubmitSelfReportedSkillDtoSchema = z.object({
+  skill: z.string().min(1, "skill is required"),
+  description: z.string().min(1, "description is required"),
+});
+
+export type SubmitSelfReportedSkillDto = z.infer<typeof SubmitSelfReportedSkillDtoSchema>;

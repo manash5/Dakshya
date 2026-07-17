@@ -26,9 +26,19 @@ export interface IUserProgress
       stepOrder: number;
       completedAt: Date;
     }[];
+    roadmapStepProgress: {
+      stepOrder: number;
+      watchedResourceUrls: string[];
+    }[];
+    selfReportedSkills: {
+      skill: string;
+      description: string;
+      reportedAt: Date;
+    }[];
     completedProjects: {
       projectTitle: string;
       completedAt: Date;
+      githubLink?: string | null;
     }[];
     lastAnalyzed: Date;
     lastVisited: Date | null;
@@ -92,6 +102,40 @@ const CompletedRoadmapStepSchema = new Schema(
   { _id: false }
 );
 
+const RoadmapStepResourceProgressSchema = new Schema(
+  {
+    stepOrder: {
+      type: Number,
+      required: true,
+    },
+
+    watchedResourceUrls: [{ type: String }],
+  },
+  { _id: false }
+);
+
+const SelfReportedSkillSchema = new Schema(
+  {
+    skill: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    description: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    reportedAt: {
+      type: Date,
+      default: Date.now,
+    },
+  },
+  { _id: false }
+);
+
 const CompletedProjectSchema = new Schema(
   {
     projectTitle: {
@@ -103,6 +147,11 @@ const CompletedProjectSchema = new Schema(
     completedAt: {
       type: Date,
       default: Date.now,
+    },
+
+    githubLink: {
+      type: String,
+      default: null,
     },
   },
   { _id: false }
@@ -130,6 +179,10 @@ const TargetRoleProgressSchema = new Schema(
     ],
 
     completedRoadmapSteps: [CompletedRoadmapStepSchema],
+
+    roadmapStepProgress: [RoadmapStepResourceProgressSchema],
+
+    selfReportedSkills: [SelfReportedSkillSchema],
 
     completedProjects: [CompletedProjectSchema],
 

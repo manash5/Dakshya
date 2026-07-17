@@ -35,10 +35,26 @@ export const UserProgressSchema = z.object({
         }),
       ),
 
+      roadmapStepProgress: z.array(
+        z.object({
+          stepOrder: z.number().int().positive(),
+          watchedResourceUrls: z.array(z.string()),
+        }),
+      ),
+
+      selfReportedSkills: z.array(
+        z.object({
+          skill: z.string(),
+          description: z.string(),
+          reportedAt: z.date(),
+        }),
+      ),
+
       completedProjects: z.array(
         z.object({
           projectTitle: z.string(),
           completedAt: z.date(),
+          githubLink: z.string().nullable().optional(),
         }),
       ),
 

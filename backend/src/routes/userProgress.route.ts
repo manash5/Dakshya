@@ -42,4 +42,22 @@ router.post(
   controller.completeProject.bind(controller),
 );
 
+router.post(
+  "/roadmap/:jobRoleId/step",
+  authorizedMiddleware,
+  controller.completeRoadmapStep.bind(controller),
+);
+
+router.post(
+  "/roadmap/:jobRoleId/resource",
+  authorizedMiddleware,
+  controller.markRoadmapStepResourceWatched.bind(controller),
+);
+
+router.post(
+  "/skills/:jobRoleId/report",
+  authorizedMiddleware,
+  controller.submitSelfReportedSkill.bind(controller),
+);
+
 export default router;
