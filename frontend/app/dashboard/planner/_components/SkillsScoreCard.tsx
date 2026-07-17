@@ -1,115 +1,40 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, FileText, FolderGit2, MessageSquare } from "lucide-react";
-import type { SkillPlannerSkill, SkillSourceTag } from "@/lib/api/skillPlanner";
-
-const TABS = [
-  { id: "all", label: "All Skills" },
-  { id: "priority", label: "High Priority" },
-] as const;
-
-type TabId = (typeof TABS)[number]["id"];
+import { ArrowRight, Plus } from "lucide-react";
+import type { SkillPlannerSkill } from "@/lib/api/skillPlanner";
+import type { Project } from "@/lib/api/project";
+import type { PracticeAttempt } from "@/lib/api/practiceAttempt";
+import { STATUS_INFO, SOURCE_LABELS, SOURCE_ICONS } from "./skillStatus";
+import { buildInterviewHref } from "@/lib/utils/practiceLink";
+import SkillDetailDrawer from "./SkillDetailDrawer";
+import AddSkillEvidenceModal from "./AddSkillEvidenceModal";
 
 const DEFAULT_VISIBLE_COUNT = 3;
-
-// Plain-English label + a short one-line explanation of what the status
-// means and what to do next, so the badge alone never has to be decoded by
-// the user. Kept short (line-clamp-1'd in the row) so the card stays compact.
-const STATUS_INFO: Record<SkillPlannerSkill["status"], { label: string; badge: string; description: string }> = {
-  Locked: {
-    label: "Not Started",
-    badge: "bg-neutral-100 text-neutral-500",
-    description: "No evidence yet — check the Resources tab.",
-  },
-  Upcoming: {
-    label: "Upcoming",
-    badge: "bg-[#EAF1FB] text-[#2E6BB8]",
-    description: "Comes later in your degree program.",
-  },
-  Learning: {
-    label: "Learning",
-    badge: "bg-[#F2F3EE] text-neutral-600",
-    description: "Part of your coursework right now.",
-  },
-  Practiced: {
-    label: "Practiced",
-    badge: "bg-[#FDF0D5] text-[#B8860B]",
-    description: "Tackled in interviews — try a project next.",
-  },
-  ProjectApplied: {
-    label: "Project Applied",
-    badge: "bg-[#E4F3E1] text-[#2F5D2A]",
-    description: "Applied in a project — test it in an interview.",
-  },
-  InterviewReady: {
-    label: "Interview Ready",
-    badge: "bg-[#E9F7CC] text-[#5C8A1C]",
-    description: "Scoring well in mock interviews.",
-  },
-  Mastered: {
-    label: "Mastered",
-    badge: "bg-[#2F5D2A] text-white",
-    description: "Backed by coursework, project, and interviews.",
-  },
-};
-
-const SOURCE_LABELS: Record<SkillSourceTag, string> = {
-  curriculum: "Degree",
-  resume: "Resume",
-  project: "Project",
-  practice: "Interview",
-};
-
-const SOURCE_ICONS: Partial<Record<SkillSourceTag, typeof FileText>> = {
-  resume: FileText,
-  project: FolderGit2,
-  practice: MessageSquare,
-};
 
 interface SkillsScoreCardProps {
   skills: SkillPlannerSkill[];
   jobRoleId: string;
+  projects: Project[];
+  attempts: PracticeAttempt[];
 }
 
-export default function SkillsScoreCard({ skills, jobRoleId }: SkillsScoreCardProps) {
-  const [activeTab, setActiveTab] = useState<TabId>("priority");
+export default function SkillsScoreCard({
+  skills,
+  jobRoleId,
+  projects,
+  attempts,
+}: SkillsScoreCardProps) {
   const [showAll, setShowAll] = useState(false);
+  const [selectedSkill, setSelectedSkill] = useState<SkillPlannerSkill | null>(null);
+  const [evidenceSkill, setEvidenceSkill] = useState<SkillPlannerSkill | null>(null);
 
-  const visibleSkills =
-    activeTab === "priority" ? skills.filter((s) => s.gapSeverity === "high") : skills;
-  const displayedSkills = showAll ? visibleSkills : visibleSkills.slice(0, DEFAULT_VISIBLE_COUNT);
+  const displayedSkills = showAll ? skills : skills.slice(0, DEFAULT_VISIBLE_COUNT);
 
   return (
     <div className="rounded-2xl border border-black/5 bg-white p-5 shadow-sm transition-shadow duration-200 hover:shadow-md">
-      <div className="mb-1 flex items-center justify-between">
-        <h2 className="text-xl font-bold text-neutral-900">Skill Graph</h2>
-
-        <div className="flex items-center gap-2">
-          {TABS.map((tab) => {
-            const isActive = tab.id === activeTab;
-
-            return (
-              <button
-                key={tab.id}
-                onClick={() => {
-                  setActiveTab(tab.id);
-                  setShowAll(false);
-                }}
-                className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
-                  isActive
-                    ? "bg-[#C6EA5D] text-neutral-900"
-                    : "bg-[#F2F3EE] text-neutral-500 hover:bg-neutral-200"
-                }`}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      <h2 className="mb-1 text-xl font-bold text-neutral-900">Skill Graph</h2>
 
       <p className="mb-4 text-sm text-neutral-400">
         What you have, and what to do next.
@@ -119,28 +44,23 @@ export default function SkillsScoreCard({ skills, jobRoleId }: SkillsScoreCardPr
         <p className="py-8 text-center text-sm text-neutral-400">
           No required skills found for this role yet.
         </p>
-      ) : visibleSkills.length === 0 ? (
-        <p className="py-8 text-center text-sm text-neutral-400">
-          Nothing high priority right now — nice work.
-        </p>
       ) : (
         <>
-          <div className="mb-3 grid grid-cols-[1.5fr_1.6fr_0.6fr] gap-4 px-1">
+          <div className="mb-3 grid grid-cols-[1.5fr_1.6fr_0.7fr] gap-4 px-1">
             <span className="text-xs font-medium tracking-wide text-neutral-400">
               SKILL &amp; NEXT STEP
             </span>
             <span className="text-xs font-medium tracking-wide text-neutral-400">
               YOUR LEVEL &amp; EVIDENCE
             </span>
-            <span className="text-xs font-medium tracking-wide text-neutral-400">
-              PRIORITY
-            </span>
+            <span className="text-xs font-medium tracking-wide text-neutral-400">ACTION</span>
           </div>
 
           <div className="flex flex-col">
             <AnimatePresence initial={false}>
               {displayedSkills.map((skill, i) => {
                 const status = STATUS_INFO[skill.status];
+                const isUnleveled = skill.status === "Locked";
 
                 return (
                   <motion.div
@@ -153,7 +73,16 @@ export default function SkillsScoreCard({ skills, jobRoleId }: SkillsScoreCardPr
                     className="overflow-hidden"
                   >
                     <div
-                      className={`grid grid-cols-[1.5fr_1.6fr_0.6fr] items-center gap-4 px-1 py-3 ${
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => setSelectedSkill(skill)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          setSelectedSkill(skill);
+                        }
+                      }}
+                      className={`grid cursor-pointer grid-cols-[1.5fr_1.6fr_0.7fr] items-center gap-4 px-1 py-3 text-left transition-colors hover:bg-[#FAFBF6] ${
                         i !== 0 ? "border-t border-neutral-100" : ""
                       }`}
                     >
@@ -222,23 +151,29 @@ export default function SkillsScoreCard({ skills, jobRoleId }: SkillsScoreCardPr
                         </div>
                       </div>
 
-                      <div className="flex flex-col items-start gap-2">
-                        <span
-                          className={`inline-block rounded-lg px-3 py-1.5 text-sm font-semibold ${
-                            skill.gapSeverity === "high"
-                              ? "bg-[#FCE8E6] text-[#D0362A]"
-                              : "bg-[#F2F3EE] text-neutral-500"
-                          }`}
-                        >
-                          {skill.gapSeverity === "high" ? "High Priority" : "Low Priority"}
-                        </span>
-                        <Link
-                          href={`/dashboard/practice/interview?jobRoleId=${jobRoleId}&skill=${encodeURIComponent(skill.skill)}&skillLabel=${encodeURIComponent(skill.displayName)}`}
-                          className="inline-flex items-center gap-1 text-xs font-semibold text-neutral-500 transition-colors hover:text-neutral-900"
-                        >
-                          Practice
-                          <ArrowRight className="h-3 w-3" />
-                        </Link>
+                      <div className="flex items-start">
+                        {isUnleveled ? (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEvidenceSkill(skill);
+                            }}
+                            className="inline-flex items-center gap-1 rounded-lg bg-neutral-900 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-neutral-800"
+                          >
+                            <Plus className="h-3 w-3" />
+                            Add Skill
+                          </button>
+                        ) : (
+                          <a
+                            href={buildInterviewHref(jobRoleId, skill)}
+                            onClick={(e) => e.stopPropagation()}
+                            className="inline-flex items-center gap-1 rounded-lg border border-neutral-200 px-3 py-1.5 text-xs font-semibold text-neutral-600 transition-colors hover:border-neutral-300 hover:text-neutral-900"
+                          >
+                            Practice
+                            <ArrowRight className="h-3 w-3" />
+                          </a>
+                        )}
                       </div>
                     </div>
                   </motion.div>
@@ -247,16 +182,30 @@ export default function SkillsScoreCard({ skills, jobRoleId }: SkillsScoreCardPr
             </AnimatePresence>
           </div>
 
-          {visibleSkills.length > DEFAULT_VISIBLE_COUNT && (
+          {skills.length > DEFAULT_VISIBLE_COUNT && (
             <button
               onClick={() => setShowAll((prev) => !prev)}
               className="mt-4 w-full rounded-xl border border-dashed border-neutral-300 py-3 text-sm font-medium text-neutral-500 transition-colors hover:border-neutral-400 hover:text-neutral-600"
             >
-              {showAll ? "Show Less" : `View All (${visibleSkills.length})`}
+              {showAll ? "Show Less" : `View All (${skills.length})`}
             </button>
           )}
         </>
       )}
+
+      <SkillDetailDrawer
+        skill={selectedSkill}
+        projects={projects}
+        attempts={attempts}
+        jobRoleId={jobRoleId}
+        onClose={() => setSelectedSkill(null)}
+      />
+
+      <AddSkillEvidenceModal
+        skill={evidenceSkill}
+        jobRoleId={jobRoleId}
+        onClose={() => setEvidenceSkill(null)}
+      />
     </div>
   );
 }

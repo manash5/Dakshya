@@ -2,7 +2,7 @@ import { Check, GraduationCap, X } from "lucide-react";
 import RingGauge from "../../_components/RingGauge";
 import type { SkillPlannerSkill } from "@/lib/api/skillPlanner";
 
-const MAX_VISIBLE_PER_COLUMN = 6;
+const MAX_VISIBLE_PER_COLUMN = 10;
 
 interface DegreeVsMarketCardProps {
   skills: SkillPlannerSkill[];
@@ -56,8 +56,8 @@ export default function DegreeVsMarketCard({
             </p>
           </div>
 
-          <div className="mt-5 grid grid-cols-2 divide-x divide-neutral-100">
-            <div className="pr-4">
+          <div className="mt-5 grid grid-cols-1 divide-y divide-neutral-100 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
+            <div className="pb-4 sm:pb-0 sm:pr-6">
               <div className="mb-3 flex items-center gap-1.5">
                 <Check className="h-3.5 w-3.5 text-[#5C8A1C]" />
                 <p className="text-xs font-semibold tracking-wide text-neutral-500">
@@ -67,7 +67,7 @@ export default function DegreeVsMarketCard({
               {taught.length === 0 ? (
                 <p className="text-sm text-neutral-400">None yet.</p>
               ) : (
-                <div className="flex flex-col gap-2">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   {taught.slice(0, MAX_VISIBLE_PER_COLUMN).map((skill) => (
                     <div
                       key={skill.skill}
@@ -90,7 +90,7 @@ export default function DegreeVsMarketCard({
               )}
             </div>
 
-            <div className="pl-4">
+            <div className="pt-4 sm:pt-0 sm:pl-6">
               <div className="mb-3 flex items-center gap-1.5">
                 <X className="h-3.5 w-3.5 text-[#D0362A]" />
                 <p className="text-xs font-semibold tracking-wide text-neutral-500">
@@ -100,7 +100,7 @@ export default function DegreeVsMarketCard({
               {notTaught.length === 0 ? (
                 <p className="text-sm text-neutral-400">Fully covered.</p>
               ) : (
-                <div className="flex flex-col gap-2">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   {notTaught.slice(0, MAX_VISIBLE_PER_COLUMN).map((skill) => (
                     <div
                       key={skill.skill}

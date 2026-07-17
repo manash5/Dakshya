@@ -2,6 +2,7 @@ import Link from "next/link";
 import { MessageSquare, Sparkles } from "lucide-react";
 import RingGauge from "../../_components/RingGauge";
 import type { SkillPlannerSkill } from "@/lib/api/skillPlanner";
+import { buildInterviewHref } from "@/lib/utils/practiceLink";
 
 interface PracticeCardProps {
   selectedSkill: SkillPlannerSkill | null;
@@ -9,9 +10,7 @@ interface PracticeCardProps {
 }
 
 export default function PracticeCard({ selectedSkill, jobRoleId }: PracticeCardProps) {
-  const interviewHref = selectedSkill
-    ? `/dashboard/practice/interview?jobRoleId=${jobRoleId}&skill=${encodeURIComponent(selectedSkill.skill)}&skillLabel=${encodeURIComponent(selectedSkill.displayName)}`
-    : `/dashboard/practice/interview?jobRoleId=${jobRoleId}`;
+  const interviewHref = buildInterviewHref(jobRoleId, selectedSkill);
 
   return (
     <div className="rounded-2xl border border-black/5 bg-white p-5 shadow-sm transition-shadow duration-200 hover:shadow-md">

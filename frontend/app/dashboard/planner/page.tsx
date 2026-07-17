@@ -5,12 +5,15 @@ import MarketAlignmentCard from "./_components/MarketAlignmentCard";
 import SkillsScoreCard from "./_components/SkillsScoreCard";
 import DegreeVsMarketCard from "./_components/DegreeVsMarketCard";
 import PracticeCard from "./_components/PracticeCard";
-import ResourceLibraryCard from "./_components/ResourceLibraryCard";
 import { getCareerDashboardData } from "@/lib/actions/dashboard-action";
 import { getSkillPlannerData } from "@/lib/actions/skillPlanner-action";
 import { handleTouchRoadmapVisit } from "@/lib/actions/userProgress-action";
+import { handleGetAllProjects } from "@/lib/actions/project-action";
+import { handleGetAttemptHistory } from "@/lib/actions/practiceAttempt-action";
 import type { CareerDashboard } from "@/lib/api/dashboard";
 import type { SkillPlanner } from "@/lib/api/skillPlanner";
+import type { Project } from "@/lib/api/project";
+import type { PracticeAttempt } from "@/lib/api/practiceAttempt";
 
 const EMPTY_DASHBOARD: CareerDashboard = {
   hero: [],
@@ -85,6 +88,12 @@ export default async function Page({
     dashboard.hero.find((r) => r.jobRoleId === roleParam) ?? dashboard.hero[0];
   const selectedRoleId = selectedHero.jobRoleId;
 
+  // Independent reads (Project, PracticeAttempt) that the skill detail drawer
+  // needs — neither touches UserProgress, so they're safe to run alongside
+  // the planner/touch pair below rather than after it.
+  const projectsPromise = handleGetAllProjects({ careerRole: selectedRoleId, limit: 100 });
+  const attemptsPromise = handleGetAttemptHistory({ jobRoleId: selectedRoleId, limit: 100 });
+
   // Sequential, not Promise.all: both calls mutate the same UserProgress
   // document (skill planner self-heals readiness, roadmap-visit stamps
   // lastVisited) — running them concurrently would let one read-modify-write
@@ -93,9 +102,14 @@ export default async function Page({
   const plannerResult = await getSkillPlannerData(selectedRoleId);
   await handleTouchRoadmapVisit(selectedRoleId);
 
+  const [projectsResult, attemptsResult] = await Promise.all([projectsPromise, attemptsPromise]);
+
   const planner: SkillPlanner = plannerResult.success
     ? plannerResult.data
     : emptyPlanner(selectedRoleId, selectedHero.jobRole);
+
+  const projects: Project[] = projectsResult.success ? projectsResult.data : [];
+  const attempts: PracticeAttempt[] = attemptsResult.success ? attemptsResult.data : [];
 
   // Top of the worst-gap-first sorted list — the Practice panel always
   // shows this role's highest-priority skill.
@@ -128,7 +142,7 @@ export default async function Page({
           </header>
         </StaggerItem>
 
-        <section className="grid gap-5 xl:grid-cols-[280px_minmax(0,1fr)_320px]">
+        <section className="grid items-start gap-5 xl:grid-cols-[280px_minmax(0,1fr)]">
           <div className="flex flex-col gap-5">
             <StaggerItem>
               <FocusCategoriesCard roles={dashboard.hero} selectedRoleId={selectedRoleId} />
@@ -141,26 +155,25 @@ export default async function Page({
                 roleTitle={planner.role.jobRole}
               />
             </StaggerItem>
+            <StaggerItem>
+              <PracticeCard selectedSkill={selectedSkill} jobRoleId={selectedRoleId} />
+            </StaggerItem>
           </div>
 
           <div className="flex flex-col gap-5">
             <StaggerItem>
-              <SkillsScoreCard skills={planner.skills} jobRoleId={selectedRoleId} />
+              <SkillsScoreCard
+                skills={planner.skills}
+                jobRoleId={selectedRoleId}
+                projects={projects}
+                attempts={attempts}
+              />
             </StaggerItem>
             <StaggerItem>
               <DegreeVsMarketCard
                 skills={planner.skills}
                 curriculumCoveragePercent={planner.degreeVsMarket.curriculumCoverage}
               />
-            </StaggerItem>
-          </div>
-
-          <div className="flex flex-col gap-5">
-            <StaggerItem>
-              <PracticeCard selectedSkill={selectedSkill} jobRoleId={selectedRoleId} />
-            </StaggerItem>
-            <StaggerItem>
-              <ResourceLibraryCard resources={planner.resources} />
             </StaggerItem>
           </div>
         </section>

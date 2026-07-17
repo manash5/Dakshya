@@ -10,7 +10,7 @@ export type SkillStatus =
     | "InterviewReady"
     | "Mastered";
 
-export type SkillSourceTag = "curriculum" | "resume" | "project" | "practice";
+export type SkillSourceTag = "curriculum" | "resume" | "project" | "practice" | "selfReported";
 
 export interface SkillPlannerSkill {
     skill: string;
@@ -48,6 +48,7 @@ export interface SkillPlannerRoadmapStep {
     resources: string[];
     status: "done" | "current" | "locked";
     completedAt: string | null;
+    watchedResourceUrls: string[];
 }
 
 export interface SkillPlannerResource {
@@ -104,5 +105,17 @@ export const getSkillPlanner = async (jobRoleId: string) => {
         return response.data;
     } catch (error: any) {
         throw new Error(error?.response?.data?.message || "Failed to fetch skill planner");
+    }
+};
+
+export const generateSkillResources = async (jobRoleId: string, skill: string) => {
+    try {
+        const response = await axiosInstance.post(
+            API.SKILL_PLANNER.GENERATE_RESOURCES(jobRoleId),
+            { skill },
+        );
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error?.response?.data?.message || "Failed to generate resources");
     }
 };
