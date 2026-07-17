@@ -1,4 +1,11 @@
+import { z } from "zod";
 import { RoadmapProgressDto } from "./userProgress.dto";
+
+export const GenerateSkillResourcesDtoSchema = z.object({
+  skill: z.string().min(1, "skill is required"),
+});
+
+export type GenerateSkillResourcesDto = z.infer<typeof GenerateSkillResourcesDtoSchema>;
 
 // Response-only DTOs for the Skill Planner aggregator. Everything here is
 // computed on read from existing collections (UserProgress, CareerKnowledge,
@@ -14,7 +21,7 @@ export type SkillStatus =
   | "InterviewReady"
   | "Mastered";
 
-export type SkillSourceTag = "curriculum" | "resume" | "project" | "practice";
+export type SkillSourceTag = "curriculum" | "resume" | "project" | "practice" | "selfReported";
 
 export interface SkillPlannerSkillDto {
   skill: string; // lowercased canonical key
@@ -52,6 +59,7 @@ export interface SkillPlannerRoadmapStepDto {
   resources: string[];
   status: "done" | "current" | "locked";
   completedAt: Date | null;
+  watchedResourceUrls: string[];
 }
 
 export interface SkillPlannerResourceDto {

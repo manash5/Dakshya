@@ -108,6 +108,54 @@ export class CareerKnowledgeService {
     return created;
   }
 
+  // AI-generates 2-3 resources for a single skill and appends them into this
+  // role's existing learningResources array -- used when a roadmap step's
+  // skill has no matching resources yet. Additive only: never edits/removes
+  // any existing resource. Self-healing -- once persisted, every future
+  // reader of this role's Skill Planner/Roadmap benefits, no regeneration.
+  async generateResourcesForSkill(jobRoleId: string, skill: string) {
+    const knowledge = await careerRepository.findByJobRoleId(jobRoleId);
+
+    if (!knowledge) {
+      throw new HttpException(404, "Career knowledge not found");
+    }
+
+    const jobRole = await jobRoleRepository.findById(jobRoleId);
+
+    if (!jobRole) {
+      throw new HttpException(404, "Job role not found");
+    }
+
+    const ai = await fastApiClient.generateSkillResources(jobRole.title, skill);
+
+    const existingUrls = new Set(knowledge.learningResources.map((r) => r.url));
+
+    const newResources = ai.resources
+      .filter((r: { url: string }) => !existingUrls.has(r.url))
+      .map((r: { title: string; type: string; url: string; skills: string[] }) => ({
+        title: r.title,
+        type: r.type,
+        url: r.url,
+        skills: r.skills.some((s) => s.toLowerCase() === skill.toLowerCase())
+          ? r.skills
+          : [...r.skills, skill],
+      }));
+
+    if (newResources.length === 0) {
+      return [];
+    }
+
+    const updated = await careerRepository.updateByJobRoleId(jobRoleId, {
+      learningResources: [...knowledge.learningResources, ...newResources],
+    } as UpdateCareerKnowledgeDto);
+
+    if (!updated) {
+      throw new HttpException(500, "Failed to save generated resources");
+    }
+
+    return newResources;
+  }
+
   async regenerateCareerKnowledge(jobRoleId: string) {
     const existing = await careerRepository.findByJobRoleId(jobRoleId);
 

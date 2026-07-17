@@ -9,4 +9,9 @@ router.use(authorizedMiddleware);
 
 router.get("/:jobRoleId", controller.getSkillPlanner.bind(controller));
 
+router.post(
+  "/:jobRoleId/generate-resources",
+  controller.generateSkillResources.bind(controller),
+);
+
 export default router;

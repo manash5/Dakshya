@@ -7,6 +7,7 @@ import { CareerKnowledgeMongoRepository } from "../repository/careerKnowledge.re
 import { ResumeAnalysisMongoRepository } from "../repository/resumeAnalysis.repository";
 import { ProjectMongoRepository } from "../repository/project.repository";
 import { PracticeAttemptMongoRepository } from "../repository/practiceAttempt.repository";
+import { CareerKnowledgeService } from "./careerKnowledge.service";
 import { extractRequiredSkills, getReadinessLabel } from "../lib/readiness";
 import {
   SkillPlannerDto,
@@ -23,6 +24,7 @@ const careerKnowledgeRepository = new CareerKnowledgeMongoRepository();
 const resumeAnalysisRepository = new ResumeAnalysisMongoRepository();
 const projectRepository = new ProjectMongoRepository();
 const practiceAttemptRepository = new PracticeAttemptMongoRepository();
+const careerKnowledgeService = new CareerKnowledgeService();
 
 // Same 70-point bar the readiness labels already treat as "Above
 // Average"/"Interview Ready" territory (lib/readiness.ts) -- reused here so
@@ -172,6 +174,8 @@ export class SkillPlannerService {
       }
     }
 
+    const selfReportedSkillSet = new Set(role.selfReportedSkills.map((s) => s.skill));
+
     const displayNameBySkill = new Map<string, string>();
     const rememberDisplayName = (s: string) => {
       const key = s.toLowerCase();
@@ -195,11 +199,14 @@ export class SkillPlannerService {
         const hasPracticeEvidence = !!practiceEntry;
         const bestScore = practiceEntry?.bestScore ?? null;
         const isInterviewReady = hasPracticeEvidence && (bestScore as number) >= INTERVIEW_READY_SCORE;
+        const hasSelfReportedEvidence = selfReportedSkillSet.has(skill);
 
         // Precedence: best signal wins. A skill only "graduates" to Mastered
         // once it has interview, project AND (curriculum or resume) backing
         // all at once -- otherwise it settles on whichever single strongest
-        // signal it has.
+        // signal it has. Self-reported evidence (user-submitted "how I used
+        // this skill" text, no AI evaluation) sits at the same tier as
+        // curriculum/resume -- it's a real signal, just not a strong one.
         let status: SkillStatus;
         if (isInterviewReady && hasProjectEvidence && (isTaughtPast || hasResumeEvidence)) {
           status = "Mastered";
@@ -209,7 +216,7 @@ export class SkillPlannerService {
           status = "ProjectApplied";
         } else if (hasPracticeEvidence) {
           status = "Practiced";
-        } else if (isTaughtPast || hasResumeEvidence) {
+        } else if (isTaughtPast || hasResumeEvidence || hasSelfReportedEvidence) {
           status = "Learning";
         } else if (isTaughtFuture) {
           status = "Upcoming";
@@ -222,6 +229,7 @@ export class SkillPlannerService {
           ...(hasResumeEvidence ? (["resume"] as const) : []),
           ...(hasProjectEvidence ? (["project"] as const) : []),
           ...(hasPracticeEvidence ? (["practice"] as const) : []),
+          ...(hasSelfReportedEvidence ? (["selfReported"] as const) : []),
         ];
 
         // Prefer the real evaluated score when one exists (most objective
@@ -278,6 +286,7 @@ export class SkillPlannerService {
           status = "locked";
         }
         const completedEntry = role.completedRoadmapSteps.find((s) => s.stepOrder === step.order);
+        const stepProgress = role.roadmapStepProgress.find((s) => s.stepOrder === step.order);
 
         return {
           order: step.order,
@@ -290,6 +299,7 @@ export class SkillPlannerService {
           resources: step.resources,
           status,
           completedAt: completedEntry?.completedAt ?? null,
+          watchedResourceUrls: stepProgress?.watchedResourceUrls ?? [],
         };
       });
 
@@ -324,6 +334,14 @@ export class SkillPlannerService {
       },
       lastVisited: role.lastVisited,
     };
+  }
+
+  // Thin delegate -- CareerKnowledgeService stays the single owner of all
+  // CareerKnowledge mutations. Lives here (not on the admin-only
+  // careerKnowledge route) because this is a regular authenticated user
+  // action triggered from their own Skill Planner/Roadmap, not admin CRUD.
+  async generateResourcesForSkill(jobRoleId: string, skill: string) {
+    return careerKnowledgeService.generateResourcesForSkill(jobRoleId, skill);
   }
 
   private emptyPlanner(
