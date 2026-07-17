@@ -11,6 +11,10 @@ export const OpportunitySchema = z.object({
   source: z.string(),
   postedDate: z.string().nullable().optional(),
   isActive: z.boolean().default(true),
+  // Which of the platform's job roles this event is relevant to, assigned
+  // by an AI classification step at scrape/admin-create time -- empty means
+  // general/open to everyone rather than "not yet classified".
+  jobRoles: z.array(z.string()).default([]),
 });
 
 export type OpportunityType = z.infer<typeof OpportunitySchema>;

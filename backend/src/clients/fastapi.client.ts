@@ -47,6 +47,18 @@ export interface OpportunityScrapeResponse {
     stats: ScrapeStats;
 }
 
+export interface OpportunityToClassify {
+    index: number;
+    title: string;
+    description?: string;
+    category?: string | null;
+}
+
+export interface OpportunityClassification {
+    index: number;
+    jobRoles: string[];
+}
+
 export interface ResumeProject {
     title: string;
     description: string;
@@ -133,6 +145,14 @@ export class FastApiClient {
         return response.data;
     }
 
+    async generateSkillResources(jobRole: string, skill: string) {
+        const response = await axios.post(
+            `${this.baseUrl}/api/v1/career-knowledge/generate-resources`,
+            { jobRole, skill }
+        );
+        return response.data;
+    }
+
     // Always a full scrape now — no per-role targeting. Every source has no
     // working per-role search anyway, so scraping used to mean re-fetching
     // identical data once per JobRole for nothing. Express stores
@@ -163,6 +183,22 @@ export class FastApiClient {
             `${this.baseUrl}/api/v1/opportunities/scrape`,
             options ?? {},
             { timeout: 120_000 }
+        );
+        return response.data;
+    }
+
+    // Tags each opportunity with which job roles it's relevant to (empty
+    // array = general/open to everyone). One batched AI call per scrape run
+    // or admin manual create, not one call per item -- see
+    // opportunity/service.py's classify_opportunities.
+    async classifyOpportunities(
+        opportunities: OpportunityToClassify[],
+        jobRoleTitles: string[]
+    ): Promise<{ classifications: OpportunityClassification[] }> {
+        const response = await axios.post(
+            `${this.baseUrl}/api/v1/opportunities/classify`,
+            { opportunities, jobRoleTitles },
+            { timeout: 60_000 }
         );
         return response.data;
     }
@@ -221,11 +257,12 @@ export class FastApiClient {
         difficulty: "Beginner" | "Intermediate" | "Advanced",
         mode: "Oral" | "Coding" | "Mixed",
         questionCount: number,
-        skill?: string | null
+        skill?: string | null,
+        skills?: string[] | null
     ): Promise<GenerateInterviewQuestionsResult> {
         const response = await axios.post(
             `${this.baseUrl}/api/v1/interview/generate-questions`,
-            { jobRole, difficulty, mode, questionCount, skill: skill ?? null }
+            { jobRole, difficulty, mode, questionCount, skill: skill ?? null, skills: skills ?? null }
         );
         return response.data;
     }

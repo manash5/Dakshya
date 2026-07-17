@@ -2,7 +2,8 @@ import {
   OpportunityMongoRepository,
   OpportunityFilters,
 } from "../repository/opportunity.repository";
-import { fastApiClient } from "../clients/fastapi.client";
+import { JobRoleMongoRepository } from "../repository/jobRole.repository";
+import { fastApiClient, OpportunityToClassify } from "../clients/fastapi.client";
 import { HttpException } from "../exceptions/http-exceptions";
 import {
   CreateOpportunityDto,
@@ -10,6 +11,55 @@ import {
 } from "../dtos/opportunity.dto";
 
 const opportunityRepository = new OpportunityMongoRepository();
+const jobRoleRepository = new JobRoleMongoRepository();
+
+// Shared by both the scrape pipeline and admin manual-create: batches every
+// item into one AI call, maps the returned role titles back to JobRole
+// ObjectIds (title match is case-insensitive since it's just crossing the
+// FastAPI/Express boundary as plain strings, not a stored key). Falls back
+// to leaving jobRoles empty (general/unclassified) rather than failing the
+// whole scrape/create if the AI call errors -- classification is additive
+// enrichment, not a hard requirement for an opportunity to be usable.
+async function classifyAgainstRoles(
+  items: { title: string; description?: string | null; category?: string | null }[],
+): Promise<string[][]> {
+  const empty = items.map(() => [] as string[]);
+
+  if (items.length === 0) {
+    return empty;
+  }
+
+  try {
+    const jobRoles = await jobRoleRepository.findAll();
+    if (jobRoles.length === 0) {
+      return empty;
+    }
+
+    const titleToId = new Map(jobRoles.map((r) => [r.title.toLowerCase(), r._id.toString()]));
+    const toClassify: OpportunityToClassify[] = items.map((item, index) => ({
+      index,
+      title: item.title,
+      description: item.description ?? "",
+      category: item.category ?? null,
+    }));
+
+    const { classifications } = await fastApiClient.classifyOpportunities(
+      toClassify,
+      jobRoles.map((r) => r.title),
+    );
+
+    const byIndex = new Map(classifications.map((c) => [c.index, c.jobRoles]));
+
+    return items.map((_, index) => {
+      const titles = byIndex.get(index) ?? [];
+      return titles
+        .map((title) => titleToId.get(title.toLowerCase()))
+        .filter((id): id is string => !!id);
+    });
+  } catch {
+    return empty;
+  }
+}
 
 export interface OpportunityScrapeRunStats {
   startedAt: string;
@@ -38,11 +88,11 @@ export class OpportunityService {
     let skipped = 0;
     const seenLinks: string[] = [];
 
-    for (const opportunity of opportunities) {
-      if (!opportunity.title || !opportunity.registrationLink) {
-        skipped++;
-        continue;
-      }
+    const validOpportunities = opportunities.filter((o) => o.title && o.registrationLink);
+    const jobRolesByIndex = await classifyAgainstRoles(validOpportunities);
+
+    for (let i = 0; i < validOpportunities.length; i++) {
+      const opportunity = validOpportunities[i];
 
       seenLinks.push(opportunity.registrationLink);
 
@@ -56,6 +106,7 @@ export class OpportunityService {
         registrationLink: opportunity.registrationLink,
         source: opportunity.source,
         postedDate: opportunity.postedDate,
+        jobRoles: jobRolesByIndex[i],
       };
 
       const { created: wasCreated } = await opportunityRepository.upsert(payload);
@@ -66,6 +117,8 @@ export class OpportunityService {
         updated++;
       }
     }
+
+    skipped = opportunities.length - validOpportunities.length;
 
     const deactivated = await opportunityRepository.deactivateStale(seenLinks);
 
@@ -96,7 +149,11 @@ export class OpportunityService {
       );
     }
 
-    return await opportunityRepository.create(data);
+    const [jobRoles] = await classifyAgainstRoles([
+      { title: data.title, description: data.description, category: data.category },
+    ]);
+
+    return await opportunityRepository.create({ ...data, jobRoles });
   }
 
   async getOpportunitiesPaginated(

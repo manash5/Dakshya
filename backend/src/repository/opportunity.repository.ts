@@ -7,6 +7,11 @@ import {
 export interface OpportunityFilters {
   category?: string;
   search?: string;
+  // When provided, scopes results to opportunities matched to one of these
+  // roles OR not yet classified into any role (jobRoles: []) -- unclassified
+  // events stay visible to everyone rather than disappearing until the next
+  // scrape/classification pass reaches them.
+  jobRoleIds?: string[];
 }
 
 export interface IOpportunityRepository {
@@ -55,6 +60,7 @@ export class OpportunityMongoRepository implements IOpportunityRepository {
         postedDate: data.postedDate,
         source: data.source,
         isActive: true,
+        ...(data.jobRoles !== undefined && { jobRoles: data.jobRoles }),
       });
 
       await existing.save();
@@ -105,17 +111,33 @@ export class OpportunityMongoRepository implements IOpportunityRepository {
     filters: OpportunityFilters,
   ) {
     const query: any = { isActive: true };
+    const andClauses: any[] = [];
 
     if (filters.category) {
       query.category = { $regex: filters.category, $options: "i" };
     }
 
     if (filters.search) {
-      query.$or = [
-        { title: { $regex: filters.search, $options: "i" } },
-        { organizer: { $regex: filters.search, $options: "i" } },
-        { description: { $regex: filters.search, $options: "i" } },
-      ];
+      andClauses.push({
+        $or: [
+          { title: { $regex: filters.search, $options: "i" } },
+          { organizer: { $regex: filters.search, $options: "i" } },
+          { description: { $regex: filters.search, $options: "i" } },
+        ],
+      });
+    }
+
+    if (filters.jobRoleIds && filters.jobRoleIds.length > 0) {
+      andClauses.push({
+        $or: [
+          { jobRoles: { $in: filters.jobRoleIds } },
+          { jobRoles: { $size: 0 } },
+        ],
+      });
+    }
+
+    if (andClauses.length > 0) {
+      query.$and = andClauses;
     }
 
     const total = await Opportunity.countDocuments(query);

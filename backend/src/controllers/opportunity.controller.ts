@@ -7,6 +7,7 @@ interface QueryParams {
   limit?: string;
   category?: string;
   search?: string;
+  jobRoleIds?: string;
 }
 
 const service = new OpportunityService();
@@ -35,12 +36,16 @@ export class OpportunityController {
 
   async getOpportunities(req: Request, res: Response) {
     try {
-      const { page, limit, category, search }: QueryParams = req.query;
+      const { page, limit, category, search, jobRoleIds }: QueryParams = req.query;
 
       const { data, pagination } = await service.getOpportunitiesPaginated(
         page,
         limit,
-        { category, search }
+        {
+          category,
+          search,
+          jobRoleIds: jobRoleIds ? jobRoleIds.split(",").filter(Boolean) : undefined,
+        }
       );
 
       return ApiResponseHelper.success(
