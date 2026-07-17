@@ -1,3 +1,4 @@
+import asyncio
 import os
 from typing import List
 
@@ -42,7 +43,12 @@ async def generate_university_courses(payload: GenerateCoursesRequest):
     if not crawl["combined_text"].strip():
         raise HTTPException(status_code=502, detail="No readable text found on the website")
 
-    extraction = extract_courses(crawl["combined_text"])
+    # extract_courses is sync and can now take minutes (the Groq chunk
+    # fallback paces itself against Groq's per-minute token budget with
+    # sleep-based retries) -- runs in a worker thread so a slow/rate-limited
+    # extraction doesn't stall every other concurrent request this process
+    # is serving, same reasoning as scraper.py's crawl_website.
+    extraction = await asyncio.to_thread(extract_courses, crawl["combined_text"])
     if not extraction.courses:
         return GenerateCoursesResponse(
             website=website,
