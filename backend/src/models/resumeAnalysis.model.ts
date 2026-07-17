@@ -20,10 +20,18 @@ const ResumeProjectSchema = new Schema(
   { _id: false },
 );
 
+// title/company (Experience) and institution/degree (Education) are NOT
+// `required` even though they're conceptually the core fields -- FastAPI's
+// extraction schema already normalizes a missing value to "" rather than
+// null (see resume_analysis/schemas.py's null_to_empty validators), so the
+// real contract here is "always a string, possibly empty," not "always
+// present." Mongoose's `required` validator rejects "" too, so keeping
+// `required: true` here crashed on any resume where the AI couldn't find a
+// company/degree for one entry.
 const ResumeExperienceSchema = new Schema(
   {
-    title: { type: String, required: true },
-    company: { type: String, required: true },
+    title: { type: String, default: "" },
+    company: { type: String, default: "" },
     duration: { type: String, default: "" },
     description: { type: String, default: "" },
   },
@@ -32,8 +40,8 @@ const ResumeExperienceSchema = new Schema(
 
 const ResumeEducationSchema = new Schema(
   {
-    institution: { type: String, required: true },
-    degree: { type: String, required: true },
+    institution: { type: String, default: "" },
+    degree: { type: String, default: "" },
     fieldOfStudy: { type: String, default: null },
     duration: { type: String, default: null },
   },
