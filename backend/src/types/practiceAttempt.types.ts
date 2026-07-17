@@ -2,27 +2,12 @@ import { z } from "zod";
 
 export const PracticeQuestionSchema = z.object({
   question: z.string(),
-  // Freeform (not a fixed enum) since question categories vary by mode/AI
-  // generation (e.g. "technical", "behavioral", "coding", "system-design").
   type: z.string(),
-  // 1-3 skills/technologies this question tests, tagged by FastAPI at
-  // generation time. Empty for attempts generated before this field existed.
   skills: z.array(z.string()).default([]),
-  // Filled in at generation time for oral/theory questions where FastAPI can
-  // draft one up front; coding questions instead have this filled in after
-  // evaluation (see evaluate's idealAnswer), since a good implementation
-  // depends on the language/approach the candidate actually attempted.
   expectedAnswer: z.string().default(""),
   userAnswer: z.string().default(""),
-  // Only meaningful for coding questions -- kept separate from userAnswer
-  // (the verbal explanation) so both are available on review instead of one
-  // overwriting the other.
   userCode: z.string().default(""),
-  // Technical correctness, from FastAPI's evaluate endpoint.
   score: z.number().min(0).max(100).default(0),
-  // How clear/confident the verbal explanation was -- a separate axis from
-  // technical correctness. Averaged across questions into the attempt's
-  // communicationScore at completion time.
   confidenceScore: z.number().min(0).max(100).default(0),
   feedback: z.string().default(""),
 });
@@ -35,6 +20,11 @@ export const PracticeAttemptSchema = z.object({
   // fastApiClient.generateInterviewQuestions). Null/absent for attempts
   // started before this field existed, or for whole-role attempts.
   skill: z.string().trim().min(1).nullable().optional(),
+  // Optional multi-skill list for an auto-generated mixed session (e.g. the
+  // Practice page's "today's recommendation" spanning several weak skills at
+  // once). Mutually exclusive with `skill` -- empty for single-skill and
+  // whole-role attempts alike.
+  skills: z.array(z.string()).default([]),
   difficulty: z.enum(["Beginner", "Intermediate", "Advanced"]),
   mode: z.enum(["Oral", "Coding", "Mixed"]),
   questionCount: z.number().int().positive(),

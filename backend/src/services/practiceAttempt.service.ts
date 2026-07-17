@@ -38,6 +38,7 @@ export class PracticeAttemptService {
       data.mode,
       data.questionCount,
       data.skill,
+      data.skills,
     );
 
     const questions = generated.questions.map((q) => ({
@@ -56,6 +57,7 @@ export class PracticeAttemptService {
       userId: new mongoose.Types.ObjectId(userId),
       jobRoleId: new mongoose.Types.ObjectId(data.jobRoleId),
       skill: data.skill ?? null,
+      skills: data.skills ?? [],
       difficulty: data.difficulty,
       mode: data.mode,
       questionCount: data.questionCount,

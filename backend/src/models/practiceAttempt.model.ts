@@ -31,6 +31,7 @@ const PracticeAttemptModelSchema: Schema = new Schema<IPracticeAttempt>(
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
     jobRoleId: { type: Schema.Types.ObjectId, ref: "JobRole", required: true },
     skill: { type: String, default: null },
+    skills: { type: [String], default: [] },
     difficulty: {
       type: String,
       enum: ["Beginner", "Intermediate", "Advanced"],
