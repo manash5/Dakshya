@@ -14,6 +14,18 @@ import adminCourseRoute from './routes/admin/course.route'
 import adminSubjectRoute from './routes/admin/subject.route'
 import adminJobRoleRoute from './routes/admin/jobRoles.route'
 import adminCareerKnowledgeRouter from './routes/admin/careerKnowledge.route'
+import jobPostingRoute from './routes/jobPosting.route'
+import adminJobPostingRoute from './routes/admin/jobPosting.route'
+import dashboardRoute from './routes/dashboard.route'
+import opportunityRoute from './routes/opportunity.route'
+import adminOpportunityRoute from './routes/admin/opportunity.route'
+import userProgressRoute from './routes/userProgress.route'
+import savedJobRoute from './routes/savedJob.route'
+import projectRoute from './routes/project.route'
+import adminProjectRoute from './routes/admin/project.route'
+import practiceAttemptRoute from './routes/practiceAttempt.route'
+import resumeAnalysisRoute from './routes/resumeAnalysis.route'
+import skillPlannerRoute from './routes/skillPlanner.route'
 
 
 const app: Application = express();
@@ -41,8 +53,20 @@ app.use('/api/v1/admin/university', adminUniversityRoute);
 app.use('/api/v1/admin/course', adminCourseRoute); 
 app.use('/api/v1/admin/subject', adminSubjectRoute); 
 app.use('/api/v1/admin/jobRoles', adminJobRoleRoute); 
-app.use('/api/v1/admin/careerKnowledge', adminCareerKnowledgeRouter); 
+app.use('/api/v1/admin/careerKnowledge', adminCareerKnowledgeRouter);
 app.use("/api/v1/admin/users", adminUserRoutes);
+app.use('/api/v1/job-postings', jobPostingRoute);
+app.use('/api/v1/admin/job-postings', adminJobPostingRoute);
+app.use('/api/v1/dashboard', dashboardRoute);
+app.use('/api/v1/opportunities', opportunityRoute);
+app.use('/api/v1/admin/opportunities', adminOpportunityRoute);
+app.use('/api/v1/userProgress', userProgressRoute);
+app.use('/api/v1/saved-jobs', savedJobRoute);
+app.use('/api/v1/projects', projectRoute);
+app.use('/api/v1/admin/projects', adminProjectRoute);
+app.use('/api/v1/practice-attempts', practiceAttemptRoute);
+app.use('/api/v1/resume-analysis', resumeAnalysisRoute);
+app.use('/api/v1/skill-planner', skillPlannerRoute);
 
 
 app.use(

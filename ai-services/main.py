@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
-import whisper
 
 from app.core.config import AI_SERVICE_PORT
 # Import directly from the router submodule (not the package's __init__.py
@@ -13,6 +12,10 @@ from app.core.config import AI_SERVICE_PORT
 # the ambiguity entirely.
 from app.api import course_generator
 from app.api import career_knowledge
+from app.api import job_poster
+from app.api import opportunities
+from app.api import resume_analysis
+from app.api import interview
 
 app = FastAPI(title="Dakshya")
 
@@ -36,6 +39,10 @@ app.add_middleware(
 # app.include_router(transcript_summarizer_router)
 app.include_router(course_generator.router)
 app.include_router(career_knowledge.router)
+app.include_router(job_poster.router)
+app.include_router(opportunities.router)
+app.include_router(resume_analysis.router)
+app.include_router(interview.router)
 
 if __name__ == "__main__":
     import uvicorn

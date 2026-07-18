@@ -7,6 +7,8 @@ export type ProfileUser = {
     profilePicture?: string | null;
     role?: string;
     updatedAt?: string;
+    targetRoles?: string[];
+    currentSemester?: number;
 };
 
 export function resolveProfileImageSrc(profilePicture?: string | null) {

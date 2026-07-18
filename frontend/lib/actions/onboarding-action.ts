@@ -2,6 +2,11 @@
 
 import axios from "axios";
 import { getTokenCookie, getUserInfoCookie, setUserInfoCookie } from "@/lib/cookies";
+import {
+    fetchUniversities,
+    fetchCoursesByUniversity,
+    fetchJobRoles,
+} from "@/lib/api/onboarding";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8088";
 
@@ -50,4 +55,21 @@ export async function submitOnboarding(
             message: error?.response?.data?.message || "Failed to complete onboarding",
         };
     }
+}
+
+// The onboarding overlay is a client component and can't safely call
+// lib/api/onboarding.ts's axiosInstance-backed functions itself (its cookie
+// interceptor relies on a "use server" cookie read) — these just move that
+// call server-side, same signatures, so the overlay's existing try/catch
+// keeps working unchanged.
+export async function getUniversities() {
+    return await fetchUniversities();
+}
+
+export async function getCoursesByUniversity(universityId: string) {
+    return await fetchCoursesByUniversity(universityId);
+}
+
+export async function getJobRoles() {
+    return await fetchJobRoles();
 }

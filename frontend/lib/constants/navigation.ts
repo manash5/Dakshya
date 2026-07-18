@@ -5,6 +5,9 @@ import {
   University,
   GraduationCap,
   BookText,
+  Trophy,
+  FolderKanban,
+  Sparkles,
   LucideIcon,
 } from "lucide-react";
 
@@ -51,6 +54,30 @@ export const NAV_ITEMS: NavItem[] = [
     href: "/admin/jobRole",
     icon: BriefcaseBusiness,
     description: "Create, edit and publish job posts.",
+  },
+  {
+    name: "Job Postings",
+    href: "/admin/job-postings",
+    icon: BriefcaseBusiness,
+    description: "Scrape, edit and manage job postings.",
+  },
+  {
+    name: "Opportunities",
+    href: "/admin/opportunities",
+    icon: Trophy,
+    description: "Scrape, edit and manage opportunities.",
+  },
+  {
+    name: "Projects",
+    href: "/admin/project",
+    icon: FolderKanban,
+    description: "Create, edit and manage practice projects.",
+  },
+  {
+    name: "Career Knowledge",
+    href: "/admin/career-knowledge",
+    icon: Sparkles,
+    description: "Generate and regenerate AI career knowledge per role.",
   },
 ];
 

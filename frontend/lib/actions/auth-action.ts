@@ -1,6 +1,6 @@
 "use server";  // from frontend server
 import { LoginFormValues, SignUpFormValues } from "@/app/(auth)/_components/schema";
-import { register, login, whoami, profileUpdate } from "@/lib/api/auth";
+import { register, login, whoami, profileUpdate, changePassword } from "@/lib/api/auth";
 import { setUserInfoCookie, setTokenCookie } from "../cookies";
 import { revalidatePath } from "next/cache";
 
@@ -71,6 +71,12 @@ export async function handleUpdateProfile(data: FormData) {
     try {
         const result = await profileUpdate(data);
         if (result.success) {
+            // Keep the cookie AuthContext reads (see checkAuth in
+            // AuthContext.tsx) in sync with what just got saved, so header
+            // avatars/names reflect the change without needing a fresh login.
+            if (result.data) {
+                await setUserInfoCookie(result.data);
+            }
             revalidatePath("/dashboard/profile");
             return {
                 success: true, data: result.data,
@@ -84,4 +90,22 @@ export async function handleUpdateProfile(data: FormData) {
     } catch (error: any) {
         return { success: false, message: error.message || 'Profile update failed' };
     }
-} 
+}
+
+export async function changePasswordAction(data: { currentPassword: string; newPassword: string }) {
+    try {
+        const result = await changePassword(data);
+        if (result.success) {
+            return {
+                success: true, data: result.data,
+                message: result.message || 'Password changed successfully'
+            };
+        }
+        return {
+            success: false, message: result.message
+                || 'Password change failed'
+        };
+    } catch (error: any) {
+        return { success: false, message: error.message || 'Password change failed' };
+    }
+}

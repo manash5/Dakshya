@@ -2,102 +2,99 @@
 
 import { useState } from "react";
 import JobCard from "../../_components/JobCard";
+import { handleSaveJob, handleUnsaveJob } from "@/lib/actions/savedJob-action";
 
 export type RecommendedJob = {
-  id: string;
-  match: string;
+  _id: string;
   title: string;
   company: string;
   location: string;
+  salary?: string;
+  experience?: string | null;
+  employmentType?: string | null;
+  requiredSkills?: string[];
+  description?: string;
+  applyLink?: string;
+  matchedRoleId: string;
 };
 
-const RECOMMENDED_JOBS: RecommendedJob[] = [
-  {
-    id: "1",
-    match: "98% MATCH",
-    title: "Junior Frontend Developer",
-    company: "Cloud Tech Nepal",
-    location: "Kathmandu · $60k - $85k",
-  },
-  {
-    id: "2",
-    match: "84% MATCH",
-    title: "React Engineer (Intern)",
-    company: "Swift Innovations",
-    location: "Lalitpur · Full-time",
-  },
-  {
-    id: "3",
-    match: "72% MATCH",
-    title: "UI/UX Designer",
-    company: "DataMind Solutions",
-    location: "Kathmandu · Senior Role",
-  },
-  {
-    id: "4",
-    match: "72% MATCH",
-    title: "UI/UX Designer",
-    company: "DataMind Solutions",
-    location: "Kathmandu · Senior Role",
-  },
-  {
-    id: "5",
-    match: "98% MATCH",
-    title: "Junior Frontend Developer",
-    company: "Cloud Tech Nepal",
-    location: "Kathmandu · $60k - $85k",
-  },
-  {
-    id: "6",
-    match: "84% MATCH",
-    title: "React Engineer (Intern)",
-    company: "Swift Innovations",
-    location: "Lalitpur · Full-time",
-  },
-];
+interface RecommendedJobsGridProps {
+  jobs: RecommendedJob[];
+  readinessByRole: Record<string, number>;
+  savedJobIds: string[];
+}
 
-export default function RecommendedJobsGrid() {
-  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+export default function RecommendedJobsGrid({
+  jobs,
+  readinessByRole,
+  savedJobIds,
+}: RecommendedJobsGridProps) {
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set(savedJobIds));
 
-  const toggleSave = (id: string) => {
+  const toggleSave = async (jobId: string) => {
+    const wasSaved = savedIds.has(jobId);
+
     setSavedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
+      if (wasSaved) {
+        next.delete(jobId);
       } else {
-        next.add(id);
+        next.add(jobId);
       }
       return next;
     });
+
+    const result = wasSaved ? await handleUnsaveJob(jobId) : await handleSaveJob(jobId);
+
+    if (!result.success) {
+      // Revert the optimistic update on failure.
+      setSavedIds((prev) => {
+        const next = new Set(prev);
+        if (wasSaved) {
+          next.add(jobId);
+        } else {
+          next.delete(jobId);
+        }
+        return next;
+      });
+    }
   };
 
   return (
     <section className="flex flex-col gap-5">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-zinc-900">
-          Recommended Jobs
-        </h2>
-        <button
-          type="button"
-          className="text-xs font-semibold tracking-wide text-zinc-500 transition hover:text-zinc-900"
-        >
-          SEE ALL MATCHES
-        </button>
+        <h2 className="text-lg font-semibold text-zinc-900">Recommended Jobs</h2>
       </div>
 
-      <div className="grid gap-5 sm:grid-cols-2">
-        {RECOMMENDED_JOBS.map((job) => (
-          <JobCard
-            key={job.id}
-            match={job.match}
-            title={job.title}
-            company={job.company}
-            location={job.location}
-            saved={savedIds.has(job.id)}
-            onToggleSave={() => toggleSave(job.id)}
-          />
-        ))}
-      </div>
+      {jobs.length === 0 ? (
+        <p className="rounded-[24px] border border-dashed border-zinc-200 bg-white p-8 text-center text-sm text-zinc-500">
+          No open roles matching your search right now. Check back soon.
+        </p>
+      ) : (
+        <div className="grid gap-5 sm:grid-cols-2">
+          {jobs.map((job) => {
+            const score = readinessByRole[job.matchedRoleId];
+
+            return (
+              <JobCard
+                key={job._id}
+                match={score !== undefined ? `${score}% MATCH` : "NEW"}
+                title={job.title}
+                company={job.company}
+                location={job.location}
+                salary={job.salary}
+                experience={job.experience}
+                employmentType={job.employmentType}
+                requiredSkills={job.requiredSkills}
+                description={job.description}
+                applyLink={job.applyLink}
+                saved={savedIds.has(job._id)}
+                onToggleSave={() => toggleSave(job._id)}
+              />
+            );
+          })}
+        </div>
+      )}
     </section>
   );
 }

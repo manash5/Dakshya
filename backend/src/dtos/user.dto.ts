@@ -14,16 +14,6 @@ export const CreateUserDto = z.object({
 
 export type CreateUserDto = z.infer<typeof CreateUserDto>; 
 
-// export const UpdateUserDto = z.object({
-//     firstName: z.string().optional(),
-//     email: z.string().optional(), 
-//     lastName: z.string().optional(), 
-//     username: z.string().optional(), 
-//     phoneNumber: z.string().optional(),      
-//     profilePicture: z.string().optional(),   
-// });
-
-// export type UpdateUserDto = z.infer<typeof UpdateUserDto>;
 
 export const LoginUserDto = UserSchema.pick({
     email: true, 
@@ -31,15 +21,36 @@ export const LoginUserDto = UserSchema.pick({
 }); 
 export type LoginUserDto = z.infer<typeof LoginUserDto> 
 
-export const updateUserDTO = UserSchema.omit({
-  universityId: true,
-  courseId: true,
-  targetRoles: true,
-  currentSemester: true,
-  onboardingCompleted: true,
-}).partial();
+// This DTO is parsed from a multipart/form-data body (see uploads.single()
+// in user.route.ts), where every field arrives as a string regardless of
+// its logical type -- currentSemester needs coercion, and targetRoles is
+// sent as a JSON-stringified array (a single repeated form field would
+// collapse to a plain string instead of an array when exactly one role is
+// selected) and needs parsing back out.
+export const UpdateUserDto = z.object({
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  email: z.string().email().optional(),
+  username: z.string().min(3).optional(),
+  password: z.string().min(6).optional(),
+  phoneNumber: z.string().optional(),
+  profilePicture: z.string().optional(),
 
-export type updateUserDTO = z.infer<typeof updateUserDTO>;
+  currentSemester: z.coerce.number().int().min(1).max(8).optional(),
+
+  targetRoles: z.preprocess((value) => {
+    if (typeof value === "string") {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return [value];
+      }
+    }
+    return value;
+  }, z.array(z.string())).optional(),
+});
+
+export type UpdateUserDto = z.infer<typeof UpdateUserDto>;
 
 export const UpdatePasswordDto = z.object({
     currentPassword: z.string().min(6, "Current password must be at least 6 characters long"),
@@ -80,3 +91,31 @@ export const CompleteOnboardingDto = z.object({
 
 export type CompleteOnboardingDto =
     z.infer<typeof CompleteOnboardingDto>;
+
+
+export const UpdateUserAdminDto = z.object({
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  email: z.string().email().optional(),
+  username: z.string().min(3).optional(),
+  password: z.string().min(6).optional(),
+  phoneNumber: z.string().optional(),
+  profilePicture: z.string().optional(),
+
+  age: z.coerce.number().int().positive().optional(),
+
+  role: z.enum(["admin", "user"]).optional(),
+
+  universityId: z.string().optional(),
+
+  courseId: z.string().optional(),
+
+  currentSemester: z.coerce.number().int().min(1).max(8).optional(),
+
+  targetRoles: z.array(z.string()).optional(),
+
+  onboardingCompleted: z.boolean().optional(),
+});
+
+export type UpdateUserAdminDto =
+  z.infer<typeof UpdateUserAdminDto>;

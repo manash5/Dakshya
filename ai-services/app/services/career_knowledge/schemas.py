@@ -15,6 +15,11 @@ class CareerKnowledgeRequest(BaseModel):
     jobRole: str = Field(..., min_length=2, description="Job role/title to generate career knowledge for")
 
 
+class GenerateSkillResourcesRequest(BaseModel):
+    jobRole: str = Field(..., min_length=2, description="Job role/title for context")
+    skill: str = Field(..., min_length=1, description="Skill to generate learning resources for")
+
+
 # ---------------------------------------------------------------------------
 # Enums (kept in sync with the Express-side zod enums)
 # ---------------------------------------------------------------------------
@@ -78,6 +83,10 @@ class LearningResource(BaseModel):
     title: str
     type: LearningResourceType
     url: HttpUrl
+    skills: List[str] = Field(
+        default_factory=list,
+        description="1-3 skills from requiredSkills this resource teaches",
+    )
 
 
 class Salary(BaseModel):
@@ -156,3 +165,7 @@ class CareerKnowledgeResponse(_CareerKnowledgeCore):
             "updatedAt": datetime.now(timezone.utc),
         }
         return cls.model_validate(data)
+
+
+class GenerateSkillResourcesResponse(BaseModel):
+    resources: List[LearningResource]

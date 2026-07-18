@@ -35,6 +35,7 @@ const LearningResourceSchema = new Schema({
   title: { type: String, required: true },
   type: { type: String, enum: ["Course", "Documentation", "Video", "Article"], required: true },
   url: { type: String, required: true },
+  skills: [{ type: String }],
 }, { _id: false });
 
 

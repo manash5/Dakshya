@@ -1,43 +1,74 @@
-import JobCard, { type JobCardProps } from "./JobCard";
+import Link from "next/link";
+import JobCard from "./JobCard";
+import type { CareerHero } from "@/lib/api/dashboard";
 
-const jobCards: JobCardProps[] = [
-  {
-    match: "78% MATCH",
-    title: "Junior Frontend Developer",
-    company: "Cloud Tech Nepal",
-    location: "KATHMANDU",
-  },
-  {
-    match: "84% MATCH",
-    title: "React Engineer (Intern)",
-    company: "Swift Innovations",
-    location: "LALITPUR",
-  },
-  {
-    match: "72% MATCH",
-    title: "UI/UX Developer",
-    company: "DataMind Solutions",
-    location: "KATHMANDU",
-  },
-];
+export interface RecommendedJob {
+  _id: string;
+  title: string;
+  company: string;
+  location: string;
+  salary?: string;
+  experience?: string | null;
+  employmentType?: string | null;
+  requiredSkills?: string[];
+  description?: string;
+  applyLink?: string;
+  createdAt: string;
+  // Jobs aren't tagged to a role in storage anymore — this is attached by
+  // the page when it fetches, based on which role's title it searched for
+  // (see dashboard/page.tsx).
+  matchedRoleId: string;
+}
 
-export default function RecommendedJobsSection() {
+interface RecommendedJobsSectionProps {
+  jobs: RecommendedJob[];
+  hero: CareerHero[];
+}
+
+export default function RecommendedJobsSection({ jobs, hero }: RecommendedJobsSectionProps) {
+  const readinessByRole = new Map(hero.map((role) => [role.jobRoleId, role.readinessScore]));
+
   return (
     <section className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-[18px] font-semibold text-zinc-900">
           Recommended Jobs
         </h2>
-        <button className="text-[12px] font-semibold tracking-wide text-zinc-900 underline decoration-zinc-900/80 underline-offset-4">
-          SEE ALL MATCHES
-        </button>
+        <Link
+          href="/dashboard/job-finder"
+          className="text-[12px] font-semibold tracking-wide text-zinc-900 underline decoration-zinc-900/80 underline-offset-4"
+        >
+          VIEW MORE
+        </Link>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-3">
-        {jobCards.map((job) => (
-          <JobCard key={job.title} {...job} />
-        ))}
-      </div>
+      {jobs.length === 0 ? (
+        <p className="rounded-[24px] border border-dashed border-zinc-200 bg-white p-8 text-center text-sm text-zinc-500">
+          No open roles for your target careers right now. Check back soon.
+        </p>
+      ) : (
+        <div className="grid gap-5 lg:grid-cols-3">
+          {jobs.map((job) => {
+            const score = readinessByRole.get(job.matchedRoleId);
+
+            return (
+              <JobCard
+                key={job._id}
+                match={score !== undefined ? `${score}% MATCH` : "NEW"}
+                title={job.title}
+                company={job.company}
+                location={(job.location ?? "").toUpperCase()}
+                salary={job.salary}
+                experience={job.experience}
+                employmentType={job.employmentType}
+                requiredSkills={job.requiredSkills}
+                description={job.description}
+                applyLink={job.applyLink}
+              />
+            );
+          })}
+        </div>
+      )}
     </section>
   );
 }

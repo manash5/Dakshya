@@ -1,9 +1,11 @@
 import { UserService } from "../../services/user.service";
 import { z } from "zod";
-import { CreateUserDto, LoginUserDto, updateUserDTO, UpdatePasswordDto, CreateUserDtoAdmin } from "../../dtos/user.dto";
+import { CreateUserDto, LoginUserDto, UpdateUserAdminDto, UpdatePasswordDto, CreateUserDtoAdmin } from "../../dtos/user.dto";
 import { ApiResponseHelper } from "../../utils/api-response";
 import { Request, Response } from "express";
+import { UserProgressService } from '../../services/userProgress.service';
 const userService = new UserService();
+const userProgressService = new UserProgressService(); 
 
 interface QueryParams {
     page?: string;
@@ -46,7 +48,7 @@ export class AdminUserController {
             payload.profilePicture = "/uploads/" + req.file.filename;
         }
 
-        const userData = updateUserDTO.safeParse(payload);
+        const userData = UpdateUserAdminDto.safeParse(payload);
 
         if (!userData.success) {
             return ApiResponseHelper
@@ -54,7 +56,7 @@ export class AdminUserController {
         }
 
         // 4. Pass the cleaned, validated data to your service
-        const updatedUser = await userService.updateUser(userId, userData.data);
+        const updatedUser = await userService.updateUserByAdmin(userId, userData.data);
         
         return ApiResponseHelper.success(res, updatedUser, 200, "User updated successfully");
     } catch (error: any) {
@@ -98,6 +100,7 @@ export class AdminUserController {
             if (!deleted) {
                 return ApiResponseHelper.error(res, "User not found", 404);
             }
+            await userProgressService.deleteUserProgress(userId); 
             return ApiResponseHelper.success(res, null, 200,"User deleted successfully");
         }
         catch (error: Error | any | unknown) {

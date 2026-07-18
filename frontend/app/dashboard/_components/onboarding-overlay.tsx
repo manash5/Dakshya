@@ -2,15 +2,13 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useUser } from "@/lib/context/UserContext";
-import { submitOnboarding } from "@/lib/actions/onboarding-action";
 import {
-    fetchUniversities,
-    fetchCoursesByUniversity,
-    fetchJobRoles,
-    University,
-    Course,
-    JobRole,
-} from "@/lib/api/onboarding";
+    submitOnboarding,
+    getUniversities,
+    getCoursesByUniversity,
+    getJobRoles,
+} from "@/lib/actions/onboarding-action";
+import type { University, Course, JobRole } from "@/lib/api/onboarding";
 
 const STEPS = [
     { label: "About you" },
@@ -49,8 +47,8 @@ export default function OnboardingOverlay() {
             setLoadingOptions(true);
             try {
                 const [uniData, roleData] = await Promise.all([
-                    fetchUniversities(),
-                    fetchJobRoles(),
+                    getUniversities(),
+                    getJobRoles(),
                 ]);
                 setUniversities(uniData);
                 setJobRoles(roleData);
@@ -70,7 +68,7 @@ export default function OnboardingOverlay() {
         }
         (async () => {
             try {
-                const courseData = await fetchCoursesByUniversity(universityId);
+                const courseData = await getCoursesByUniversity(universityId);
                 setCourses(courseData);
             } catch (err) {
                 setError("Failed to load courses for selected university.");

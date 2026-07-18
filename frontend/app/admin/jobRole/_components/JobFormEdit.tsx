@@ -28,6 +28,7 @@ export default function JobFormEdit({ job }: { job: any }) {
             category: job.category,
             description: job.description,
             isActive: job.isActive,
+            keywords: (job.keywords ?? []).join(", "),
         },
     });
 
@@ -35,7 +36,14 @@ export default function JobFormEdit({ job }: { job: any }) {
         setError("");
         startTransition(async () => {
             try {
-                const result = await handleUpdateJobRole(job._id, data);
+                const payload = {
+                    ...data,
+                    keywords: data.keywords
+                        ? data.keywords.split(",").map((s: string) => s.trim()).filter(Boolean)
+                        : [],
+                };
+
+                const result = await handleUpdateJobRole(job._id, payload);
 
                 if (!result.success) throw new Error(result.message);
                 toast.success("Job role updated successfully");
@@ -92,6 +100,19 @@ export default function JobFormEdit({ job }: { job: any }) {
                                 rows={4}
                                 className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 placeholder:text-gray-400 outline-none transition-colors focus:border-gray-400 focus:bg-white"
                             />
+                        </div>
+
+                        <div>
+                            <label className={labelClass}>Similar Titles / Keywords</label>
+                            <input
+                                {...register("keywords")}
+                                placeholder="Comma-separated, e.g. Backend Engineer, Software Engineer Backend, API Developer"
+                                className={fieldClass}
+                            />
+                            <p className="mt-1 text-xs text-gray-400">
+                                Optional. Widens job-scraping matches for this role — postings phrased
+                                differently from the title above will still be picked up if they match one of these.
+                            </p>
                         </div>
 
                         <div>

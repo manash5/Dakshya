@@ -9,5 +9,9 @@ venv/
 **/__pycache__/
 *.pyc
 
+# Stable-named ffmpeg binary materialized at runtime (see
+# app/services/interview/transcription.py) -- generated locally, not source.
+.bin/
+
 # Project locks/dependencies (Optional: only if you don't want to commit uv.lock)
 uv.lock
