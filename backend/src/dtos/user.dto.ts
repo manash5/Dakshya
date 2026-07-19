@@ -21,12 +21,7 @@ export const LoginUserDto = UserSchema.pick({
 }); 
 export type LoginUserDto = z.infer<typeof LoginUserDto> 
 
-// This DTO is parsed from a multipart/form-data body (see uploads.single()
-// in user.route.ts), where every field arrives as a string regardless of
-// its logical type -- currentSemester needs coercion, and targetRoles is
-// sent as a JSON-stringified array (a single repeated form field would
-// collapse to a plain string instead of an array when exactly one role is
-// selected) and needs parsing back out.
+
 export const UpdateUserDto = z.object({
   firstName: z.string().optional(),
   lastName: z.string().optional(),
@@ -119,3 +114,34 @@ export const UpdateUserAdminDto = z.object({
 
 export type UpdateUserAdminDto =
   z.infer<typeof UpdateUserAdminDto>;
+
+  export const RegisterWithEmailDto = z.object({
+  email: z.email(),
+  firstName: z.string(),
+  lastName: z.string(),
+  username: z.string().min(3),
+});
+export type RegisterWithEmailDto = z.infer<typeof RegisterWithEmailDto>;
+
+export const ForgotPasswordDto = z.object({
+  email: z.email(),
+});
+export type ForgotPasswordDto = z.infer<typeof ForgotPasswordDto>;
+
+export const ResetPasswordDto = z
+  .object({
+    token: z.string(),
+    newPassword: z.string().min(6),
+    confirmPassword: z.string().min(6),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "New password and confirm password must match",
+    path: ["confirmPassword"],
+  });
+export type ResetPasswordDto = z.infer<typeof ResetPasswordDto>;
+
+
+export const GoogleLoginDto = z.object({
+  idToken: z.string(),
+});
+export type GoogleLoginDto = z.infer<typeof GoogleLoginDto>;
