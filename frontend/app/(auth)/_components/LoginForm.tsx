@@ -38,8 +38,6 @@ export default function LoginForm() {
         "mt-2 w-full rounded-xl border border-transparent bg-neutral-50 px-4 py-3 text-sm text-neutral-800 outline-none transition duration-200 placeholder:text-neutral-400 focus:border-lime-300 focus:bg-white focus:ring-4 focus:ring-lime-200/30";
 
     const onSubmit = (data: LoginFormValues) => {
-        // isPending is true during the transition, 
-        // and false after it finishes
         setError('');
         startTransition(
             async () => {
@@ -47,9 +45,11 @@ export default function LoginForm() {
                     const result = await loginUser(data);
                     if (result.success) {
                         await checkAuth();
-                        router.push('/dashboard')
-                    } else {
-                        setError(result.message || 'Login failed');
+                        if (result.data?.mustChangePassword) {
+                            router.push('/reset-password'); 
+                        } else {
+                            router.push('/dashboard');
+                        }
                     }
                 } catch (error: any) {
                     setError(error?.message || 'Login failed');
