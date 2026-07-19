@@ -83,3 +83,14 @@ export const changePassword = async (data: { currentPassword: string; newPasswor
         );
     }
 };
+
+export const googleLogin = async (idToken: string) => {
+    try {
+        const response = await axiosInstance.post(API.AUTH.GOOGLE_LOGIN, { idToken });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(
+            error.response?.data?.message || 'Google login failed'
+        );
+    }
+}

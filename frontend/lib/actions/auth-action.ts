@@ -3,6 +3,7 @@ import { LoginFormValues, SignUpFormValues } from "@/app/(auth)/_components/sche
 import { register, login, whoami, profileUpdate, changePassword } from "@/lib/api/auth";
 import { setUserInfoCookie, setTokenCookie } from "../cookies";
 import { revalidatePath } from "next/cache";
+import { googleLogin } from "@/lib/api/auth";
 
 export async function registerUser(data: SignUpFormValues) {
     try {
@@ -107,5 +108,30 @@ export async function changePasswordAction(data: { currentPassword: string; newP
         };
     } catch (error: any) {
         return { success: false, message: error.message || 'Password change failed' };
+    }
+}
+
+
+
+export async function googleLoginAction(idToken: string) {
+    try {
+        const result = await googleLogin(idToken);
+        if (result.success) {
+            const user = result.data?.user;
+            const token = result.data?.token;
+            await setUserInfoCookie(user);
+            await setTokenCookie(token);
+
+            return {
+                success: true, data: result.data,
+                message: result.message || 'Login successful'
+            };
+        }
+        return {
+            success: false, message: result.message
+                || 'Google login failed'
+        };
+    } catch (error: any) {
+        return { success: false, message: error.message || 'Google login failed' };
     }
 }

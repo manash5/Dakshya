@@ -6,7 +6,8 @@ export const API = {
         UPDATE: "/api/v1/auth/update",
         GET_PROFILE: '/api/v1/auth/getProfile',
         CHANGE_PASSWORD: '/api/v1/auth/change-password',
-        ONBOARDING: '/api/v1/auth/onboarding'
+        ONBOARDING: '/api/v1/auth/onboarding', 
+        GOOGLE_LOGIN: "/api/v1/auth/google",
     }, 
 
     UNIVERSITY: {
