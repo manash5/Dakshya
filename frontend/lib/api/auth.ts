@@ -94,3 +94,25 @@ export const googleLogin = async (idToken: string) => {
         );
     }
 }
+
+export const forgotPassword = async (data: { email: string }) => {
+    try {
+        const response = await axiosInstance.post(API.AUTH.FORGOT_PASSWORD, data);
+        return response.data;
+    } catch (error: any) {
+        throw new Error(
+            error.response?.data?.message || 'Failed to send reset link'
+        );
+    }
+}
+
+export const resetPassword = async (data: { token: string; newPassword: string; confirmPassword: string }) => {
+    try {
+        const response = await axiosInstance.post(API.AUTH.RESET_PASSWORD, data);
+        return response.data;
+    } catch (error: any) {
+        throw new Error(
+            error.response?.data?.message || 'Failed to reset password'
+        );
+    }
+}

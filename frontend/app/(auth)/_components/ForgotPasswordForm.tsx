@@ -5,9 +5,13 @@ import { useForm } from "react-hook-form";
 
 
 import { forgotPasswordSchema, ForgotPasswordValues } from "./schema";
-import  Image from 'next/image';
+import Image from 'next/image';
+import { useState, useTransition } from "react";
+import { forgotPasswordAction } from "@/lib/actions/auth-action";
 export default function FogotPasswordForm() {
-    
+    const [isPending, startTransition] = useTransition();
+    const [error, setError] = useState('');
+    const [sent, setSent] = useState(false)
     const {
         register,
         handleSubmit,
@@ -22,7 +26,19 @@ export default function FogotPasswordForm() {
         "mt-2 w-full rounded-xl border border-transparent bg-neutral-50 px-4 py-3 text-sm text-neutral-800 outline-none transition duration-200 placeholder:text-neutral-400 focus:border-lime-300 focus:bg-white focus:ring-4 focus:ring-lime-200/30";
 
     const onSubmit = (data: ForgotPasswordValues) => {
-        void data;
+        setError('');
+        startTransition(async () => {
+            try {
+                const result = await forgotPasswordAction(data);
+                if (result.success) {
+                    setSent(true);
+                } else {
+                    setError(result.message || 'Failed to send reset link');
+                }
+            } catch (err: any) {
+                setError(err?.message || 'Failed to send reset link');
+            }
+        });
     };
 
     return (
@@ -31,19 +47,19 @@ export default function FogotPasswordForm() {
                 <div className="space-y-5">
                     <div className="flex items-center gap-2">
                         <div className="relative h-8 w-28 shrink-0">
-                        <Image
-                            src="/dakshya_main.png"
-                            alt="Dakshya"
-                            fill
-                            sizes="128px"
-                            className="object-cover -trasnlate-x-5"
-                            priority
-                            loading="eager"
-                        />
-                    </div>
-                    <span className="rounded-full border border-lime-200 bg-lime-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-lime-700">
-                        Reset Access
-                    </span>
+                            <Image
+                                src="/dakshya_main.png"
+                                alt="Dakshya"
+                                fill
+                                sizes="128px"
+                                className="object-cover -trasnlate-x-5"
+                                priority
+                                loading="eager"
+                            />
+                        </div>
+                        <span className="rounded-full border border-lime-200 bg-lime-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-lime-700">
+                            Reset Access
+                        </span>
                     </div>
 
                     <div>
@@ -54,6 +70,16 @@ export default function FogotPasswordForm() {
                             Enter your email and we will send a reset link.
                         </p>
                     </div>
+                    {error ? (
+                        <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+                            {error}
+                        </p>
+                    ) : null}
+                    {sent ? (
+                        <p className="rounded-xl border border-lime-200 bg-lime-50 px-4 py-3 text-sm text-lime-700">
+                            If that email exists, a reset link has been sent. Check your inbox.
+                        </p>
+                    ) : null}
 
                     <form className="space-y-5" onSubmit={handleSubmit(onSubmit)} noValidate>
                         <div>
@@ -75,9 +101,9 @@ export default function FogotPasswordForm() {
                         <button
                             type="submit"
                             className="w-full rounded-xl bg-gradient-to-r from-[#b9e956] to-[#a6e042] px-4 py-3 text-sm font-semibold text-[#0c2422] shadow-[0_10px_20px_rgba(166,224,66,0.35)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_30px_rgba(166,224,66,0.4)] active:translate-y-0"
-                            disabled={isSubmitting}
+                            disabled={isPending}
                         >
-                            {isSubmitting ? "Sending..." : "Send reset link"}
+                            {isPending ? "Sending..." : "Send reset link"}
                         </button>
                     </form>
                 </div>

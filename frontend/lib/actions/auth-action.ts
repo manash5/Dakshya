@@ -1,6 +1,6 @@
 "use server";  // from frontend server
 import { LoginFormValues, SignUpFormValues } from "@/app/(auth)/_components/schema";
-import { register, login, whoami, profileUpdate, changePassword } from "@/lib/api/auth";
+import { register, login, whoami, profileUpdate, changePassword, forgotPassword, resetPassword } from "@/lib/api/auth";
 import { setUserInfoCookie, setTokenCookie } from "../cookies";
 import { revalidatePath } from "next/cache";
 import { googleLogin } from "@/lib/api/auth";
@@ -133,5 +133,42 @@ export async function googleLoginAction(idToken: string) {
         };
     } catch (error: any) {
         return { success: false, message: error.message || 'Google login failed' };
+    }
+}
+
+
+export async function forgotPasswordAction(data: { email: string }) {
+    try {
+        const result = await forgotPassword(data);
+        if (result.success) {
+            return {
+                success: true, data: result.data,
+                message: result.message || 'Reset link sent'
+            };
+        }
+        return {
+            success: false, message: result.message
+                || 'Failed to send reset link'
+        };
+    } catch (error: any) {
+        return { success: false, message: error.message || 'Failed to send reset link' };
+    }
+}
+
+export async function resetPasswordAction(data: { token: string; newPassword: string; confirmPassword: string }) {
+    try {
+        const result = await resetPassword(data);
+        if (result.success) {
+            return {
+                success: true, data: result.data,
+                message: result.message || 'Password reset successful'
+            };
+        }
+        return {
+            success: false, message: result.message
+                || 'Failed to reset password'
+        };
+    } catch (error: any) {
+        return { success: false, message: error.message || 'Failed to reset password' };
     }
 }
