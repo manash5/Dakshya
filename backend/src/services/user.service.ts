@@ -5,6 +5,7 @@ import {
   LoginUserDto,
   UpdateUserDto,
   UpdateUserAdminDto,
+  RegisterWithEmailDto,
 } from "../dtos/user.dto";
 import { HttpException } from "../exceptions/http-exceptions";
 import bcrypt from "bcryptjs";
@@ -14,6 +15,12 @@ import jwt from "jsonwebtoken";
 import { JWT_KEY } from "../config/constant";
 import { UpdateQuery } from "mongoose";
 import { UserProgressService } from "./userProgress.service";
+import {
+  generateResetToken,
+  generateTempPassword,
+} from "../utils/password.util";
+import { mailService } from "./mail.service";
+import { authService } from "./auth.service";
 
 const userRepository = new UserMongoRepository();
 const userProgressService = new UserProgressService();
@@ -48,7 +55,9 @@ export class UserService {
     if (!user) {
       throw new HttpException(400, "Invalid email or password");
     }
-    console.log(user);
+    console.log(user);if (!user.password) {
+      throw new HttpException(400, "This account uses Google Sign-In. Please log in with Google.");
+    }
     const isPasswordValid = await bcrypt.compare(
       loginData.password,
       user.password,
@@ -57,13 +66,11 @@ export class UserService {
       throw new HttpException(400, "Invalid email or password");
     }
 
-    if(user.role == 'user'){
-      if (user.onboardingCompleted){
-
+    if (user.role == "user") {
+      if (user.onboardingCompleted) {
         await userProgressService.checkForKnowledgeUpdates(user._id.toString());
       }
     }
-
 
     const token = jwt.sign(
       {
@@ -210,7 +217,8 @@ export class UserService {
       // onboarding flow, which is what initializeUserProgress normally
       // does) — if that just happened, make sure the progress doc actually
       // gets created instead of leaving the account onboarded-but-broken.
-      const justOnboarded = updateData.onboardingCompleted === true && !wasOnboarded;
+      const justOnboarded =
+        updateData.onboardingCompleted === true && !wasOnboarded;
 
       if (targetRolesChanged || justOnboarded) {
         await userProgressService.syncTargetRoles(id);
@@ -247,7 +255,10 @@ export class UserService {
     if (!updatedUser) {
       throw new HttpException(404, "user not found");
     }
-    await userProgressService.initializeUserProgress(id, onboardingData.currentSemester);
+    await userProgressService.initializeUserProgress(
+      id,
+      onboardingData.currentSemester,
+    );
     await userProgressService.syncTargetRoles(id);
 
     await userProgressService.refreshAcademicProgress(id);
@@ -328,5 +339,101 @@ export class UserService {
       throw new HttpException(400, "Current password is incorrect");
     }
     return isPasswordValid;
+  }
+
+  async registerWithEmail(data: RegisterWithEmailDto) {
+    const existingUserByEmail = await userRepository.findByEmail(data.email);
+    if (existingUserByEmail) {
+      throw new HttpException(400, "Email already exists");
+    }
+    const existingUserByUsername = await userRepository.findByUsername(
+      data.username,
+    );
+    if (existingUserByUsername) {
+      throw new HttpException(400, "Username already exists");
+    }
+
+    const tempPassword = generateTempPassword();
+    const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
+    const createdUser = await userRepository.create({
+      ...data,
+      password: hashedPassword,
+      mustChangePassword: true,
+    } as any);
+
+    await mailService.sendTempPassword(data.email, tempPassword);
+    return createdUser;
+  }
+
+  async forgotPassword(email: string) {
+    const user = await userRepository.findByEmail(email);
+    if (!user) return;
+
+    const token = generateResetToken();
+    const expires = new Date(Date.now() + 1000 * 60 * 60); // 1 hour
+
+    await userRepository.update(user._id.toString(), {
+      resetPasswordToken: token,
+      resetPasswordExpires: expires,
+    });
+
+    const resetLink = `${process.env.APP_URL}/reset-password?token=${token}`;
+    await mailService.sendResetLink(email, resetLink);
+  }
+
+  async resetPassword(token: string, newPassword: string) {
+    const user = await userRepository.findByResetToken(token);
+    if (!user) {
+      throw new HttpException(400, "Invalid or expired token");
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await userRepository.update(user._id.toString(), {
+      password: hashedPassword,
+      mustChangePassword: false,
+      resetPasswordToken: undefined,
+      resetPasswordExpires: undefined,
+    });
+  }
+
+  async loginWithGoogle(idToken: string) {
+    const googleData = await authService.verifyGoogleToken(idToken);
+
+    let user = await userRepository.findByGoogleId(googleData.googleId);
+
+    if (!user) {
+      const existingByEmail = await userRepository.findByEmail(
+        googleData.email,
+      );
+
+      if (existingByEmail) {
+        user = await userRepository.update(existingByEmail._id.toString(), {
+          googleId: googleData.googleId,
+        });
+      } else {
+        const baseUsername = googleData.email.split("@")[0];
+        user = await userRepository.create({
+          email: googleData.email,
+          firstName: googleData.firstName,
+          lastName: googleData.lastName,
+          username: `${baseUsername}_${Date.now()}`,
+          googleId: googleData.googleId,
+          mustChangePassword: false,
+        } as any);
+      }
+    }
+
+    if (!user) {
+      throw new HttpException(500, "Failed to create or find user");
+    }
+
+    const token = jwt.sign(
+      { id: user._id, email: user.email, role: user.role },
+      JWT_KEY,
+      { expiresIn: "30d" },
+    );
+
+    return { user, token };
   }
 }

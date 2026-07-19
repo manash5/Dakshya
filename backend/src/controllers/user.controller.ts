@@ -4,7 +4,11 @@ import { z } from "zod";
 import {
   CompleteOnboardingDto,
   CreateUserDto,
+  ForgotPasswordDto,
+  GoogleLoginDto,
   LoginUserDto,
+  RegisterWithEmailDto,
+  ResetPasswordDto,
   UpdatePasswordDTO,
   UpdateUserDto,
 } from "../dtos/user.dto";
@@ -166,6 +170,97 @@ export class UserController {
       return ApiResponseHelper.error(
         res,
         e?.message || "Failed to change password",
+        e.status || 500,
+      );
+    }
+  }
+
+  async registerWithEmail(req: Request, res: Response) {
+    try {
+      const parseResult = RegisterWithEmailDto.safeParse(req.body);
+      if (!parseResult.success) {
+        throw new HttpException(400, z.prettifyError(parseResult.error));
+      }
+      const createdUser = await userService.registerWithEmail(parseResult.data);
+      return ApiResponseHelper.success(
+        res,
+        createdUser,
+        201,
+        "Check your email for your password",
+      );
+    } catch (e: Error | unknown | any) {
+      return ApiResponseHelper.error(
+        res,
+        e?.message || "Failed to register user",
+        e.status || 500,
+      );
+    }
+  }
+
+  async forgotPassword(req: Request, res: Response) {
+    try {
+      const parseResult = ForgotPasswordDto.safeParse(req.body);
+      if (!parseResult.success) {
+        throw new HttpException(400, z.prettifyError(parseResult.error));
+      }
+      await userService.forgotPassword(parseResult.data.email);
+      return ApiResponseHelper.success(
+        res,
+        null,
+        200,
+        "If that email exists, a reset link was sent",
+      );
+    } catch (e: Error | unknown | any) {
+      return ApiResponseHelper.error(
+        res,
+        e?.message || "Failed to process request",
+        e.status || 500,
+      );
+    }
+  }
+
+  async resetPassword(req: Request, res: Response) {
+    try {
+      const parseResult = ResetPasswordDto.safeParse(req.body);
+      if (!parseResult.success) {
+        throw new HttpException(400, z.prettifyError(parseResult.error));
+      }
+      const { token, newPassword } = parseResult.data;
+      await userService.resetPassword(token, newPassword);
+      return ApiResponseHelper.success(
+        res,
+        null,
+        200,
+        "Password reset successful",
+      );
+    } catch (e: Error | unknown | any) {
+      return ApiResponseHelper.error(
+        res,
+        e?.message || "Failed to reset password",
+        e.status || 500,
+      );
+    }
+  }
+
+  async googleLogin(req: Request, res: Response) {
+    try {
+      const parseResult = GoogleLoginDto.safeParse(req.body);
+      if (!parseResult.success) {
+        throw new HttpException(400, z.prettifyError(parseResult.error));
+      }
+      const { user, token } = await userService.loginWithGoogle(
+        parseResult.data.idToken,
+      );
+      return ApiResponseHelper.success(
+        res,
+        { user, token },
+        200,
+        "Login successful",
+      );
+    } catch (e: Error | unknown | any) {
+      return ApiResponseHelper.error(
+        res,
+        e?.message || "Failed to login with Google",
         e.status || 500,
       );
     }
