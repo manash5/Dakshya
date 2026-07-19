@@ -55,8 +55,12 @@ export class UserService {
     if (!user) {
       throw new HttpException(400, "Invalid email or password");
     }
-    console.log(user);if (!user.password) {
-      throw new HttpException(400, "This account uses Google Sign-In. Please log in with Google.");
+    console.log(user);
+    if (!user.password) {
+      throw new HttpException(
+        400,
+        "This account uses Google Sign-In. Please log in with Google.",
+      );
     }
     const isPasswordValid = await bcrypt.compare(
       loginData.password,
@@ -397,6 +401,7 @@ export class UserService {
     });
   }
 
+
   async loginWithGoogle(idToken: string) {
     const googleData = await authService.verifyGoogleToken(idToken);
 
@@ -412,6 +417,10 @@ export class UserService {
           googleId: googleData.googleId,
         });
       } else {
+        // 👇 NEW — generate + hash a temp password for brand-new Google users
+        const tempPassword = generateTempPassword();
+        const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
         const baseUsername = googleData.email.split("@")[0];
         user = await userRepository.create({
           email: googleData.email,
@@ -419,8 +428,12 @@ export class UserService {
           lastName: googleData.lastName,
           username: `${baseUsername}_${Date.now()}`,
           googleId: googleData.googleId,
-          mustChangePassword: false,
+          password: hashedPassword, // 👈 NEW
+          mustChangePassword: true, // 👈 changed from false
         } as any);
+
+        // 👇 NEW — email it to them
+        await mailService.sendTempPassword(googleData.email, tempPassword);
       }
     }
 
@@ -434,6 +447,6 @@ export class UserService {
       { expiresIn: "30d" },
     );
 
-    return { user, token };
+    return { user, token, mustChangePassword: user.mustChangePassword };
   }
 }
