@@ -296,7 +296,7 @@ export default function CareerScrollExperience({ isAuthenticated }: CareerScroll
           <div className="flex items-center gap-4">
             <div className="h-14 w-14 rounded-full bg-slate-100" />
             <div className="flex-1 space-y-2">
-              <div className="h-3 w-3/5 rounded-full bg-slate-800/80" />
+              <div className="h-3 w-3/5 rounded-full bg-slate-200/80" />
               <div className="h-2 w-2/5 rounded-full bg-slate-200" />
             </div>
           </div>
@@ -368,9 +368,8 @@ export default function CareerScrollExperience({ isAuthenticated }: CareerScroll
                       </span>
                     )}
                     <span
-                      className={`text-base tracking-tight ${
-                        missing ? "text-slate-400" : "font-medium text-slate-900"
-                      }`}
+                      className={`text-base tracking-tight ${missing ? "text-slate-400" : "font-medium text-slate-900"
+                        }`}
                     >
                       {s}
                     </span>
@@ -481,55 +480,167 @@ export default function CareerScrollExperience({ isAuthenticated }: CareerScroll
 
         <div className="grid flex-1 grid-cols-1 gap-8 p-10 md:grid-cols-3">
           {/* Editor */}
-          <div className="dash-el col-span-2 rounded-2xl border border-slate-200 bg-white p-8 font-mono text-sm leading-relaxed">
-            <div className="mb-5 flex items-center justify-between">
+          {/* Editor */}
+          <div className="dash-el col-span-2 rounded-2xl overflow-hidden border border-[#2d2d2d] bg-[#1e1e1e] font-mono text-sm leading-relaxed shadow-[0_20px_60px_-20px_rgba(0,0,0,0.5)]">
+            {/* Title bar */}
+            <div className="flex items-center justify-between border-b border-[#2d2d2d] bg-[#252526] px-5 py-3">
               <div className="flex gap-2">
-                <div className="h-2 w-2 rounded-full bg-slate-200" />
-                <div className="h-2 w-2 rounded-full bg-slate-200" />
-                <div className="h-2 w-2 rounded-full bg-slate-200" />
+                <div className="h-3 w-3 rounded-full bg-[#FF5F56]" />
+                <div className="h-3 w-3 rounded-full bg-[#FFBD2E]" />
+                <div className="h-3 w-3 rounded-full bg-[#27C93F]" />
               </div>
-              <span className="text-[10px] uppercase tracking-[0.25em] text-slate-400">solution.py</span>
+              <span className="text-[10px] uppercase tracking-[0.25em] text-[#8b8b8b]">solution.py</span>
             </div>
-            <div className="space-y-2 text-slate-700">
-              <div>
-                <span style={{ color: ACCENT }}>def</span> <span style={{ color: INK }}>solve</span>(input):
+
+            {/* Tab bar */}
+            <div className="flex border-b border-[#2d2d2d] bg-[#252526]">
+              <div className="flex items-center gap-2 border-r border-[#2d2d2d] bg-[#1e1e1e] px-4 py-2 text-xs text-[#d4d4d4]">
+                <span className="h-2 w-2 rounded-sm bg-[#569CD6]" />
+                solution.py
               </div>
-              <div className="pl-6 text-slate-400">{"# two-pointer approach"}</div>
-              <div className="pl-6">
-                seen = {"{}"}
-              </div>
-              <div className="pl-6">
-                <span style={{ color: ACCENT }}>for</span> i, val <span style={{ color: ACCENT }}>in</span>{" "}
-                enumerate(input):
-              </div>
-              <div className="pl-12">seen[val] = i</div>
-              <div className="pl-6">
-                <span style={{ color: ACCENT }}>return</span> seen
+            </div>
+
+            {/* Code body */}
+            <div className="p-8">
+              <div className="space-y-2 text-[#d4d4d4]">
+                <div className="flex gap-4">
+                  <span className="select-none text-[#5a5a5a]">1</span>
+                  <div>
+                    <span style={{ color: "#569CD6" }}>def</span>{" "}
+                    <span style={{ color: "#DCDCAA" }}>solve</span>
+                    <span style={{ color: "#d4d4d4" }}>(</span>
+                    <span style={{ color: "#9CDCFE" }}>input</span>
+                    <span style={{ color: "#d4d4d4" }}>):</span>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <span className="select-none text-[#5a5a5a]">2</span>
+                  <div className="pl-6" style={{ color: "#6A9955" }}>
+                    {"# two-pointer approach"}
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <span className="select-none text-[#5a5a5a]">3</span>
+                  <div className="pl-6">
+                    <span style={{ color: "#9CDCFE" }}>seen</span>{" "}
+                    <span style={{ color: "#d4d4d4" }}>= {"{}"}</span>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <span className="select-none text-[#5a5a5a]">4</span>
+                  <div className="pl-6">
+                    <span style={{ color: "#C586C0" }}>for</span>{" "}
+                    <span style={{ color: "#9CDCFE" }}>i, val</span>{" "}
+                    <span style={{ color: "#C586C0" }}>in</span>{" "}
+                    <span style={{ color: "#DCDCAA" }}>enumerate</span>
+                    <span style={{ color: "#d4d4d4" }}>(</span>
+                    <span style={{ color: "#9CDCFE" }}>input</span>
+                    <span style={{ color: "#d4d4d4" }}>):</span>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <span className="select-none text-[#5a5a5a]">5</span>
+                  <div className="pl-12">
+                    <span style={{ color: "#9CDCFE" }}>seen</span>
+                    <span style={{ color: "#d4d4d4" }}>[val] = i</span>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <span className="select-none text-[#5a5a5a]">6</span>
+                  <div className="pl-6">
+                    <span style={{ color: "#C586C0" }}>return</span>{" "}
+                    <span style={{ color: "#9CDCFE" }}>seen</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Webcam + Signal */}
+          {/* Webcam + Signal */}
           <div className="dash-el flex flex-col gap-6">
-            <div className="relative aspect-video overflow-hidden rounded-2xl border border-slate-200 bg-white">
-              <div className="absolute inset-4 rounded-lg border border-dashed border-slate-300" />
-              <div className="absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-[60%] rounded-full border border-slate-300" />
-              <div className="absolute left-1/2 top-1/2 h-24 w-32 -translate-x-1/2 translate-y-2 rounded-t-[3rem] border border-slate-300" />
-              <div className="absolute right-3 top-3 flex items-center gap-1.5">
-                <div className="h-1.5 w-1.5 rounded-full" style={{ background: ACCENT }} />
-                <span className="text-[10px] uppercase tracking-widest text-slate-500">REC</span>
+            {/* Webcam */}
+            <div className="relative aspect-video overflow-hidden rounded-2xl border border-[#2d2d2d] bg-gradient-to-br from-[#1e1e1e] to-[#141414]">
+              {/* subtle grid backdrop */}
+              <div
+                className="absolute inset-0 opacity-[0.15]"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px)",
+                  backgroundSize: "24px 24px",
+                }}
+              />
+              <div className="absolute inset-4 rounded-lg border border-dashed border-[#3d3d3d]" />
+              {/* silhouette */}
+              <div className="absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-[60%] rounded-full border-2" style={{ borderColor: `${ACCENT}88` }} />
+              <div
+                className="absolute left-1/2 top-1/2 h-24 w-32 -translate-x-1/2 translate-y-2 rounded-t-[3rem] border-2"
+                style={{ borderColor: `${ACCENT}88` }}
+              />
+              {/* REC badge */}
+              <div className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full bg-black/40 px-2 py-1 backdrop-blur-sm">
+                <div
+                  className="h-1.5 w-1.5 rounded-full"
+                  style={{ background: "#FF5F56", boxShadow: "0 0 8px #FF5F56" }}
+                />
+                <span className="text-[10px] uppercase tracking-widest text-[#e5e5e5]">REC</span>
               </div>
+              {/* timer */}
+              <div className="absolute left-3 top-3 rounded-full bg-black/40 px-2 py-1 backdrop-blur-sm">
+                <span className="text-[10px] font-mono tracking-widest text-[#e5e5e5]">04:12</span>
+              </div>
+              {/* corner accent brackets */}
+              <div className="absolute bottom-3 left-3 h-4 w-4 border-b-2 border-l-2" style={{ borderColor: ACCENT }} />
+              <div className="absolute bottom-3 right-3 h-4 w-4 border-b-2 border-r-2" style={{ borderColor: ACCENT }} />
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-5">
-              <div className="text-[10px] uppercase tracking-[0.28em] text-slate-400">Signal</div>
+
+            {/* Signal */}
+            <div className="rounded-2xl border border-[#2d2d2d] bg-[#1e1e1e] p-5">
+              <div className="flex items-center justify-between">
+                <div className="text-[10px] uppercase tracking-[0.28em] text-[#8b8b8b]">Signal</div>
+                <span className="text-[10px] font-mono" style={{ color: ACCENT }}>
+                  Stable
+                </span>
+              </div>
               <div className="mt-4 flex h-8 items-end gap-1">
-                {[3, 6, 4, 8, 5, 7, 4, 9, 6, 8, 5, 7, 4, 6, 5].map((h, i) => (
-                  <div
-                    key={i}
-                    className="w-1 rounded-full"
-                    style={{ height: `${h * 10}%`, background: ACCENT, opacity: 0.35 + h / 20 }}
-                  />
-                ))}
+                {[3, 6, 4, 8, 5, 7, 4, 9, 6, 8, 5, 7, 4, 6, 5].map((h, i) => {
+                  const colors = ["#569CD6", ACCENT, "#DCDCAA"];
+                  const color = colors[i % colors.length];
+                  return (
+                    <div
+                      key={i}
+                      className="w-1 rounded-full"
+                      style={{
+                        height: `${h * 10}%`,
+                        background: color,
+                        opacity: 0.4 + h / 18,
+                        boxShadow: `0 0 6px ${color}55`,
+                      }}
+                    />
+                  );
+                })}
+              </div>
+
+              {/* mini stat row */}
+              <div className="mt-4 grid grid-cols-3 gap-2 border-t border-[#2d2d2d] pt-4">
+                <div>
+                  <div className="text-[9px] uppercase tracking-widest text-[#6b6b6b]">CPU</div>
+                  <div className="text-xs font-mono" style={{ color: "#569CD6" }}>
+                    38%
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[9px] uppercase tracking-widest text-[#6b6b6b]">Audio</div>
+                  <div className="text-xs font-mono" style={{ color: ACCENT }}>
+                    Good
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[9px] uppercase tracking-widest text-[#6b6b6b]">Latency</div>
+                  <div className="text-xs font-mono" style={{ color: "#DCDCAA" }}>
+                    22ms
+                  </div>
+                </div>
               </div>
             </div>
           </div>
