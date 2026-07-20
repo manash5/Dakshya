@@ -37,10 +37,10 @@ export default function JobCard(props: JobCardProps) {
 
   return (
     <>
-      <article className="flex flex-col rounded-[24px] border border-zinc-200 bg-white p-5 shadow-[0_12px_30px_rgba(15,23,42,0.05)] transition hover:border-zinc-300 hover:shadow-[0_16px_36px_rgba(15,23,42,0.08)]">
+      <article className="group flex flex-col rounded-[24px] border border-zinc-200 bg-white p-5 shadow-[0_12px_30px_rgba(15,23,42,0.05)] transition-all duration-200 hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-[0_16px_36px_rgba(15,23,42,0.08)]">
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-zinc-900 text-white">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-zinc-900 text-white transition-colors duration-200 group-hover:bg-zinc-800">
               <Building2 size={16} />
             </div>
             <div className="min-w-0">
@@ -87,7 +87,7 @@ export default function JobCard(props: JobCardProps) {
           <button
             type="button"
             onClick={() => setDetailOpen(true)}
-            className="flex h-11 flex-1 items-center justify-center rounded-full border border-zinc-900 text-sm font-semibold text-zinc-900 transition hover:bg-zinc-50"
+            className="flex h-11 flex-1 items-center justify-center rounded-full border border-zinc-900 text-sm font-semibold text-zinc-900 transition-colors duration-200 hover:bg-zinc-900 hover:text-white"
           >
             VIEW DETAILS
           </button>
@@ -97,7 +97,12 @@ export default function JobCard(props: JobCardProps) {
             onClick={onToggleSave}
             aria-pressed={saved}
             aria-label={saved ? "Remove from saved jobs" : "Save job"}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#D9F24A] text-zinc-900 transition hover:brightness-95"
+            title={saved ? "Remove from saved jobs" : "Save job"}
+            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border transition-all duration-200 ${
+              saved
+                ? "border-zinc-900 bg-zinc-900 text-white"
+                : "border-zinc-200 text-zinc-400 hover:border-zinc-900 hover:text-zinc-900"
+            }`}
           >
             <Bookmark size={16} fill={saved ? "currentColor" : "none"} />
           </button>
