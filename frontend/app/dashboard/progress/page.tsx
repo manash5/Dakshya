@@ -1,13 +1,16 @@
 import Link from "next/link";
+import { StaggerGroup, StaggerItem } from "../_components/AnimatedSection";
 import RoleTabs from "./_components/RoleTabs";
 import RoadmapBoard from "./_components/RoadmapBoard";
 import { getCareerDashboardData } from "@/lib/actions/dashboard-action";
 import { getSkillPlannerData } from "@/lib/actions/skillPlanner-action";
 import { handleTouchRoadmapVisit } from "@/lib/actions/userProgress-action";
 import { handleGetAttemptHistory } from "@/lib/actions/practiceAttempt-action";
+import { handleGetAllProjects } from "@/lib/actions/project-action";
 import type { CareerDashboard } from "@/lib/api/dashboard";
 import type { SkillPlanner } from "@/lib/api/skillPlanner";
 import type { PracticeAttempt } from "@/lib/api/practiceAttempt";
+import type { Project } from "@/lib/api/project";
 
 const EMPTY_DASHBOARD: CareerDashboard = {
   hero: [],
@@ -85,6 +88,7 @@ export default async function Page({
   // gate) — doesn't touch UserProgress, safe to run alongside the
   // planner/touch pair below rather than after it.
   const attemptsPromise = handleGetAttemptHistory({ jobRoleId: selectedRoleId, limit: 100 });
+  const projectsPromise = handleGetAllProjects({ careerRole: selectedRoleId, limit: 20 });
 
   // Sequential, not Promise.all: both calls mutate the same UserProgress
   // document (skill planner self-heals readiness, roadmap-visit stamps
@@ -95,17 +99,19 @@ export default async function Page({
   await handleTouchRoadmapVisit(selectedRoleId);
 
   const attemptsResult = await attemptsPromise;
+  const projectsResult = await projectsPromise;
 
   const planner: SkillPlanner = plannerResult.success
     ? plannerResult.data
     : emptyPlanner(selectedRoleId, selectedHero.jobRole);
 
   const attempts: PracticeAttempt[] = attemptsResult.success ? attemptsResult.data : [];
+  const projects: Project[] = projectsResult.success ? projectsResult.data : [];
 
   return (
     <div className="bg-[#F7F8F5] px-6 py-6 sm:px-8 lg:px-10 lg:py-8">
-      <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-8">
-        <div className="flex flex-col gap-6">
+      <StaggerGroup className="mx-auto flex w-full max-w-[1400px] flex-col gap-8">
+        <StaggerItem className="flex flex-col gap-6">
           <div>
             <h1 className="bg-gradient-to-r from-neutral-900 to-neutral-600 bg-clip-text text-3xl font-bold text-transparent">
               {planner.role.jobRole} Roadmap
@@ -118,16 +124,19 @@ export default async function Page({
           </div>
 
           <RoleTabs roles={dashboard.hero} selectedRoleId={selectedRoleId} />
-        </div>
+        </StaggerItem>
 
-        <RoadmapBoard
-          roadmap={planner.roadmap}
-          roadmapProgress={planner.roadmapProgress}
-          skills={planner.skills}
-          attempts={attempts}
-          jobRoleId={selectedRoleId}
-        />
-      </div>
+        <StaggerItem>
+          <RoadmapBoard
+            roadmap={planner.roadmap}
+            roadmapProgress={planner.roadmapProgress}
+            skills={planner.skills}
+            attempts={attempts}
+            projects={projects}
+            jobRoleId={selectedRoleId}
+          />
+        </StaggerItem>
+      </StaggerGroup>
     </div>
   );
 }

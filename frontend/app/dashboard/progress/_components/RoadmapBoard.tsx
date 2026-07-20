@@ -7,6 +7,8 @@ import type {
   SkillPlannerSkill,
 } from "@/lib/api/skillPlanner";
 import type { PracticeAttempt } from "@/lib/api/practiceAttempt";
+import type { Project } from "@/lib/api/project";
+import { StaggerGroup, StaggerItem } from "../../_components/AnimatedSection";
 import RoadmapStepCard from "./RoadmapStepCard";
 import RoadmapStepDrawer from "./RoadmapStepDrawer";
 import { bucketRoadmapIntoMilestones, findCurrentMilestoneIndex } from "./milestones";
@@ -17,6 +19,7 @@ interface RoadmapBoardProps {
   roadmapProgress: RoadmapProgress;
   skills: SkillPlannerSkill[];
   attempts: PracticeAttempt[];
+  projects: Project[];
   jobRoleId: string;
 }
 
@@ -34,6 +37,7 @@ export default function RoadmapBoard({
   roadmapProgress,
   skills,
   attempts,
+  projects,
   jobRoleId,
 }: RoadmapBoardProps) {
   const [justCompletedOrders, setJustCompletedOrders] = useState<Set<number>>(new Set());
@@ -70,15 +74,15 @@ export default function RoadmapBoard({
     (selectedStep.status === "done" || justCompletedOrders.has(selectedStep.order));
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+    <StaggerGroup className="flex flex-col gap-5">
+      <StaggerItem className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatTile label="COMPLETE" value={`${progressPercent}%`} />
         <StatTile label="STEPS DONE" value={`${completedModules}/${totalModules}`} />
         <StatTile label="REMAINING" value={`${remaining}`} />
         <StatTile label="WEEKS LEFT" value={`${weeksLeft}`} />
-      </div>
+      </StaggerItem>
 
-      <div className="rounded-2xl border border-black/5 bg-white p-5 shadow-sm">
+      <StaggerItem className="rounded-2xl border border-black/5 bg-white p-5 shadow-sm">
         <div className="flex items-center justify-between text-sm">
           <p className="font-semibold text-neutral-900">
             Current milestone: <span className="text-[#5C8A1C]">{currentMilestone.label}</span>
@@ -99,9 +103,9 @@ export default function RoadmapBoard({
             }}
           />
         </div>
-      </div>
+      </StaggerItem>
 
-      <div className="p-1">
+      <StaggerItem className="p-1">
         <div className="mx-auto flex max-w-2xl flex-col gap-10">
           {milestones.map((milestone, i) => (
             <div key={milestone.label} className="relative flex gap-5">
@@ -155,13 +159,14 @@ export default function RoadmapBoard({
             </div>
           ))}
         </div>
-      </div>
+      </StaggerItem>
 
       <RoadmapStepDrawer
         step={selectedStep}
         milestoneLabel={selectedMilestoneLabel}
         skills={skills}
         attempts={attempts}
+        projects={projects}
         jobRoleId={jobRoleId}
         isDone={selectedStepIsDone}
         onClose={() => setSelectedStepOrder(null)}
@@ -169,6 +174,6 @@ export default function RoadmapBoard({
           setJustCompletedOrders((prev) => new Set(prev).add(stepOrder))
         }
       />
-    </div>
+    </StaggerGroup>
   );
 }
