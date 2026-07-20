@@ -11,19 +11,19 @@ const storage = multer.diskStorage(
             file: Express.Multer.File, 
             cb: (error: Error | null, destination: string) => void
         ) => {
-            const uploadPath = path.join(__dirname, "../../uploads"); // __dirname -> current dir
+            const uploadPath = path.join(__dirname, "../../uploads");
             if (!fs.existsSync(uploadPath)) {
-                fs.mkdirSync(uploadPath); // create uploads dir if not exists
+                fs.mkdirSync(uploadPath);
             }
-            cb(null, uploadPath); // save to uploads dir
+            cb(null, uploadPath);
         },
         filename: (
             req: Request, 
             file: Express.Multer.File, 
             cb: (error: Error | null, filename: string) => void
         ) => {
-            const fileSuffix = uuidv4(); // unique suffix
-            cb(null, fileSuffix + "-" + file.originalname); // unique filename
+            const fileSuffix = uuidv4();
+            cb(null, fileSuffix + "-" + file.originalname);
         }
     }
 );
@@ -37,9 +37,9 @@ const fileFilter = (
         file.mimetype === "image/jpeg" || 
         file.mimetype === "image/png"
     ) {
-        cb(null, true); // accept file
+        cb(null, true);
     } else {
-        cb(new HttpException(400, "Only JPEG and PNG files are allowed")); // reject file
+        cb(new HttpException(400, "Only JPEG and PNG files are allowed"));
     }
 }
 const upload = multer(

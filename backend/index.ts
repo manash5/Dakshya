@@ -10,7 +10,7 @@ connectToMongoDB()
     })
     .catch((error) => {
         console.error("Failed to connect to MongoDB, server not started.", error);
-        process.exit(1); // Exit the process with an error code
+        process.exit(1);
 });
 
 app.listen(

@@ -65,7 +65,7 @@ export class UserService {
     const isPasswordValid = await bcrypt.compare(
       loginData.password,
       user.password,
-    ); // compare hashed password
+    );
     if (!isPasswordValid) {
       throw new HttpException(400, "Invalid email or password");
     }

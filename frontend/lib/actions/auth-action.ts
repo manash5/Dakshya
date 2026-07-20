@@ -1,4 +1,4 @@
-"use server";  // from frontend server
+"use server";
 import { LoginFormValues, SignUpFormValues } from "@/app/(auth)/_components/schema";
 import { register, login, whoami, profileUpdate, changePassword, forgotPassword, resetPassword } from "@/lib/api/auth";
 import { setUserInfoCookie, setTokenCookie } from "../cookies";

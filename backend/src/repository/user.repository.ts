@@ -49,7 +49,7 @@ export class UserMongoRepository implements IUserRepository {
   }
   async delete(id: string): Promise<boolean> {
     const deletedUser = await User.findByIdAndDelete(id);
-    return !!deletedUser; // return true if deleted, false if not found
+    return !!deletedUser;
   }
 
   async getAllPaginated(
