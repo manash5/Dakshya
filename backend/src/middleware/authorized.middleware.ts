@@ -7,21 +7,22 @@ import { ApiResponseHelper } from "../utils/api-response";
 import { UserMongoRepository } from "../repository/user.repository";
 
 const userRepository = new UserMongoRepository();
-// user tag implementation
+
 declare global {
+    // eslint-disable-next-line @typescript-eslint/no-namespace -- declaration merging onto Express requires a namespace
     namespace Express {
         interface Request {
-            user?: Record<string, any> | IUser; // Add user property, Request interface
+            user?: Record<string, any> | IUser;
         }
     }
-}// for user detail now can be accessed in req.user
+}
 export const authorizedMiddleware =
     async (req: Request, res: Response, next: NextFunction) => {
         try {
             const authHeader = req.headers.authorization;
             if (!authHeader || !authHeader.startsWith("Bearer "))
                 throw new HttpException(401, "Authorization header missing or malformed");
-            const token = authHeader.split(" ")[1]; // Bearer-> 0, <token>-> 1
+            const token = authHeader.split(" ")[1];
             if (!token)
                 throw new HttpException(401, "Token missing");
             const decoded = jwt.verify(token, JWT_KEY) as Record<string, any>;
@@ -30,8 +31,8 @@ export const authorizedMiddleware =
             const user = await userRepository.findById(decoded.id);
             if (!user)
                 throw new HttpException(401, "User not found");
-            req.user = user; // attach user to request object for downstream use
-            return next(); // entry ahead
+            req.user = user;
+            return next();
         } catch (e: Error | unknown | any) {
             return ApiResponseHelper.error(
                 res,

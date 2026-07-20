@@ -146,7 +146,7 @@ export class JobRoleService {
         jobRole._id.toString(),
       );
     } catch {
-      careerKnowledge = null;
+      // keep careerKnowledge as null
     }
 
     return {

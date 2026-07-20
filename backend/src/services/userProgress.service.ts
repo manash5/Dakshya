@@ -89,7 +89,7 @@ export class UserProgressService implements IUserProgressService {
 
   // get user progress
   async getUserProgress(userId: string): Promise<IUserProgress> {
-    let progress = await progressRepository.findByUserId(userId);
+    const progress = await progressRepository.findByUserId(userId);
 
     if (!progress) {
       throw new HttpException(404, "User progress not found.");
