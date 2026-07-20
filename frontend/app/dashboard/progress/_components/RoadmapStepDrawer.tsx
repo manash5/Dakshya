@@ -1,13 +1,16 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  ArrowRight,
   BookOpen,
   Check,
   Circle,
   Clock,
   FileText,
+  FolderGit2,
   MessageSquare,
   Newspaper,
   Play,
@@ -21,6 +24,7 @@ import type {
   SkillPlannerSkill,
 } from "@/lib/api/skillPlanner";
 import type { PracticeAttempt } from "@/lib/api/practiceAttempt";
+import type { Project } from "@/lib/api/project";
 import { buildInterviewHref } from "@/lib/utils/practiceLink";
 import { handleCompleteRoadmapStep } from "@/lib/actions/userProgress-action";
 import { handleGenerateSkillResources } from "@/lib/actions/skillPlanner-action";
@@ -39,10 +43,26 @@ interface RoadmapStepDrawerProps {
   milestoneLabel: string;
   skills: SkillPlannerSkill[];
   attempts: PracticeAttempt[];
+  projects: Project[];
   jobRoleId: string;
   isDone: boolean;
   onClose: () => void;
   onCompleted: (stepOrder: number) => void;
+}
+
+// The catalog project whose skills overlap this step's skills the most —
+// gives every step a concrete build alongside its watch/practice work.
+function findStepProject(projects: Project[], stepSkills: Set<string>): Project | null {
+  let best: Project | null = null;
+  let bestOverlap = 0;
+  for (const project of projects) {
+    const overlap = project.skills.filter((s) => stepSkills.has(s.toLowerCase())).length;
+    if (overlap > bestOverlap) {
+      best = project;
+      bestOverlap = overlap;
+    }
+  }
+  return best;
 }
 
 export default function RoadmapStepDrawer({
@@ -50,6 +70,7 @@ export default function RoadmapStepDrawer({
   milestoneLabel,
   skills,
   attempts,
+  projects,
   jobRoleId,
   isDone,
   onClose,
@@ -127,6 +148,7 @@ export default function RoadmapStepDrawer({
   const practiceMet = qualifyingSessions >= MIN_QUALIFYING_SESSIONS;
 
   const topGapSkill = [...matchedSkills].sort((a, b) => a.proficiency - b.proficiency)[0] ?? null;
+  const stepProject = findStepProject(projects, stepSkillsLower);
   const canComplete = !isDone && allResourcesWatched && practiceMet;
 
   const handleComplete = () => {
@@ -141,7 +163,11 @@ export default function RoadmapStepDrawer({
     });
   };
 
-  return (
+  // Portalled to <body> so the overlay is fixed to the actual viewport --
+  // not to whatever transformed ancestor (e.g. the page's entrance-animation
+  // wrapper) happens to sit above it in the tree, which would otherwise
+  // confine "fixed" to that ancestor's box instead of the full screen.
+  return createPortal(
     <AnimatePresence>
       <motion.div
         key="backdrop"
@@ -153,7 +179,7 @@ export default function RoadmapStepDrawer({
       />
       <motion.div
         key="panel"
-        className="fixed inset-y-0 right-0 z-50 flex w-full max-w-lg flex-col overflow-y-auto bg-white shadow-xl"
+        className="scrollbar-elegant fixed inset-y-0 right-0 z-50 flex w-full max-w-lg flex-col overflow-y-auto bg-white shadow-xl"
         initial={{ x: "100%" }}
         animate={{ x: 0 }}
         exit={{ x: "100%" }}
@@ -336,6 +362,29 @@ export default function RoadmapStepDrawer({
               <MessageSquare className="h-4 w-4" />
               Practice
             </a>
+
+            {stepProject && (
+              <a
+                href="/dashboard/practice"
+                className="mt-3 flex items-start gap-3 rounded-xl border border-neutral-100 p-3 transition-colors hover:border-[#C6EA5D] hover:bg-[#FAFBF6]"
+              >
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#F2F3EE] text-neutral-500">
+                  <FolderGit2 className="h-4 w-4" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[10px] font-semibold tracking-wide text-neutral-400">
+                    BUILD THIS PROJECT · {stepProject.difficulty.toUpperCase()} · ~{stepProject.estimatedHours}H
+                  </span>
+                  <span className="block truncate text-sm font-semibold text-neutral-900">
+                    {stepProject.title}
+                  </span>
+                  <span className="mt-0.5 line-clamp-2 block text-xs leading-relaxed text-neutral-500">
+                    {stepProject.description}
+                  </span>
+                </span>
+                <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-neutral-300" />
+              </a>
+            )}
           </div>
 
           {error && <p className="text-sm text-red-500">{error}</p>}
@@ -384,6 +433,7 @@ export default function RoadmapStepDrawer({
         onClose={() => setActiveResource(null)}
         onWatched={(url) => setWatchedResourceUrls((prev) => [...prev, url])}
       />
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
 }
