@@ -1,10 +1,12 @@
 "use server";
+import { revalidatePath } from "next/cache";
 import {
     startAttempt,
     getAttemptHistory,
     getAttemptById,
     submitAnswer,
     completeAttempt,
+    deleteAttempt,
     transcribeAudio,
 } from "@/lib/api/practiceAttempt";
 
@@ -81,6 +83,12 @@ export const handleSubmitAnswer = async (
     try {
         const result = await submitAnswer(id, data);
         if (result.success) {
+            // Skill Planner/Roadmap read per-question scores as soon as they're
+            // submitted (see backend skillPlanner.service.ts), not just on
+            // attempt completion -- revalidate now so a skill flips to
+            // "Practiced" without waiting for the whole session to finish.
+            revalidatePath("/dashboard/planner");
+            revalidatePath("/dashboard/progress");
             return { success: true, message: result.message, data: result.data };
         }
         return { success: false, message: result.message || "Failed to submit answer" };
@@ -96,11 +104,29 @@ export const handleCompleteAttempt = async (
     try {
         const result = await completeAttempt(id, data);
         if (result.success) {
+            revalidatePath("/dashboard/practice");
+            revalidatePath("/dashboard/planner");
+            revalidatePath("/dashboard/progress");
             return { success: true, message: result.message, data: result.data };
         }
         return { success: false, message: result.message || "Failed to complete practice attempt" };
     } catch (error: any) {
         return { success: false, message: error?.message || "Failed to complete practice attempt" };
+    }
+};
+
+export const handleDeleteAttempt = async (id: string) => {
+    try {
+        const result = await deleteAttempt(id);
+        if (result.success) {
+            revalidatePath("/dashboard/practice");
+            revalidatePath("/dashboard/planner");
+            revalidatePath("/dashboard/progress");
+            return { success: true, message: result.message };
+        }
+        return { success: false, message: result.message || "Failed to delete practice attempt" };
+    } catch (error: any) {
+        return { success: false, message: error?.message || "Failed to delete practice attempt" };
     }
 };
 
