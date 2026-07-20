@@ -3,9 +3,12 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormProvider, useForm } from "react-hook-form";
 import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
 import { handleUpdateProfile } from "@/lib/actions/auth-action";
+import { useAuth } from "@/lib/context/AuthContext";
+import { StaggerGroup, StaggerItem } from "@/app/dashboard/_components/AnimatedSection";
 import type { JobRole } from "@/lib/api/onboarding";
 
 import AccountSettingsCard from "./AccountSettingsCard";
@@ -41,6 +44,15 @@ export default function UpdateUserForm({
     const [error, setError] = useState<string | null>(null);
     const [previewImage, setPreviewImage] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const router = useRouter();
+    const { checkAuth } = useAuth();
+
+    // The header reads AuthContext, which only loads the user_data cookie once
+    // on mount — re-run checkAuth after a save so it picks up the new cookie.
+    const syncHeaderProfile = async () => {
+        await checkAuth();
+        router.refresh();
+    };
 
     const resolvedImage = previewImage || resolveProfileImageSrc(user?.profilePicture);
     const profileScore = Math.round(
@@ -84,6 +96,7 @@ export default function UpdateUserForm({
                     }
 
                     toast.success("Profile image uploaded successfully");
+                    void syncHeaderProfile();
                 })
                 .catch((submitError: unknown) => {
                     const message = submitError instanceof Error ? submitError.message : "Image upload failed";
@@ -140,6 +153,7 @@ export default function UpdateUserForm({
 
             handleDismissImage();
             toast.success("Profile updated successfully");
+            await syncHeaderProfile();
         } catch (submitError: unknown) {
             const message = submitError instanceof Error ? submitError.message : "Profile update failed";
             toast.error(message);
@@ -155,34 +169,42 @@ export default function UpdateUserForm({
             </div>
 
             <FormProvider {...methods}>
-                <form onSubmit={methods.handleSubmit(onSubmit)} className="mx-auto flex w-full max-w-[1160px] flex-col gap-6">
-                    <ProfileHeader
-                        displayName={displayName}
-                        subtitle={subtitle || "Profile overview"}
-                        profileScore={profileScore}
-                        avatarSrc={resolvedImage}
-                        previewImage={previewImage}
-                        userRole={user?.role}
-                        fileInputRef={fileInputRef}
-                        onImageChange={handleImageChange}
-                        onDismissImage={handleDismissImage}
-                        isSubmitting={methods.formState.isSubmitting}
-                    />
+                <form onSubmit={methods.handleSubmit(onSubmit)} className="mx-auto flex w-full max-w-[1160px] flex-col">
+                    <StaggerGroup className="flex flex-col gap-6">
+                        <StaggerItem>
+                            <ProfileHeader
+                                displayName={displayName}
+                                subtitle={subtitle || "Profile overview"}
+                                profileScore={profileScore}
+                                avatarSrc={resolvedImage}
+                                previewImage={previewImage}
+                                userRole={user?.role}
+                                fileInputRef={fileInputRef}
+                                onImageChange={handleImageChange}
+                                onDismissImage={handleDismissImage}
+                                isSubmitting={methods.formState.isSubmitting}
+                            />
+                        </StaggerItem>
 
-                    {error ? (
-                        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                            {error}
-                        </div>
-                    ) : null}
+                        {error ? (
+                            <StaggerItem className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                                {error}
+                            </StaggerItem>
+                        ) : null}
 
-                    <AccountSettingsCard />
+                        <StaggerItem>
+                            <AccountSettingsCard />
+                        </StaggerItem>
 
-                    <div className="grid gap-6 lg:grid-cols-2">
-                        <CareerGoalsCard jobRoles={jobRoles} roadmapSnapshots={roadmapSnapshots} />
-                        <SecurityCard />
-                    </div>
+                        <StaggerItem className="grid gap-6 lg:grid-cols-2">
+                            <CareerGoalsCard jobRoles={jobRoles} roadmapSnapshots={roadmapSnapshots} />
+                            <SecurityCard />
+                        </StaggerItem>
 
-                    <ProfileFooter updatedAt={user?.updatedAt} />
+                        <StaggerItem>
+                            <ProfileFooter updatedAt={user?.updatedAt} />
+                        </StaggerItem>
+                    </StaggerGroup>
                 </form>
             </FormProvider>
         </div>
