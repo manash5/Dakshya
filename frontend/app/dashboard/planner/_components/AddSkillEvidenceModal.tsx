@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { toast } from "react-toastify";
 import { X } from "lucide-react";
 import type { SkillPlannerSkill } from "@/lib/api/skillPlanner";
@@ -46,7 +47,9 @@ export default function AddSkillEvidenceModal({
     }
   };
 
-  return (
+  // Portalled to <body> so "fixed" is relative to the real viewport, not a
+  // transformed ancestor (e.g. the page's stagger-entrance wrapper).
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
       onClick={onClose}
@@ -98,6 +101,7 @@ export default function AddSkillEvidenceModal({
           {isSubmitting ? "Saving…" : "Save"}
         </button>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

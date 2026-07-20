@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   AnimatePresence,
   motion,
@@ -182,7 +183,9 @@ export default function SkillDetailDrawer({
       !completedTitles.has(p.title.toLowerCase()),
   );
 
-  return (
+  // Portalled to <body> so "fixed" is relative to the real viewport, not a
+  // transformed ancestor (e.g. the page's stagger-entrance wrapper).
+  return createPortal(
     <AnimatePresence>
       <motion.div
         key="backdrop"
@@ -421,6 +424,7 @@ export default function SkillDetailDrawer({
           </a>
         </div>
       </motion.div>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
 }
