@@ -42,6 +42,7 @@ export const API = {
     GET_BY_ID: (id: string) => `/api/v1/practice-attempts/${id}`,
     SUBMIT_ANSWER: (id: string) => `/api/v1/practice-attempts/${id}/answer`,
     COMPLETE: (id: string) => `/api/v1/practice-attempts/${id}/complete`,
+    DELETE: (id: string) => `/api/v1/practice-attempts/${id}`,
     TRANSCRIBE: "/api/v1/practice-attempts/transcribe",
   },
   RESUME_ANALYSIS: {

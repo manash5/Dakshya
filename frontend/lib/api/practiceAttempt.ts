@@ -106,6 +106,15 @@ export const completeAttempt = async (
     }
 };
 
+export const deleteAttempt = async (id: string) => {
+    try {
+        const response = await axiosInstance.delete(API.PRACTICE_ATTEMPT.DELETE(id));
+        return response.data;
+    } catch (error: Error | any) {
+        throw new Error(error?.response?.data?.message || "Failed to delete practice attempt");
+    }
+};
+
 export const transcribeAudio = async (formData: FormData) => {
     try {
         const response = await axiosInstance.post(API.PRACTICE_ATTEMPT.TRANSCRIBE, formData, {
