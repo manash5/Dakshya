@@ -31,7 +31,7 @@ export default function CodeEditor({
                 something" validation before the candidate types anything). */}
             {value === "" && (
                 <div className="pointer-events-none absolute left-[52px] top-[13px] z-10 select-none font-mono text-sm text-zinc-500">
-                    // Write your solution here
+                    {"// Write your solution here"}
                 </div>
             )}
             <MonacoEditor

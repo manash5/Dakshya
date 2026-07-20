@@ -57,7 +57,7 @@ export default function UserForm() {
                    formdata.append("role", data.role || "user");
                    formdata.append("password", data.password ); 
                    if (data.image) formdata.append("profilePicture", data.image);
-                   let result = await handleCreateUser(formdata);
+                   const result = await handleCreateUser(formdata);
                    console.log(formdata); 
                    console.log(result); 
    

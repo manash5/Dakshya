@@ -150,7 +150,7 @@ export default function CareerKnowledgeTable({ rows }: { rows: CareerKnowledgeRo
                     <p className="mb-6 text-sm text-gray-500 leading-relaxed">
                         Are you sure you want to delete the generated career knowledge for{" "}
                         <span className="font-semibold text-gray-900">{target?.jobRoleTitle}</span>? This affects
-                        every user's readiness score and roadmap for this role until it's regenerated.
+                        every user&apos;s readiness score and roadmap for this role until it&apos;s regenerated.
                     </p>
                     <div className="flex gap-3">
                         <button

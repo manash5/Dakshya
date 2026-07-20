@@ -66,7 +66,7 @@ export default function UserFormEdit({ user }: { user?: any }) {
                 formdata.append("username", data.username || "");
                 formdata.append("role", data.role || "user");
                 if (data.image) formdata.append("profileImage", data.image);
-                let result = await handleUpdateUser(user._id, formdata);
+                const result = await handleUpdateUser(user._id, formdata);
 
                 if (!result.success) throw new Error(result.message);
                 toast.success("User updated successfully");
