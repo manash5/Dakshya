@@ -1,3 +1,4 @@
+import { StaggerGroup, StaggerItem } from "./_components/AnimatedSection";
 import DashboardHeroCard from "./_components/DashboardHeroCard";
 import MarketPulseCard from "./_components/MarketPulseCard";
 import RecommendedJobsSection, { type RecommendedJob } from "./_components/RecommendedJobsSection";
@@ -68,21 +69,23 @@ export default async function Page() {
 
   return (
     <div className="bg-[#F7F8F5] px-6 py-6 sm:px-8 lg:px-10 lg:py-8">
-      <div className="mx-auto flex w-full max-w-[1000px] flex-col gap-8">
-        <section className="grid gap-5 xl:grid-cols-[minmax(0,1.8fr)_minmax(300px,0.9fr)]">
+      <StaggerGroup className="mx-auto flex w-full max-w-[1000px] flex-col gap-8">
+        <StaggerItem className="grid gap-5 xl:grid-cols-[minmax(0,1.8fr)_minmax(300px,0.9fr)]">
           <DashboardHeroCard hero={dashboard.hero} />
 
           <MarketPulseCard marketPulse={dashboard.marketPulse} />
-        </section>
+        </StaggerItem>
 
-        <section className="grid gap-5 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.7fr)]">
+        <StaggerItem className="grid gap-5 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.7fr)]">
           <SalaryRangeCard salaryRange={dashboard.salaryRange} />
 
           <OpportunitiesCard opportunities={opportunities} />
-        </section>
+        </StaggerItem>
 
-        <RecommendedJobsSection jobs={jobs} hero={dashboard.hero} />
-      </div>
+        <StaggerItem>
+          <RecommendedJobsSection jobs={jobs} hero={dashboard.hero} />
+        </StaggerItem>
+      </StaggerGroup>
     </div>
   );
 }

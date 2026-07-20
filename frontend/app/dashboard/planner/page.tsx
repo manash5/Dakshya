@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { StaggerGroup, StaggerItem } from "./_components/AnimatedSection";
+import { StaggerGroup, StaggerItem } from "../_components/AnimatedSection";
 import FocusCategoriesCard from "./_components/FocusCategoriesCard";
 import MarketAlignmentCard from "./_components/MarketAlignmentCard";
 import SkillsScoreCard from "./_components/SkillsScoreCard";

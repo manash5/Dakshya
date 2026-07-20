@@ -3,9 +3,8 @@
 import { motion } from "framer-motion";
 import type { ReactNode } from "react";
 
-// Same container/item stagger pattern already used by the resume-analysis
-// results view (see ResumeAnalysisResults.tsx) — kept consistent so
-// entrance motion reads the same across the dashboard.
+// Shared entrance-stagger pattern for every dashboard page: children fade
+// and rise in one after another instead of popping in all at once.
 const container = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.08 } },
