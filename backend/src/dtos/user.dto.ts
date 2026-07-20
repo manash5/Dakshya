@@ -63,10 +63,13 @@ export const CreateUserDtoAdmin = UserSchema.pick({
     lastName: true,
     email: true,
     username: true,
-    password: true,
-    role: true, 
-    phoneNumber: true,      
-    profilePicture: true,   
+    role: true,
+    phoneNumber: true,
+    profilePicture: true,
+}).extend({
+    // password is optional on UserSchema (Google accounts have none), but
+    // admin-created accounts must always have one
+    password: z.string().min(6),
 });
 export type CreateUserDtoAdmin = z.infer<typeof CreateUserDtoAdmin>;
 
