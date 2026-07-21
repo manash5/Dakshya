@@ -2,11 +2,21 @@ import {
   JobPostingMongoRepository,
   JobPostingFilters,
 } from "../repository/jobPosting.repository";
+import { JobRoleMongoRepository } from "../repository/jobRole.repository";
 import { fastApiClient } from "../clients/fastapi.client";
 import { HttpException } from "../exceptions/http-exceptions";
 import { CreateJobPostingDto, UpdateJobPostingDto } from "../dtos/jobPosting.dto";
 
 const jobPostingRepository = new JobPostingMongoRepository();
+const jobRoleRepository = new JobRoleMongoRepository();
+
+export interface JobPostingQueryFilters {
+  location?: string;
+  skill?: string;
+  experience?: string;
+  search?: string;
+  jobRoleId?: string;
+}
 
 export interface ScrapeRunStats {
   startedAt: string;
@@ -95,15 +105,32 @@ export class JobPostingService {
   async getJobPostingsPaginated(
     page?: string,
     limit?: string,
-    filters?: JobPostingFilters,
+    filters?: JobPostingQueryFilters,
   ) {
     const currentPage = page && parseInt(page) > 0 ? parseInt(page) : 1;
     const currentLimit = limit && parseInt(limit) > 0 ? parseInt(limit) : 10;
 
+    const repositoryFilters: JobPostingFilters = {
+      location: filters?.location,
+      skill: filters?.skill,
+      experience: filters?.experience,
+      search: filters?.search,
+    };
+
+    if (filters?.jobRoleId) {
+      const jobRole = await jobRoleRepository.findById(filters.jobRoleId);
+
+      if (!jobRole) {
+        throw new HttpException(404, "Job role not found");
+      }
+
+      repositoryFilters.role = { title: jobRole.title, keywords: jobRole.keywords ?? [] };
+    }
+
     const { data, total } = await jobPostingRepository.getAllPaginated(
       currentPage,
       currentLimit,
-      filters ?? {},
+      repositoryFilters,
     );
 
     return {

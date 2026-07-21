@@ -9,6 +9,7 @@ interface QueryParams {
   skill?: string;
   experience?: string;
   search?: string;
+  jobRoleId?: string;
 }
 
 const service = new JobPostingService();
@@ -44,12 +45,13 @@ export class JobPostingController {
         skill,
         experience,
         search,
+        jobRoleId,
       }: QueryParams = req.query;
 
       const { data, pagination } = await service.getJobPostingsPaginated(
         page,
         limit,
-        { location, skill, experience, search }
+        { location, skill, experience, search, jobRoleId }
       );
 
       return ApiResponseHelper.success(
