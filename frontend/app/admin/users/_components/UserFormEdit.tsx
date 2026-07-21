@@ -30,6 +30,7 @@ export default function UserFormEdit({ user }: { user?: any }) {
             lastName: user?.lastName || "",
             email: user?.email || "",
             username: user?.username || "",
+            phoneNumber: user?.phoneNumber || "",
             role: user?.role || "user",
             password: "",
         },
@@ -65,6 +66,7 @@ export default function UserFormEdit({ user }: { user?: any }) {
                 formdata.append("email", data.email || "");
                 formdata.append("username", data.username || "");
                 formdata.append("role", data.role || "user");
+                if (data.phoneNumber?.trim()) formdata.append("phoneNumber", data.phoneNumber.trim());
                 if (data.image) formdata.append("profileImage", data.image);
                 const result = await handleUpdateUser(user._id, formdata);
 
@@ -169,10 +171,17 @@ export default function UserFormEdit({ user }: { user?: any }) {
                         </div>
                     </div>
 
-                    <div className="mb-5">
-                        <label className={labelClass}>Username</label>
-                        <input type="text" {...register("username")} placeholder="janedoe" className={fieldClass} />
-                        {errors.username && <span className={errClass}>{errors.username.message as string}</span>}
+                    <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div>
+                            <label className={labelClass}>Username</label>
+                            <input type="text" {...register("username")} placeholder="janedoe" className={fieldClass} />
+                            {errors.username && <span className={errClass}>{errors.username.message as string}</span>}
+                        </div>
+                        <div>
+                            <label className={labelClass}>Phone Number</label>
+                            <input type="tel" {...register("phoneNumber")} placeholder="9779841234567" className={fieldClass} />
+                            {errors.phoneNumber && <span className={errClass}>{errors.phoneNumber.message as string}</span>}
+                        </div>
                     </div>
 
                     <div className="mb-5">

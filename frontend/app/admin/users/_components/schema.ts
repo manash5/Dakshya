@@ -9,6 +9,7 @@ const base = {
     email: z.email({ message: "Invalid email address" }),
     username: z.string("Must be a valid string").min(3, { message: "Minimum 3 characters" }),
     role: z.enum(["user", "admin"]),
+    phoneNumber: z.string().optional(),
 };
 
 const imageField = z
