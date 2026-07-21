@@ -40,3 +40,50 @@ body {
 .animate-marquee {
   animation: marquee 28s linear infinite;
 }
+
+/* Page-enter transition, applied by template.tsx on every navigation */
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-page-enter {
+  animation: page-enter 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-page-enter {
+    animation: none;
+  }
+}
+
+/* Thin, rounded scrollbar for modals and drawers */
+.scrollbar-elegant {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(212 212 216) transparent;
+}
+
+.scrollbar-elegant::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-elegant::-webkit-scrollbar-track {
+  background: transparent;
+  margin-block: 12px;
+}
+
+.scrollbar-elegant::-webkit-scrollbar-thumb {
+  border-radius: 9999px;
+  background: rgb(212 212 216);
+}
+
+.scrollbar-elegant::-webkit-scrollbar-thumb:hover {
+  background: rgb(161 161 170);
+}
