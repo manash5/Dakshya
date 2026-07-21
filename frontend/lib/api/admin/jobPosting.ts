@@ -8,7 +8,7 @@ export const getAllJobPostings = async (params: {
     page?: number;
     limit?: number;
     search?: string;
-    jobRole?: string;
+    jobRoleId?: string;
     location?: string;
     skill?: string;
     experience?: string;

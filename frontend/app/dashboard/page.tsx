@@ -6,6 +6,7 @@ import { OpportunitiesCard, SalaryRangeCard } from "./_components/SalaryAndNewsC
 import { getCareerDashboardData } from "@/lib/actions/dashboard-action";
 import { handleGetAllJobPostings } from "@/lib/actions/admin/jobPosting-action";
 import { handleGetAllOpportunities } from "@/lib/actions/opportunity-action";
+import { dedupeJobListings } from "@/lib/utils/dedupeJobs";
 import type { CareerDashboard } from "@/lib/api/dashboard";
 
 const EMPTY_DASHBOARD: CareerDashboard = {
@@ -36,16 +37,15 @@ export default async function Page() {
   // Recommended Jobs deliberately reuses the existing public job-postings
   // endpoint (filtered per target role) instead of a dedicated dashboard
   // endpoint — the job-finder page already lists from the same source.
-  // Jobs aren't tagged to a role in storage anymore (see
-  // jobPosting.model.ts), so this searches by the role's title text and
-  // tags each result with that role's id itself, client-side. Opportunities
-  // ARE tagged with jobRoles now (AI-classified at scrape time), so that one
-  // filters server-side by the same target-role ids instead.
+  // Jobs aren't tagged to a role in storage (see jobPosting.model.ts), so
+  // this filters by jobRoleId, which the backend resolves into the same
+  // title/keyword-aware match Market Pulse already uses — a literal-text
+  // search here would silently disagree with Market Pulse's job count.
   const [jobResultsByRole, opportunitiesResult] = await Promise.all([
     Promise.all(
       dashboard.hero.map(async (role) => ({
         role,
-        result: await handleGetAllJobPostings({ search: role.jobRole, limit: 4 }),
+        result: await handleGetAllJobPostings({ jobRoleId: role.jobRoleId, limit: 4 }),
       })),
     ),
     handleGetAllOpportunities({ limit: OPPORTUNITIES_LIMIT, jobRoleIds: targetRoleIds }),
@@ -53,19 +53,12 @@ export default async function Page() {
 
   const opportunities = opportunitiesResult.success ? opportunitiesResult.data : [];
 
-  const seenJobIds = new Set<string>();
-  const jobs: RecommendedJob[] = jobResultsByRole
-    .flatMap(({ role, result }) =>
-      result.success
-        ? (result.data as any[]).map((job) => ({ ...job, matchedRoleId: role.jobRoleId }))
-        : [],
-    )
-    .filter((job) => (seenJobIds.has(job._id) ? false : (seenJobIds.add(job._id), true)))
-    .sort(
-      (a: any, b: any) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    )
-    .slice(0, RECOMMENDED_JOBS_LIMIT);
+  const flatJobs: RecommendedJob[] = jobResultsByRole.flatMap(({ role, result }) =>
+    result.success
+      ? (result.data as any[]).map((job) => ({ ...job, matchedRoleId: role.jobRoleId }))
+      : [],
+  );
+  const jobs = dedupeJobListings(flatJobs, RECOMMENDED_JOBS_LIMIT);
 
   return (
     <div className="bg-[#F7F8F5] px-6 py-6 sm:px-8 lg:px-10 lg:py-8">

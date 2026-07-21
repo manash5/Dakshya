@@ -12,7 +12,7 @@ export const handleGetAllJobPostings = async ({
     page,
     limit,
     search,
-    jobRole,
+    jobRoleId,
     location,
     skill,
     experience,
@@ -20,7 +20,7 @@ export const handleGetAllJobPostings = async ({
     page?: number;
     limit?: number;
     search?: string;
-    jobRole?: string;
+    jobRoleId?: string;
     location?: string;
     skill?: string;
     experience?: string;
@@ -32,7 +32,7 @@ export const handleGetAllJobPostings = async ({
             page: currentPage,
             limit: currentLimit,
             search: search || "",
-            jobRole,
+            jobRoleId,
             location,
             skill,
             experience,

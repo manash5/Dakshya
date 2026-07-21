@@ -9,6 +9,7 @@ import { getCareerDashboardData } from "@/lib/actions/dashboard-action";
 import { handleGetAllJobPostings } from "@/lib/actions/admin/jobPosting-action";
 import { handleGetSavedJobs } from "@/lib/actions/savedJob-action";
 import { handleGetLatestResumeAnalysis } from "@/lib/actions/resumeAnalysis-action";
+import { dedupeJobListings } from "@/lib/utils/dedupeJobs";
 import type { CareerDashboard } from "@/lib/api/dashboard";
 import type { SavedJob } from "@/lib/api/savedJob";
 
@@ -60,36 +61,33 @@ export default async function Page({
 
   if (search) {
     const result = await handleGetAllJobPostings({ search, limit: RESULTS_LIMIT });
-    jobs = result.success
+    const flatJobs = result.success
       ? (result.data as any[]).map((job) => ({
           ...job,
           matchedRoleId: dashboard.hero[0]?.jobRoleId ?? "",
         }))
       : [];
+    jobs = dedupeJobListings(flatJobs, RESULTS_LIMIT);
   } else {
-    // Same per-role fan-out / dedupe / sort pattern as the main dashboard —
-    // jobs aren't tagged to a role in storage, so this searches by each
-    // target role's title text (see dashboard/page.tsx).
+    // Same per-role fan-out pattern as the main dashboard — jobs aren't
+    // tagged to a role in storage, so this filters by jobRoleId, which the
+    // backend resolves the same title/keyword-aware way Market Pulse's job
+    // count does (see dashboard/page.tsx). dedupeJobListings then collapses
+    // both the same posting matching more than one target role, and
+    // same-company/same-title postings repeated across many cities.
     const jobResultsByRole = await Promise.all(
       dashboard.hero.map(async (role) => ({
         role,
-        result: await handleGetAllJobPostings({ search: role.jobRole, limit: PER_ROLE_LIMIT }),
+        result: await handleGetAllJobPostings({ jobRoleId: role.jobRoleId, limit: PER_ROLE_LIMIT }),
       })),
     );
 
-    const seenJobIds = new Set<string>();
-    jobs = jobResultsByRole
-      .flatMap(({ role, result }) =>
-        result.success
-          ? (result.data as any[]).map((job) => ({ ...job, matchedRoleId: role.jobRoleId }))
-          : [],
-      )
-      .filter((job) => (seenJobIds.has(job._id) ? false : (seenJobIds.add(job._id), true)))
-      .sort(
-        (a: any, b: any) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      )
-      .slice(0, RESULTS_LIMIT);
+    const flatJobs = jobResultsByRole.flatMap(({ role, result }) =>
+      result.success
+        ? (result.data as any[]).map((job) => ({ ...job, matchedRoleId: role.jobRoleId }))
+        : [],
+    );
+    jobs = dedupeJobListings(flatJobs, RESULTS_LIMIT);
   }
 
   return (
