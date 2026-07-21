@@ -1,7 +1,10 @@
 import type { SkillPlannerRoadmapStep, SkillPlannerSkill } from "@/lib/api/skillPlanner";
 import type { PracticeAttempt } from "@/lib/api/practiceAttempt";
 
-export const MIN_QUALIFYING_QUESTIONS = 15;
+// The practice setup UI caps "Number of questions" at 10 (see
+// PracticeInterviewFlow.tsx) -- this must stay <= that cap, or no session
+// could ever qualify no matter how much a user practices.
+export const MIN_QUALIFYING_QUESTIONS = 5;
 export const MIN_QUALIFYING_SESSIONS = 5;
 
 export type RichStepStatus = "locked" | "available" | "in-progress" | "ready" | "done";
