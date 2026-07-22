@@ -76,7 +76,7 @@ export default function Sidebar() {
               <Link
                 key={item.name}
                 href={item.href}
-                className={`group flex items-center gap-3 rounded-xl px-4 py-3 text-sm transition-colors duration-200 ${
+                className={`group flex items-center gap-3 rounded-md rounded-r-xl px-4 py-3 text-sm transition-colors duration-200 ${
                   isActive
                     ? "border-l-4 border-slate-900 bg-[#EFEFE8] font-semibold text-slate-900"
                     : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
