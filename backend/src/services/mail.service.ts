@@ -6,6 +6,10 @@ import { resetPasswordTemplate } from "..//templates/resetPasswordTemplate";
 import { temporaryPasswordTemplate } from "..//templates/temporaryPasswordTemplate";
 
 dotenv.config();
+dotenv.config();
+console.log("cwd:", process.cwd());
+console.log("APP_URL:", process.env.APP_URL);
+console.log("GMAIL_USER:", process.env.GMAIL_USER);
 
 class MailService {
   private transporter = nodemailer.createTransport({
