@@ -9,7 +9,7 @@ import {
   LoginUserDto,
   RegisterWithEmailDto,
   ResetPasswordDto,
-  UpdatePasswordDTO,
+  UpdatePasswordDto,
   UpdateUserDto,
 } from "../dtos/user.dto";
 import { ApiResponseHelper } from "../utils/api-response";
@@ -147,7 +147,7 @@ export class UserController {
     try {
       const userId = req.user?._id;
 
-      const userData = UpdateUserDto.safeParse(req.body);
+      const userData = UpdatePasswordDto.safeParse(req.body);
       if (!userData.success) {
         return ApiResponseHelper.error(
           res,
@@ -156,7 +156,7 @@ export class UserController {
         );
       }
 
-      const { currentPassword, newPassword } = req.body;
+      const { currentPassword, newPassword } = userData.data;
 
       await userService.changePassword(userId, currentPassword, newPassword);
 
