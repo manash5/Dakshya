@@ -234,8 +234,12 @@ export class UserProgressService implements IUserProgressService {
     );
 
     if (!stepProgress) {
-      stepProgress = { stepOrder, watchedResourceUrls: [] };
-      role.roadmapStepProgress.push(stepProgress);
+      // Mongoose casts a plain object pushed into a subdocument array into a
+      // new EmbeddedDocument instance -- the pushed plain object itself is
+      // discarded, so mutations must target what push() actually stored, not
+      // this local reference.
+      role.roadmapStepProgress.push({ stepOrder, watchedResourceUrls: [] });
+      stepProgress = role.roadmapStepProgress[role.roadmapStepProgress.length - 1];
     }
 
     if (!stepProgress.watchedResourceUrls.includes(resourceUrl)) {
