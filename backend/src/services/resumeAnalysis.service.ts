@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { v4 as uuidv4 } from "uuid";
+import { randomUUID } from "crypto";
 
 import { HttpException } from "../exceptions/http-exceptions";
 import {
@@ -52,7 +52,7 @@ export class ResumeAnalysisService {
       fs.mkdirSync(UPLOAD_DIR, { recursive: true });
     }
 
-    const storedFileName = `${uuidv4()}-${file.originalname}`;
+    const storedFileName = `${randomUUID()}-${file.originalname}`;
     fs.writeFileSync(path.join(UPLOAD_DIR, storedFileName), file.buffer);
 
     // Only carry a comparison forward when the AI actually confirmed this

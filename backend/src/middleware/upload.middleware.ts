@@ -3,7 +3,7 @@ import path from "path";
 import { Request } from "express";
 import { HttpException } from "../exceptions/http-exceptions";
 import fs from "fs";
-import { v4 as uuidv4 } from "uuid";
+import { randomUUID } from "crypto";
 const storage = multer.diskStorage(
     {
         destination: (
@@ -22,7 +22,7 @@ const storage = multer.diskStorage(
             file: Express.Multer.File, 
             cb: (error: Error | null, filename: string) => void
         ) => {
-            const fileSuffix = uuidv4();
+            const fileSuffix = randomUUID();
             cb(null, fileSuffix + "-" + file.originalname);
         }
     }
