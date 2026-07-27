@@ -5,7 +5,7 @@ import { registerCronJobs } from "./src/cron";
 
 connectToMongoDB()
     .then(() => {
-        console.log("MongoDB connection established, starting server  ...");
+        console.log("MongoDB connection established, started server  ...");
         registerCronJobs();
     })
     .catch((error) => {
