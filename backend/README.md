@@ -56,6 +56,9 @@ npm run dev            # starts on PORT with tsx --watch
 | `BASE_URL` | Public base URL of this API (used for building upload links) |
 | `MONGO_URL` | MongoDB connection string |
 | `SECRET_KEY` | Secret for signing JWTs |
+| `APP_URL` | Frontend base URL (used in password-reset links) |
+| `GOOGLE_CLIENT_ID` | Google OAuth client id for Google Sign-In |
+| `GMAIL_USER` / `GOOGLE_APP_PASSWORD` | Gmail SMTP credentials for password-reset emails |
 | `FASTAPI_URL` / `FASTAPI_SERVICE_URL` | Base URL of the AI microservice |
 
 ### Scripts
@@ -65,6 +68,32 @@ npm run dev            # starts on PORT with tsx --watch
 | `npm run dev` | Run with auto-reload |
 | `npm run lint` | ESLint over the whole backend |
 | `npm run typecheck` | `tsc --noEmit` |
+| `npm test` | Run the Jest test suite with coverage |
+| `npm run test:watch` | Run tests in watch mode |
+| `npm run test:coverage` | Same as `npm test` (explicit alias) |
+
+## Testing
+
+Jest + Supertest + `mongodb-memory-server` — every test hits the real Express
+app and a real (in-memory, disposable) MongoDB instance, not mocked models.
+The only things mocked are external services the tests shouldn't depend on
+being available: the FastAPI AI client, Google OAuth token verification, and
+Nodemailer.
+
+```
+tests/
+  setup.ts       → starts/stops the in-memory MongoDB, clears collections between tests
+  helpers/       → test user + JWT creation, university/course/jobRole/project fixtures,
+                   a full-onboarding helper for tests that need a real UserProgress doc
+  routes/        → integration tests per route group (auth, catalog, practice, etc.)
+  unit/          → focused unit tests for repository methods integration tests don't reach
+```
+
+Run `npm test` for a full run with a coverage report. Current coverage:
+statements 82.5%, lines 83.1%, functions 81.1%, branches 45.4% (branch
+coverage — every individual conditional path — is the strictest of the four
+metrics and the threshold reflects realistic current coverage rather than an
+aspirational one).
 
 ## API Reference
 
@@ -77,7 +106,11 @@ Base URL: `http://localhost:<PORT>/api/v1`
 | Method | Endpoint | Description |
 |---|---|---|
 | POST | `/auth/register` | Register a new user |
+| POST | `/auth/register-email` | Register with email verification |
 | POST | `/auth/login` | Login, returns JWT |
+| POST | `/auth/google` | Login/register with a Google ID token |
+| POST | `/auth/forgot-password` | Email a password-reset link |
+| POST | `/auth/reset-password` | Reset password with emailed token |
 | GET | `/auth/whoami` 🔒 | Current user summary from token |
 | GET | `/auth/getProfile` 🔒 | Full profile of current user |
 | PUT | `/auth/update` 🔒 | Update profile (multipart, profile picture) |
