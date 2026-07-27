@@ -63,7 +63,7 @@ export default async function Page({
 
   if (dashboard.hero.length === 0) {
     return (
-      <div className="bg-[#F7F8F5] px-6 py-6 sm:px-8 lg:px-10 lg:py-8">
+      <div className="bg-gray-50 px-6 py-6 sm:px-8 lg:px-10 lg:py-8">
         <div className="mx-auto flex w-full max-w-[1400px] flex-col items-center gap-4 rounded-2xl border border-dashed border-neutral-300 bg-white py-20 text-center">
           <h1 className="text-2xl font-bold text-neutral-900">Roadmap</h1>
           <p className="max-w-md text-neutral-500">
@@ -109,7 +109,7 @@ export default async function Page({
   const projects: Project[] = projectsResult.success ? projectsResult.data : [];
 
   return (
-    <div className="bg-[#F7F8F5] px-6 py-6 sm:px-8 lg:px-10 lg:py-8">
+    <div className="bg-gray-50 px-6 py-6 sm:px-8 lg:px-10 lg:py-8">
       <StaggerGroup className="mx-auto flex w-full max-w-[1400px] flex-col gap-8">
         <StaggerItem className="flex flex-col gap-6">
           <div>

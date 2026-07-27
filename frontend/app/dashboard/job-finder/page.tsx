@@ -91,7 +91,7 @@ export default async function Page({
   }
 
   return (
-    <div className="bg-[#F7F8F5] px-6 py-6 sm:px-8 lg:px-10 lg:py-8">
+    <div className="bg-gray-50 px-6 py-6 sm:px-8 lg:px-10 lg:py-8">
       <StaggerGroup className="mx-auto flex w-full max-w-[1000px] flex-col gap-8">
         <StaggerItem>
           <Suspense fallback={null}>

@@ -61,7 +61,7 @@ export default async function Page() {
   const jobs = dedupeJobListings(flatJobs, RECOMMENDED_JOBS_LIMIT);
 
   return (
-    <div className="bg-[#F7F8F5] px-6 py-6 sm:px-8 lg:px-10 lg:py-8">
+    <div className="bg-gray-50 px-6 py-6 sm:px-8 lg:px-10 lg:py-8">
       <StaggerGroup className="mx-auto flex w-full max-w-[1000px] flex-col gap-8">
         <StaggerItem className="grid gap-5 xl:grid-cols-[minmax(0,1.8fr)_minmax(300px,0.9fr)]">
           <DashboardHeroCard hero={dashboard.hero} />

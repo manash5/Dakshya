@@ -9,7 +9,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
     const { onboardingCompleted, loading } = useUser();
 
     return (
-        <section className="h-screen overflow-hidden bg-[#F7F8F5]">
+        <section className="h-screen overflow-hidden bg-gray-50">
             <div className="flex h-full min-h-0">
                 <Sidebar />
 

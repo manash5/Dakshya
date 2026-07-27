@@ -20,7 +20,7 @@ export default async function Page({
 
   if (!jobRoleId) {
     return (
-      <div className="min-h-screen bg-[#F7F8F5] px-6 py-6 sm:px-8 lg:px-10 lg:py-8">
+      <div className="min-h-screen bg-gray-50 px-6 py-6 sm:px-8 lg:px-10 lg:py-8">
         <div className="mx-auto flex w-full max-w-[840px] flex-col items-center gap-4 rounded-2xl border border-dashed border-neutral-300 bg-white py-20 text-center">
           <h1 className="text-2xl font-bold text-neutral-900">Pick a skill first</h1>
           <p className="max-w-md text-neutral-500">
@@ -42,7 +42,7 @@ export default async function Page({
   const jobRole = jobRoles.find((r) => r._id === jobRoleId) ?? null;
 
   return (
-    <div className="min-h-screen bg-[#F7F8F5] px-6 py-6 sm:px-8 lg:px-10 lg:py-8">
+    <div className="min-h-screen bg-gray-50 px-6 py-6 sm:px-8 lg:px-10 lg:py-8">
       <div className="mx-auto w-full max-w-[840px]">
         <PracticeInterviewFlow
           jobRoleId={jobRoleId}
