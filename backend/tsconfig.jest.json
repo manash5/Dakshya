@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "types": ["jest", "node"],
+    // moduleResolution is deliberately left unset: the modern named values
+    // (node16/nodenext/bundler) don't pair with plain "commonjs", and the
+    // legacy "node" string TypeScript 6 hard-removed as an explicit setting.
+    // Leaving it unset lets TS fall back to the same classic resolution
+    // implicitly -- ts-jest treats that fallback's deprecation notice as
+    // fatal, so it still needs silencing here.
+    "ignoreDeprecations": "6.0"
+  }
+}
