@@ -1,36 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Dakshya — Frontend
+
+Next.js (App Router) single-page application for **Dakshya**. Consumes the Express REST API
+in `../backend` for everything — auth, onboarding, career dashboard, skill planner, AI mock
+interviews, resume analysis, job finder, and the full admin panel.
+
+## Tech Stack
+
+- **Framework:** Next.js 16 (App Router, React 19, Server Components + Server Actions)
+- **Styling:** Tailwind CSS 4 (fully custom design — no UI template)
+- **Forms:** react-hook-form + Zod
+- **HTTP:** axios instances, JWT attached from cookies server-side
+- **Testing:** Playwright (E2E) — `tests/e2e/`
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev        # http://localhost:3000 (expects the backend running too)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Scripts
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Script | Purpose |
+|---|---|
+| `npm run dev` / `build` / `start` | Development server / production build / serve build |
+| `npm run lint` | ESLint |
+| `npm run test:e2e` | Playwright E2E suite (builds + starts the app + a mock backend automatically) |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Layout
 
-## Learn More
+```
+app/
+  (auth)/          → login, signup, forgot/reset password
+  dashboard/       → student app: career dashboard, planner, practice, job-finder,
+                     resume-analysis, progress, profile
+  admin/           → admin panel: full CRUD for every platform resource
+lib/api/           → one module per backend resource; axios + typed responses
+lib/actions/       → "use server" actions wrapping the api layer (cookie/JWT handling)
+proxy.ts           → route protection (Next 16's replacement for middleware.ts)
+tests/e2e/         → Playwright suite + its own mock backend
+```
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Data flows one way: **page/component → server action (`lib/actions`) → API module
+(`lib/api`) → backend**. Full architecture, auth flow, and testing notes: see the
+[main README](../readme.md).

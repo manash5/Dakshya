@@ -4,7 +4,8 @@ import { MOCK_SERVER_PORT } from "./tests/e2e/port";
 /**
  * Every dashboard/admin page fetches data through Next.js Server Actions that
  * run inside the Next.js server process itself (never in the browser), so
- * page.route() network mocking can't reach them -- see tests/e2e/README.md.
+ * page.route() network mocking can't reach them -- see the "Testing Strategy"
+ * section in the root README.
  * Instead this config boots a real mock backend (tests/e2e/mock-server) and
  * points the Next server's NEXT_PUBLIC_API_URL at it.
  */

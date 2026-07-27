@@ -1,7 +1,8 @@
 // A zero-dependency stand-in for the real Express backend, used only by the
 // Playwright E2E suite. Every dashboard/admin page in this app fetches data
 // via Next.js Server Actions running INSIDE the Next.js server process (see
-// tests/e2e/README.md for why page.route() can't intercept those calls) --
+// the root README's "Testing Strategy" section for why page.route() can't
+// intercept those calls) --
 // so this is a real HTTP server that NEXT_PUBLIC_API_URL points at during
 // test runs, not a browser-level mock.
 //
