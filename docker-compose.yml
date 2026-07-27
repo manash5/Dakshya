@@ -1,0 +1,80 @@
+services:
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    ports:
+      - "8088:8088"
+    volumes:
+      - ./backend:/app
+      # Anonymous volume shadows the bind mount just for this one folder, so
+      # the container keeps its own Linux-built node_modules (bcrypt's native
+      # addon) instead of whatever's on the host (likely Windows-built).
+      - /app/node_modules
+    env_file:
+      - ./backend/.env
+    environment:
+      # Container-to-container calls use Docker's internal service names,
+      # not localhost -- "localhost" inside this container means this
+      # container, not the mongo/ai-services containers.
+      MONGO_URL: mongodb://mongo:27017/dakshya
+      FASTAPI_URL: http://ai-services:8000
+      FASTAPI_SERVICE_URL: http://ai-services:8000
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  ai-services:
+    build: ./ai-services
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./ai-services:/app
+      - /app/.venv
+      # Persists downloaded Whisper model weights across container
+      # recreates -- interview/transcription.py downloads them on first use,
+      # not at build time.
+      - whisper-cache:/root/.cache/whisper
+    env_file:
+      - ./ai-services/.env
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    env_file:
+      - ./frontend/.env
+    environment:
+      # These are all NEXT_PUBLIC_* (normally "browser-exposed") but are only
+      # ever read by server-side code in this app (Server Actions calling
+      # lib/api/axios-instance.ts / ai-axios-instance.ts, and
+      # course-sync-action.ts, whose courseApiUrl/subjectApiUrl the
+      # ai-services container itself calls back into the backend with) --
+      # verified during the E2E test work, nothing reads these from actual
+      # browser JS. That's what makes an internal-only Docker hostname safe
+      # to put in a "PUBLIC" variable here. If a real client-side call to
+      # either service is ever added, that one would need to go back to a
+      # host-reachable address (http://localhost:8088 / :8000) instead.
+      NEXT_PUBLIC_API_URL: http://backend:8088
+      NEXT_PUBLIC_API_BASE_URL: http://backend:8088
+      NEXT_PUBLIC_AI_SERVICE_URL: http://ai-services:8000
+    depends_on:
+      - backend
+
+volumes:
+  mongo-data:
+  whisper-cache:
