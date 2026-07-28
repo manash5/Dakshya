@@ -31,8 +31,17 @@ import skillPlannerRoute from './routes/skillPlanner.route'
 
 
 const app: Application = express();
+
+// Comma-separated so both the local dev frontend and the deployed Vercel
+// URL can be allowed at once (see ai-services/main.py's CORS_ALLOWED_ORIGINS
+// for the same pattern).
+const allowedOrigins = (process.env.CORS_ALLOWED_ORIGINS || 'http://localhost:3000')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
 const corsOptions = {
-    origin: ['http://localhost:3000'],
+    origin: allowedOrigins,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
