@@ -10,6 +10,8 @@ import Image from 'next/image';
 import { useRouter } from "next/navigation";
 import { loginUser } from "@/lib/actions/auth-action";
 import { useAuth } from "@/lib/context/AuthContext";
+import { GoogleLogin, useGoogleLogin } from "@react-oauth/google";
+import { googleLoginAction } from "@/lib/actions/auth-action"; // new action, added below
 
 
 
@@ -36,8 +38,6 @@ export default function LoginForm() {
         "mt-2 w-full rounded-xl border border-transparent bg-neutral-50 px-4 py-3 text-sm text-neutral-800 outline-none transition duration-200 placeholder:text-neutral-400 focus:border-lime-300 focus:bg-white focus:ring-4 focus:ring-lime-200/30";
 
     const onSubmit = (data: LoginFormValues) => {
-        // isPending is true during the transition, 
-        // and false after it finishes
         setError('');
         startTransition(
             async () => {
@@ -45,9 +45,11 @@ export default function LoginForm() {
                     const result = await loginUser(data);
                     if (result.success) {
                         await checkAuth();
-                        router.push('/dashboard')
-                    } else {
-                        setError(result.message || 'Login failed');
+                        if (result.data?.mustChangePassword) {
+                            router.push('/reset-password'); 
+                        } else {
+                            router.push('/dashboard');
+                        }
                     }
                 } catch (error: any) {
                     setError(error?.message || 'Login failed');
@@ -56,9 +58,45 @@ export default function LoginForm() {
         );
     }
 
-    const handleGoogleSignIn = () => {
-        alert("feature not added yet")
+    const handleGoogleSuccess = async (credentialResponse: any) => {
+        const idToken = credentialResponse.credential;
+        if (!idToken) return;
+
+        setError('');
+        startTransition(async () => {
+            try {
+                const result = await googleLoginAction(idToken);
+                if (result.success) {
+                    await checkAuth();
+                    router.push('/dashboard');
+                } else {
+                    setError(result.message || 'Google login failed');
+                }
+            } catch (err: any) {
+                setError(err?.message || 'Google login failed');
+            }
+        });
     };
+
+    const handleGoogleAuth = useGoogleLogin({
+        onSuccess: async (tokenResponse) => {
+            setError('');
+            startTransition(async () => {
+                try {
+                    const result = await googleLoginAction(tokenResponse.access_token);
+                    if (result.success) {
+                        await checkAuth();
+                        router.push('/dashboard');
+                    } else {
+                        setError(result.message || 'Google login failed');
+                    }
+                } catch (err: any) {
+                    setError(err?.message || 'Google login failed');
+                }
+            });
+        },
+        onError: () => setError('Google login failed'),
+    });
 
     return (
         <div className="relative flex w-full max-w-[480px] flex-col text-neutral-900">
@@ -174,36 +212,17 @@ export default function LoginForm() {
 
                 </div>
 
-                <button
-                    type="button"
-                    onClick={handleGoogleSignIn}
-                    className="flex w-full items-center justify-center gap-3 rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium text-neutral-700 shadow-[0_10px_20px_rgba(15,23,42,0.05)] transition duration-200 hover:-translate-y-0.5 hover:border-neutral-300 hover:bg-neutral-50"
-                >
-                    <svg
-                        width="18"
-                        height="18"
-                        viewBox="0 0 24 24"
-                        aria-hidden="true"
-                    >
-                        <path
-                            d="M23.5 12.3c0-.8-.1-1.6-.3-2.3H12v4.4h6.4a5.6 5.6 0 0 1-2.4 3.7v3h3.9c2.3-2.1 3.6-5.2 3.6-8.8z"
-                            fill="#4285F4"
-                        />
-                        <path
-                            d="M12 24c3.3 0 6-1.1 8-3l-3.9-3c-1.1.7-2.5 1.1-4.1 1.1-3.2 0-5.9-2.1-6.9-5.1H1.1v3.2C3.1 21.2 7.2 24 12 24z"
-                            fill="#34A853"
-                        />
-                        <path
-                            d="M5.1 14c-.2-.7-.4-1.5-.4-2.3s.1-1.6.4-2.3V6.2H1.1A12 12 0 0 0 0 11.7c0 2 .5 3.9 1.4 5.6L5.1 14z"
-                            fill="#FBBC05"
-                        />
-                        <path
-                            d="M12 4.7c1.8 0 3.4.6 4.6 1.8l3.4-3.4C18 1.2 15.3 0 12 0 7.2 0 3.1 2.8 1.1 6.9l4 3.1c1-3 3.7-5.3 6.9-5.3z"
-                            fill="#EA4335"
-                        />
-                    </svg>
-                    Continue with Google
-                </button>
+                <div className="flex w-full justify-center [&>div]:w-full">
+                    <GoogleLogin
+                        onSuccess={handleGoogleSuccess}
+                        onError={() => setError('Google login failed')}
+                        theme="outline"
+                        shape="pill"
+                        size="large"
+                        width="100%"
+                        text="continue_with"
+                    />
+                </div>
             </div>
 
             <div className="mt-3 text-center text-xs text-neutral-500">

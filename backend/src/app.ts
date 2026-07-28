@@ -1,8 +1,10 @@
 import express, { Application, NextFunction, Request, Response } from "express";
 import { ApiResponseHelper } from './utils/api-response';
 import { HttpException } from './exceptions/http-exceptions';
-import cors from 'cors'; 
-import userRoute from './routes/user.route'; 
+import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import userRoute from './routes/user.route';
 import path from "path";
 import adminUserRoutes from './routes/admin/user.route'
 import universityRoute from './routes/university.route'
@@ -30,17 +32,29 @@ import skillPlannerRoute from './routes/skillPlanner.route'
 
 const app: Application = express();
 const corsOptions = {
-    origin: ['http://localhost:3000'], // Explicitly allow your Next.js app port
+    origin: ['http://localhost:3000'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'], // Authorizes your Bearer tokens
-    credentials: true, // Crucial for letting headers pass through safely
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
     optionsSuccessStatus: 200
 };
 
-app.use(cors(corsOptions)); 
+app.use(cors(corsOptions));
 
-app.use(express.json());// use json as request
-app.use(express.urlencoded({ extended: true }));//use form-urlencoded as request
+// crossOriginResourcePolicy relaxed so the frontend (different origin) can load /uploads images
+app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
+
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 50,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { status: 429, success: false, message: "Too many attempts, please try again later." },
+});
+app.use(['/api/v1/auth/login', '/api/v1/auth/register'], authLimiter);
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
@@ -83,6 +97,8 @@ app.use(
             );
         }
 
+        console.error("Unhandled error:", err);
+        return ApiResponseHelper.error(res, "Internal Server Error", 500);
     }
 );
 

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import type { MarketPulse, SkillDemand } from "@/lib/api/dashboard";
 
@@ -21,7 +22,9 @@ export default function MarketReportModal({ open, onClose, marketPulse }: Market
 
   const { totalJobs, skills } = marketPulse;
 
-  return (
+  // Portalled to <body> so "fixed" is relative to the real viewport, not a
+  // transformed ancestor (e.g. the page's stagger-entrance wrapper).
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
       onClick={onClose}
@@ -64,7 +67,8 @@ export default function MarketReportModal({ open, onClose, marketPulse }: Market
           </>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

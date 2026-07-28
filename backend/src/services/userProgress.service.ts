@@ -89,7 +89,7 @@ export class UserProgressService implements IUserProgressService {
 
   // get user progress
   async getUserProgress(userId: string): Promise<IUserProgress> {
-    let progress = await progressRepository.findByUserId(userId);
+    const progress = await progressRepository.findByUserId(userId);
 
     if (!progress) {
       throw new HttpException(404, "User progress not found.");
@@ -234,8 +234,12 @@ export class UserProgressService implements IUserProgressService {
     );
 
     if (!stepProgress) {
-      stepProgress = { stepOrder, watchedResourceUrls: [] };
-      role.roadmapStepProgress.push(stepProgress);
+      // Mongoose casts a plain object pushed into a subdocument array into a
+      // new EmbeddedDocument instance -- the pushed plain object itself is
+      // discarded, so mutations must target what push() actually stored, not
+      // this local reference.
+      role.roadmapStepProgress.push({ stepOrder, watchedResourceUrls: [] });
+      stepProgress = role.roadmapStepProgress[role.roadmapStepProgress.length - 1];
     }
 
     if (!stepProgress.watchedResourceUrls.includes(resourceUrl)) {

@@ -55,12 +55,12 @@ export default function UserForm() {
                    formdata.append("email", data.email );
                    formdata.append("username", data.username);
                    formdata.append("role", data.role || "user");
-                   formdata.append("password", data.password ); 
+                   formdata.append("password", data.password );
+                   if (data.phoneNumber?.trim()) formdata.append("phoneNumber", data.phoneNumber.trim());
                    if (data.image) formdata.append("profilePicture", data.image);
-                   let result = await handleCreateUser(formdata);
-                   console.log(formdata); 
-                   console.log(result); 
-   
+                   const result = await handleCreateUser(formdata);
+
+
                    if (!result.success) throw new Error(result.message);
                    toast.success("User updated successfully");
                    router.push("/admin/users");
@@ -154,10 +154,17 @@ export default function UserForm() {
                         </div>
                     </div>
 
-                    <div className="mb-5">
-                        <label className={labelClass}>Username</label>
-                        <input type="text" {...register("username")} placeholder="janedoe" className={fieldClass} />
-                        {errors.username && <span className={errClass}>{errors.username.message as string}</span>}
+                    <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div>
+                            <label className={labelClass}>Username</label>
+                            <input type="text" {...register("username")} placeholder="janedoe" className={fieldClass} />
+                            {errors.username && <span className={errClass}>{errors.username.message as string}</span>}
+                        </div>
+                        <div>
+                            <label className={labelClass}>Phone Number</label>
+                            <input type="tel" {...register("phoneNumber")} placeholder="9779841234567" className={fieldClass} />
+                            {errors.phoneNumber && <span className={errClass}>{errors.phoneNumber.message as string}</span>}
+                        </div>
                     </div>
 
                     <div className="mb-5">

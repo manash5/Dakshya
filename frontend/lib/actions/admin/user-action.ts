@@ -6,7 +6,7 @@ export const handleCreateUser = async (data: any) => {
     try {
         const result = await createUser(data);
         if (result.success) {
-            revalidatePath("/admin/users"); // Revalidate the users page after successful creation
+            revalidatePath("/admin/users");
             return { success: true, message: result.message, data: result.data };
         }
         return { success: false, message: result.message || 'User creation failed' };
@@ -21,7 +21,7 @@ export const handleGetAllUsers = async ({ page, limit, search }: { page?: number
         const currentSearch = search || "";
         const result = await getAllUsers({ page: currentPage, limit: currentLimit, search: currentSearch });
         if (result.success) {
-            return { success: true, message: result.message, data: result.data, pagination: result.meta }; // meta returned from api contains pagination info
+            return { success: true, message: result.message, data: result.data, pagination: result.meta };
         }
         return { success: false, message: result.message || 'Failed to fetch users' };
     } catch (error: any) {

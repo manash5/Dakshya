@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { StaggerGroup, StaggerItem } from "./_components/AnimatedSection";
+import { StaggerGroup, StaggerItem } from "../_components/AnimatedSection";
 import FocusCategoriesCard from "./_components/FocusCategoriesCard";
 import MarketAlignmentCard from "./_components/MarketAlignmentCard";
 import SkillsScoreCard from "./_components/SkillsScoreCard";
@@ -66,7 +66,7 @@ export default async function Page({
 
   if (dashboard.hero.length === 0) {
     return (
-      <div className="bg-[#F7F8F5] px-6 py-6 sm:px-8 lg:px-10 lg:py-8">
+      <div className="bg-gray-50 px-6 py-6 sm:px-8 lg:px-10 lg:py-8">
         <div className="mx-auto flex w-full max-w-[1400px] flex-col items-center gap-4 rounded-2xl border border-dashed border-neutral-300 bg-white py-20 text-center">
           <h1 className="text-2xl font-bold text-neutral-900">Skill Planner</h1>
           <p className="max-w-md text-neutral-500">
@@ -116,7 +116,7 @@ export default async function Page({
   const selectedSkill = planner.skills[0] ?? null;
 
   return (
-    <div className="bg-[#F7F8F5] px-6 py-6 sm:px-8 lg:px-10 lg:py-8">
+    <div className="bg-gray-50 px-6 py-6 sm:px-8 lg:px-10 lg:py-8">
       <StaggerGroup className="mx-auto flex w-full max-w-[1400px] flex-col gap-8">
         <StaggerItem>
           <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

@@ -1,3 +1,4 @@
+import { Types } from "mongoose";
 import { CourseMongoRepository } from "../repository/course.repository";
 import { UniversityMongoRepository } from "../repository/university.repository";
 import { SubjectMongoRepository } from "../repository/subject.repository";
@@ -31,7 +32,10 @@ export class CourseService {
       );
     }
 
-    return await courseRepository.create(data);
+    return await courseRepository.create({
+      ...data,
+      universityId: new Types.ObjectId(data.universityId),
+    });
   }
 
   async updateCourse(id: string, data: UpdateCourseDto): Promise<ICourse> {

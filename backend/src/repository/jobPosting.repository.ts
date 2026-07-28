@@ -7,6 +7,11 @@ export interface JobPostingFilters {
   skill?: string;
   experience?: string;
   search?: string;
+  // Same title/keyword-aware matching Market Pulse uses (getSkillDemand
+  // below) -- lets "jobs for this role" listings agree with the count
+  // Market Pulse already shows, instead of a literal-substring search
+  // against the role title finding fewer/zero results.
+  role?: { title: string; keywords: string[] };
 }
 
 const escapeRegExp = (value: string): string =>
@@ -54,6 +59,20 @@ export const buildRoleTitleMatch = (roleTitle: string, keywords: string[] = []) 
       })),
     })),
   };
+};
+
+// Mirrors the frontend's dedupeJobs.ts key exactly -- the same company
+// posting the same base role across many cities/offices ("Staff Engineer,
+// Product (Berlin)" / "(São Paulo)" / ...) is a genuinely distinct listing
+// per posting, but reads as one repeated job to a user. Both the job list
+// (frontend) and Market Pulse's job counts (below) need to agree on what
+// counts as "one job", or the two numbers drift apart again.
+export const buildJobDedupeKey = (title: string, company: string): string => {
+  const baseTitle = title
+    .replace(/\s*[([][^)\]]*[)\]]\s*$/, "")
+    .trim()
+    .toLowerCase();
+  return `${company.trim().toLowerCase()}::${baseTitle}`;
 };
 
 export interface IJobPostingRepository {
@@ -169,6 +188,18 @@ export class JobPostingMongoRepository implements IJobPostingRepository {
       ];
     }
 
+    if (filters.role) {
+      const roleMatch = buildRoleTitleMatch(filters.role.title, filters.role.keywords);
+      // Combine with an existing $or (from `search`, above) via $and rather
+      // than overwriting it -- both apply to postings that request them.
+      if (query.$or) {
+        query.$and = [{ $or: query.$or }, roleMatch];
+        delete query.$or;
+      } else {
+        Object.assign(query, roleMatch);
+      }
+    }
+
     const total = await JobPosting.countDocuments(query);
 
     const data = await JobPosting.find(query)
@@ -227,32 +258,40 @@ export class JobPostingMongoRepository implements IJobPostingRepository {
       skills.map((skill) => [skill.toLowerCase(), skill]),
     );
 
-    const [result] = await JobPosting.aggregate([
-      { $match: { ...roleMatch, isActive: true } },
-      {
-        $facet: {
-          total: [{ $count: "count" }],
-          skillCounts: [
-            { $unwind: "$requiredSkills" },
-            {
-              $group: {
-                _id: { $toLower: "$requiredSkills" },
-                count: { $sum: 1 },
-              },
-            },
-            { $match: { _id: { $in: [...lowerToOriginal.keys()] } } },
-          ],
-        },
-      },
-    ]);
+    // Dedupe in application code rather than the aggregation pipeline --
+    // buildJobDedupeKey needs to strip a trailing "(...)" qualifier, which
+    // isn't practical to express as a portable Mongo aggregation stage. The
+    // role-matched set is small enough (bounded well under the full
+    // collection) for this to be cheap.
+    const matchedDocs = await JobPosting.find(
+      { ...roleMatch, isActive: true },
+      { title: 1, company: 1, requiredSkills: 1 },
+    );
 
-    const totalJobs = result?.total?.[0]?.count ?? 0;
+    const dedupedByKey = new Map<string, (typeof matchedDocs)[number]>();
+    for (const doc of matchedDocs) {
+      const key = buildJobDedupeKey(doc.title, doc.company);
+      if (!dedupedByKey.has(key)) {
+        dedupedByKey.set(key, doc);
+      }
+    }
+
+    const totalJobs = dedupedByKey.size;
+
+    const skillCounts = new Map<string, number>();
+    for (const doc of dedupedByKey.values()) {
+      for (const rawSkill of doc.requiredSkills) {
+        const lower = rawSkill.toLowerCase();
+        if (!lowerToOriginal.has(lower)) continue;
+        skillCounts.set(lower, (skillCounts.get(lower) ?? 0) + 1);
+      }
+    }
 
     const skillDemand: Record<string, number> = {};
-    for (const entry of result?.skillCounts ?? []) {
-      const original = lowerToOriginal.get(entry._id);
+    for (const [lower, count] of skillCounts) {
+      const original = lowerToOriginal.get(lower);
       if (original) {
-        skillDemand[original] = entry.count;
+        skillDemand[original] = count;
       }
     }
 

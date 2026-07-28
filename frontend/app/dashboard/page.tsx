@@ -1,3 +1,4 @@
+import { StaggerGroup, StaggerItem } from "./_components/AnimatedSection";
 import DashboardHeroCard from "./_components/DashboardHeroCard";
 import MarketPulseCard from "./_components/MarketPulseCard";
 import RecommendedJobsSection, { type RecommendedJob } from "./_components/RecommendedJobsSection";
@@ -5,6 +6,7 @@ import { OpportunitiesCard, SalaryRangeCard } from "./_components/SalaryAndNewsC
 import { getCareerDashboardData } from "@/lib/actions/dashboard-action";
 import { handleGetAllJobPostings } from "@/lib/actions/admin/jobPosting-action";
 import { handleGetAllOpportunities } from "@/lib/actions/opportunity-action";
+import { dedupeJobListings } from "@/lib/utils/dedupeJobs";
 import type { CareerDashboard } from "@/lib/api/dashboard";
 
 const EMPTY_DASHBOARD: CareerDashboard = {
@@ -35,16 +37,15 @@ export default async function Page() {
   // Recommended Jobs deliberately reuses the existing public job-postings
   // endpoint (filtered per target role) instead of a dedicated dashboard
   // endpoint — the job-finder page already lists from the same source.
-  // Jobs aren't tagged to a role in storage anymore (see
-  // jobPosting.model.ts), so this searches by the role's title text and
-  // tags each result with that role's id itself, client-side. Opportunities
-  // ARE tagged with jobRoles now (AI-classified at scrape time), so that one
-  // filters server-side by the same target-role ids instead.
+  // Jobs aren't tagged to a role in storage (see jobPosting.model.ts), so
+  // this filters by jobRoleId, which the backend resolves into the same
+  // title/keyword-aware match Market Pulse already uses — a literal-text
+  // search here would silently disagree with Market Pulse's job count.
   const [jobResultsByRole, opportunitiesResult] = await Promise.all([
     Promise.all(
       dashboard.hero.map(async (role) => ({
         role,
-        result: await handleGetAllJobPostings({ search: role.jobRole, limit: 4 }),
+        result: await handleGetAllJobPostings({ jobRoleId: role.jobRoleId, limit: 4 }),
       })),
     ),
     handleGetAllOpportunities({ limit: OPPORTUNITIES_LIMIT, jobRoleIds: targetRoleIds }),
@@ -52,37 +53,32 @@ export default async function Page() {
 
   const opportunities = opportunitiesResult.success ? opportunitiesResult.data : [];
 
-  const seenJobIds = new Set<string>();
-  const jobs: RecommendedJob[] = jobResultsByRole
-    .flatMap(({ role, result }) =>
-      result.success
-        ? (result.data as any[]).map((job) => ({ ...job, matchedRoleId: role.jobRoleId }))
-        : [],
-    )
-    .filter((job) => (seenJobIds.has(job._id) ? false : (seenJobIds.add(job._id), true)))
-    .sort(
-      (a: any, b: any) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    )
-    .slice(0, RECOMMENDED_JOBS_LIMIT);
+  const flatJobs: RecommendedJob[] = jobResultsByRole.flatMap(({ role, result }) =>
+    result.success
+      ? (result.data as any[]).map((job) => ({ ...job, matchedRoleId: role.jobRoleId }))
+      : [],
+  );
+  const jobs = dedupeJobListings(flatJobs, RECOMMENDED_JOBS_LIMIT);
 
   return (
-    <div className="bg-[#F7F8F5] px-6 py-6 sm:px-8 lg:px-10 lg:py-8">
-      <div className="mx-auto flex w-full max-w-[1000px] flex-col gap-8">
-        <section className="grid gap-5 xl:grid-cols-[minmax(0,1.8fr)_minmax(300px,0.9fr)]">
+    <div className="bg-gray-50 px-6 py-6 sm:px-8 lg:px-10 lg:py-8">
+      <StaggerGroup className="mx-auto flex w-full max-w-[1000px] flex-col gap-8">
+        <StaggerItem className="grid gap-5 xl:grid-cols-[minmax(0,1.8fr)_minmax(300px,0.9fr)]">
           <DashboardHeroCard hero={dashboard.hero} />
 
           <MarketPulseCard marketPulse={dashboard.marketPulse} />
-        </section>
+        </StaggerItem>
 
-        <section className="grid gap-5 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.7fr)]">
+        <StaggerItem className="grid gap-5 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.7fr)]">
           <SalaryRangeCard salaryRange={dashboard.salaryRange} />
 
           <OpportunitiesCard opportunities={opportunities} />
-        </section>
+        </StaggerItem>
 
-        <RecommendedJobsSection jobs={jobs} hero={dashboard.hero} />
-      </div>
+        <StaggerItem>
+          <RecommendedJobsSection jobs={jobs} hero={dashboard.hero} />
+        </StaggerItem>
+      </StaggerGroup>
     </div>
   );
 }

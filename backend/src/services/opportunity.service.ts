@@ -85,7 +85,6 @@ export class OpportunityService {
 
     let created = 0;
     let updated = 0;
-    let skipped = 0;
     const seenLinks: string[] = [];
 
     const validOpportunities = opportunities.filter((o) => o.title && o.registrationLink);
@@ -118,7 +117,7 @@ export class OpportunityService {
       }
     }
 
-    skipped = opportunities.length - validOpportunities.length;
+    const skipped = opportunities.length - validOpportunities.length;
 
     const deactivated = await opportunityRepository.deactivateStale(seenLinks);
 

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { StaggerGroup, StaggerItem } from "../_components/AnimatedSection";
 import ContinuePracticeHero from "./_components/ContinuePracticeHero";
 import PracticeHistoryTable from './_components/PracticeHistoryTable';
 import ProjectLearningSection from "./_components/ProjectLearningSection";
@@ -66,7 +67,7 @@ export default async function Page({
 
   if (dashboard.hero.length === 0) {
     return (
-      <div className="bg-[#F7F8F5] px-6 py-6 sm:px-8 lg:px-10 lg:py-8">
+      <div className="bg-gray-50 px-6 py-6 sm:px-8 lg:px-10 lg:py-8">
         <div className="mx-auto flex w-full max-w-[1000px] flex-col items-center gap-4 rounded-2xl border border-dashed border-neutral-300 bg-white py-20 text-center">
           <h1 className="text-2xl font-bold text-neutral-900">Practice</h1>
           <p className="max-w-md text-neutral-500">
@@ -118,47 +119,51 @@ export default async function Page({
   const projectRecommendations = buildProjectRecommendations(planners, projects, completedProjectTitles);
 
   return (
-    <div className="bg-[#F7F8F5] px-6 py-6 sm:px-8 lg:px-10 lg:py-8">
-      <div className="mx-auto flex w-full max-w-[1000px] flex-col gap-8">
-        <div>
+    <div className="bg-gray-50 px-6 py-6 sm:px-8 lg:px-10 lg:py-8">
+      <StaggerGroup className="mx-auto flex w-full max-w-[1000px] flex-col gap-8">
+        <StaggerItem>
           <h1 className="bg-gradient-to-r from-neutral-900 to-neutral-600 bg-clip-text text-3xl font-bold text-transparent">
             Practice
           </h1>
           <p className="mt-2 text-sm text-neutral-500">
             What to work on next, based on your real skill gaps.
           </p>
-        </div>
+        </StaggerItem>
 
-        <ContinuePracticeHero
-          roleTitle={planner.role.jobRole}
-          readinessScore={planner.readinessScore}
-          readinessLabel={planner.readinessLabel}
-          recommendation={recommendation}
-          jobRoleId={selectedRoleId}
-          stats={stats}
-        />
+        <StaggerItem>
+          <ContinuePracticeHero
+            roleTitle={planner.role.jobRole}
+            readinessScore={planner.readinessScore}
+            readinessLabel={planner.readinessLabel}
+            recommendation={recommendation}
+            jobRoleId={selectedRoleId}
+            stats={stats}
+          />
+        </StaggerItem>
 
-        <div>
+        <StaggerItem>
           <h2 className="mb-4 text-xl font-bold text-neutral-900">Skill Practice</h2>
           <SkillMasterySection planners={planners} />
-        </div>
+        </StaggerItem>
 
-        <section className="grid gap-5 xl:grid-cols-[minmax(0,1.8fr)_minmax(300px,0.9fr)]">
+        <StaggerItem className="grid gap-5 xl:grid-cols-[minmax(0,1.8fr)_minmax(300px,0.9fr)]">
           <PracticeHistoryTable attempts={attempts} />
 
           <div className="flex flex-col gap-5">
             <MockInterviewCard jobRoleId={selectedRoleId} />
             <PracticeStreakCard stats={stats} />
           </div>
-        </section>
+        </StaggerItem>
 
-        <ProjectLearningSection
-          heroRoles={dashboard.hero}
-          projects={projects}
-          completedProjectTitles={completedProjectTitles}
-          recommendations={projectRecommendations}
-        />
-      </div>
+        <StaggerItem>
+          <ProjectLearningSection
+            heroRoles={dashboard.hero}
+            projects={projects}
+            completedProjectTitles={completedProjectTitles}
+            recommendations={projectRecommendations}
+          />
+        </StaggerItem>
+      </StaggerGroup>
     </div>
   );
 }

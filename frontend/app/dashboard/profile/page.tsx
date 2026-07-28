@@ -41,7 +41,7 @@ export default async function Page() {
     });
 
     return (
-        <div className="bg-[#F7F8F5]">
+        <div className="bg-gray-50">
             <UpdateForm user={userData.data} jobRoles={jobRoles} roadmapSnapshots={roadmapSnapshots} />
         </div>
     );

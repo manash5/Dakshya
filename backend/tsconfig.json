@@ -38,6 +38,10 @@
     "skipLibCheck": true,                      // Skip checking definition files
     "isolatedModules": true,                   // Keeps stability
     "moduleDetection": "force",                // Keep for consistency
-    
-  }
+
+  },
+  // Tests are typechecked separately by ts-jest against tsconfig.jest.json
+  // (which has the "jest" types this config deliberately omits) -- excluding
+  // them here keeps `npm run typecheck` scoped to application code only.
+  "exclude": ["node_modules", "tests", "src/**/__mocks__"]
 }

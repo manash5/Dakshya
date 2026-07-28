@@ -50,33 +50,35 @@ export default function HeroShowcase() {
       ref={containerRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      className="relative h-95 w-full sm:h-110 lg:h-120"
+      className="relative h-90 w-full sm:h-105 lg:h-115"
       style={{ perspective: 1400 }}
     >
+      {/* Base card: Dashboard (larger, anchored near the top) */}
       <motion.div
-        className="absolute left-[2%] top-0 z-10 sm:left-[6%]"
+        className="absolute left-1/2 top-4 z-10 -translate-x-1/2 sm:left-[50%]"
         style={{
-          rotate: -3,
+          rotate: 0,
           rotateX: reducedMotion ? 0 : rotateX,
           rotateY: reducedMotion ? 0 : rotateY,
         }}
         animate={reducedMotion ? undefined : { y: [0, -10, 0] }}
-        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
       >
-        <RoadmapShowcase />
+        <DashboardShowcase />
       </motion.div>
 
+      {/* Overlapping card: Roadmap (smaller, overlays top-left corner) */}
       <motion.div
-        className="absolute bottom-0 right-[2%] z-20 sm:right-[4%]"
+        className="absolute left-[0%] top-[-20] z-20 sm:left-[75%]"
         style={{
-          rotate: 2,
+          rotate: 3,
           rotateX: reducedMotion ? 0 : rotateX,
           rotateY: reducedMotion ? 0 : rotateY,
         }}
         animate={reducedMotion ? undefined : { y: [0, -14, 0] }}
-        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 0.4 }}
+        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.4 }}
       >
-        <DashboardShowcase />
+        <RoadmapShowcase />
       </motion.div>
     </div>
   );

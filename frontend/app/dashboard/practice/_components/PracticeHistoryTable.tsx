@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Trash2 } from "lucide-react";
 import type { PracticeAttempt } from "@/lib/api/practiceAttempt";
+import { handleDeleteAttempt } from "@/lib/actions/practiceAttempt-action";
 import AttemptDetailModal from "./AttemptDetailModal";
 
 function statusFor(attempt: PracticeAttempt): { label: string; className: string } {
@@ -24,7 +27,21 @@ interface PracticeHistoryTableProps {
 
 export default function PracticeHistoryTable({ attempts }: PracticeHistoryTableProps) {
   const rows = attempts.slice(0, 8);
+  const router = useRouter();
   const [selected, setSelected] = useState<PracticeAttempt | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const onDelete = async (attempt: PracticeAttempt) => {
+    if (!window.confirm("Delete this practice session? This cannot be undone.")) return;
+    setDeletingId(attempt._id);
+    const result = await handleDeleteAttempt(attempt._id);
+    setDeletingId(null);
+    if (result.success) {
+      router.refresh();
+    } else {
+      window.alert(result.message);
+    }
+  };
 
   return (
     <div className="flex flex-col rounded-[24px] border border-zinc-200 bg-white shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
@@ -38,11 +55,12 @@ export default function PracticeHistoryTable({ attempts }: PracticeHistoryTableP
         </p>
       ) : (
         <>
-          <div className="grid grid-cols-[1fr_1.6fr_0.8fr_1fr] gap-4 border-y border-zinc-100 bg-zinc-50/60 px-6 py-3 text-[11px] font-semibold tracking-wide text-zinc-400">
+          <div className="grid grid-cols-[1fr_1.6fr_0.8fr_1fr_32px] gap-4 border-y border-zinc-100 bg-zinc-50/60 px-6 py-3 text-[11px] font-semibold tracking-wide text-zinc-400">
             <span>DATE</span>
             <span>ROLE / SKILL</span>
             <span>SCORE</span>
             <span>STATUS</span>
+            <span />
           </div>
 
           <div className="flex flex-col">
@@ -56,13 +74,16 @@ export default function PracticeHistoryTable({ attempts }: PracticeHistoryTableP
               const isViewable = !!attempt.completedAt;
 
               return (
-                <button
+                <div
                   key={attempt._id}
-                  type="button"
-                  disabled={!isViewable}
-                  onClick={() => setSelected(attempt)}
-                  className={`grid grid-cols-[1fr_1.6fr_0.8fr_1fr] items-center gap-4 border-b border-zinc-100 px-6 py-5 text-left last:border-b-0 ${
-                    isViewable ? "transition hover:bg-zinc-50/60" : "cursor-default"
+                  role="button"
+                  tabIndex={isViewable ? 0 : -1}
+                  onClick={() => isViewable && setSelected(attempt)}
+                  onKeyDown={(e) => {
+                    if (isViewable && (e.key === "Enter" || e.key === " ")) setSelected(attempt);
+                  }}
+                  className={`grid grid-cols-[1fr_1.6fr_0.8fr_1fr_32px] items-center gap-4 border-b border-zinc-100 px-6 py-5 text-left last:border-b-0 ${
+                    isViewable ? "cursor-pointer transition hover:bg-zinc-50/60" : "cursor-default"
                   }`}
                 >
                   <span className="text-sm text-zinc-500">{formatDate(attempt.createdAt)}</span>
@@ -84,7 +105,19 @@ export default function PracticeHistoryTable({ attempts }: PracticeHistoryTableP
                   >
                     {status.label}
                   </span>
-                </button>
+                  <button
+                    type="button"
+                    aria-label="Delete practice session"
+                    disabled={deletingId === attempt._id}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(attempt);
+                    }}
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-300 transition hover:bg-red-50 hover:text-red-500 disabled:opacity-40"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </div>
               );
             })}
           </div>

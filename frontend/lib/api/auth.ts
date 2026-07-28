@@ -62,7 +62,7 @@ export const profileUpdate = async ( data: any) => {
 export const getProfile = async () => {
     try {
         const response = await axiosInstance.get(API.AUTH.GET_PROFILE);
-        return response.data; // Returns the user profile object containing name, role, avatarUrl, etc.
+        return response.data;
     } catch (error: any) {
         console.error("AXIOS ERROR DETAILS:", error.response?.status, error.response?.data);
         throw new Error(
@@ -83,3 +83,36 @@ export const changePassword = async (data: { currentPassword: string; newPasswor
         );
     }
 };
+
+export const googleLogin = async (idToken: string) => {
+    try {
+        const response = await axiosInstance.post(API.AUTH.GOOGLE_LOGIN, { idToken });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(
+            error.response?.data?.message || 'Google login failed'
+        );
+    }
+}
+
+export const forgotPassword = async (data: { email: string }) => {
+    try {
+        const response = await axiosInstance.post(API.AUTH.FORGOT_PASSWORD, data);
+        return response.data;
+    } catch (error: any) {
+        throw new Error(
+            error.response?.data?.message || 'Failed to send reset link'
+        );
+    }
+}
+
+export const resetPassword = async (data: { token: string; newPassword: string; confirmPassword: string }) => {
+    try {
+        const response = await axiosInstance.post(API.AUTH.RESET_PASSWORD, data);
+        return response.data;
+    } catch (error: any) {
+        throw new Error(
+            error.response?.data?.message || 'Failed to reset password'
+        );
+    }
+}

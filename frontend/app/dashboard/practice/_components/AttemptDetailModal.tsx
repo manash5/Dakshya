@@ -1,5 +1,6 @@
 "use client";
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import type { PracticeAttempt } from "@/lib/api/practiceAttempt";
 import AttemptResults from "./AttemptResults";
@@ -21,7 +22,9 @@ export default function AttemptDetailModal({ attempt, onClose }: AttemptDetailMo
 
   const isPureInterview = !attempt.skill && (!attempt.skills || attempt.skills.length === 0);
 
-  return (
+  // Portalled to <body> so "fixed" is relative to the real viewport, not a
+  // transformed ancestor (e.g. the page's stagger-entrance wrapper).
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
       onClick={onClose}
@@ -50,6 +53,7 @@ export default function AttemptDetailModal({ attempt, onClose }: AttemptDetailMo
           <AttemptResults attempt={attempt} />
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

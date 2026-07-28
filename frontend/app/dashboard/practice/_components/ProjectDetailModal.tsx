@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { ArrowRight, Check, Clock, GitBranch, X } from "lucide-react";
 import type { Project } from "@/lib/api/project";
 
@@ -42,13 +43,15 @@ export default function ProjectDetailModal({
 
   const canMarkComplete = githubLink.trim().length > 0;
 
-  return (
+  // Portalled to <body> so "fixed" is relative to the real viewport, not a
+  // transformed ancestor (e.g. the page's stagger-entrance wrapper).
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="max-h-[85vh] w-full max-w-xl overflow-y-auto rounded-[24px] bg-white p-7 shadow-xl"
+        className="scrollbar-elegant animate-page-enter max-h-[85vh] w-full max-w-xl overflow-y-auto rounded-[24px] bg-white p-7 shadow-xl"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -153,6 +156,7 @@ export default function ProjectDetailModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

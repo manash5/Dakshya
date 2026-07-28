@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useAuth } from "@/lib/context/AuthContext";
+import { resolveProfileImageSrc } from "@/app/dashboard/profile/_components/profile-types";
 
 function getGreeting() {
   const hour = new Date().getHours();
@@ -14,6 +15,14 @@ function getGreeting() {
 export default function DashboardHeader() {
   const { user, loading } = useAuth();
   const [imgError, setImgError] = useState(false);
+  const [prevAvatarSrc, setPrevAvatarSrc] = useState<string | null>(null);
+  const avatarSrc = resolveProfileImageSrc(user?.profilePicture);
+
+  // A newly uploaded picture gets a fresh URL — clear any stale error so it renders
+  if (avatarSrc !== prevAvatarSrc) {
+    setPrevAvatarSrc(avatarSrc);
+    setImgError(false);
+  }
 
   // Show a skeleton while AuthContext resolves the session cookie
   if (loading || !user) {
@@ -41,9 +50,9 @@ export default function DashboardHeader() {
 
             {/* Avatar Container */}
             <div className="relative flex h-10 w-10 overflow-hidden items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white">
-              {user.profilePicture && !imgError ? (
+              {avatarSrc && !imgError ? (
                 <Image
-                  src={`${user.profilePicture}`}
+                  src={avatarSrc}
                   alt={name}
                   fill
                   sizes="40px"

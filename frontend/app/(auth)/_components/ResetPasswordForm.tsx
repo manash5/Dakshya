@@ -2,11 +2,18 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-
+import { useState, useTransition } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { resetPasswordAction } from "@/lib/actions/auth-action";
 import { resetPasswordSchema, ResetPasswordValues } from "./schema";
 import Image from "next/image";
 
 export default function ResetPasswordForm() {
+    const [isPending, startTransition] = useTransition();
+    const [error, setError] = useState('');
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const token = searchParams.get("token");
     const {
         register,
         handleSubmit,
@@ -23,7 +30,27 @@ export default function ResetPasswordForm() {
         "mt-2 w-full rounded-xl border border-transparent bg-neutral-50 px-4 py-3 text-sm text-neutral-800 outline-none transition duration-200 placeholder:text-neutral-400 focus:border-lime-300 focus:bg-white focus:ring-4 focus:ring-lime-200/30";
 
     const onSubmit = (data: ResetPasswordValues) => {
-        void data;
+        if (!token) {
+            setError("Reset link is invalid or missing a token.");
+            return;
+        }
+        setError('');
+        startTransition(async () => {
+            try {
+                const result = await resetPasswordAction({
+                    token,
+                    newPassword: data.password,
+                    confirmPassword: data.confirmPassword,
+                });
+                if (result.success) {
+                    router.push('/login');
+                } else {
+                    setError(result.message || 'Failed to reset password');
+                }
+            } catch (err: any) {
+                setError(err?.message || 'Failed to reset password');
+            }
+        });
     };
 
     return (
@@ -91,9 +118,9 @@ export default function ResetPasswordForm() {
                     <button
                         type="submit"
                         className="w-full rounded-xl bg-gradient-to-r from-[#b9e956] to-[#a6e042] px-4 py-3 text-sm font-semibold text-[#0c2422] shadow-[0_10px_20px_rgba(166,224,66,0.35)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_30px_rgba(166,224,66,0.4)] active:translate-y-0"
-                        disabled={isSubmitting}
+                        disabled={isPending}
                     >
-                        {isSubmitting ? "Updating..." : "Reset password"}
+                        {isPending ? "Updating..." : "Reset password"}
                     </button>
                 </form>
             </div>

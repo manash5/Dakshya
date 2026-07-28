@@ -37,4 +37,11 @@ router.post(
     userController.completeOnboarding
 );
 
+router.post("/register-email", userController.registerWithEmail);
+
+router.post("/forgot-password", userController.forgotPassword);
+router.post("/reset-password", userController.resetPassword);
+
+router.post("/google", userController.googleLogin);
+
 export default router;

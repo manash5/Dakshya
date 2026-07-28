@@ -260,11 +260,18 @@ export class FastApiClient {
         skill?: string | null,
         skills?: string[] | null
     ): Promise<GenerateInterviewQuestionsResult> {
-        const response = await axios.post(
-            `${this.baseUrl}/api/v1/interview/generate-questions`,
-            { jobRole, difficulty, mode, questionCount, skill: skill ?? null, skills: skills ?? null }
-        );
-        return response.data;
+        try {
+            const response = await axios.post(
+                `${this.baseUrl}/api/v1/interview/generate-questions`,
+                { jobRole, difficulty, mode, questionCount, skill: skill ?? null, skills: skills ?? null }
+            );
+            return response.data;
+        } catch (e: any) {
+            throw new HttpException(
+                e.response?.status ?? 500,
+                e.response?.data?.detail ?? "Failed to generate interview questions"
+            );
+        }
     }
 
     async evaluateInterviewAnswer(
@@ -275,15 +282,22 @@ export class FastApiClient {
         userAnswer?: string | null,
         userCode?: string | null
     ): Promise<EvaluateAnswerResult> {
-        const response = await axios.post(`${this.baseUrl}/api/v1/interview/evaluate`, {
-            question,
-            questionType,
-            jobRole,
-            difficulty,
-            userAnswer: userAnswer ?? null,
-            userCode: userCode ?? null,
-        });
-        return response.data;
+        try {
+            const response = await axios.post(`${this.baseUrl}/api/v1/interview/evaluate`, {
+                question,
+                questionType,
+                jobRole,
+                difficulty,
+                userAnswer: userAnswer ?? null,
+                userCode: userCode ?? null,
+            });
+            return response.data;
+        } catch (e: any) {
+            throw new HttpException(
+                e.response?.status ?? 500,
+                e.response?.data?.detail ?? "Failed to evaluate interview answer"
+            );
+        }
     }
 
     // Same fetch/FormData approach as analyzeResume, for the same reason --

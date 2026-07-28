@@ -63,20 +63,20 @@ export default async function Home() {
       <MarketingHeader isAuthenticated={isAuthenticated} />
       <main className="pt-16">
         {/* Hero */}
-        <section className="relative mx-auto max-w-[1400px] overflow-hidden px-6 pb-10 pt-20 sm:px-8 md:pt-28 lg:px-10">
+        <section className="relative mx-auto max-w-[1400px] overflow-hidden px-6 pb-6 pt-14 sm:px-8 md:pt-20 lg:px-10">
           <div
             aria-hidden
-            className="pointer-events-none absolute -top-40 left-1/2 -z-10 h-[600px] w-[1000px] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(198,234,93,0.16),transparent_65%)]"
+            className="pointer-events-none absolute -top-32 left-1/2 -z-10 h-[560px] w-[1100px] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(198,234,93,0.22),transparent_65%)]"
           />
-          <FadeInSection className="mx-auto max-w-2xl space-y-7 text-center">
-            <div className="inline-flex items-center gap-2 rounded-full border border-black/5 bg-white py-1.5 pl-1.5 pr-4">
+          <FadeInSection className="mx-auto max-w-2xl space-y-6 text-center">
+            {/* <div className="inline-flex items-center gap-2 rounded-full border border-black/5 bg-white py-1.5 pl-1.5 pr-4">
               <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white">
                 D
               </span>
               <span className="text-xs font-bold uppercase tracking-[0.12em] text-primary">
                 Dakshya · Career Navigator
               </span>
-            </div>
+            </div> */}
             <h1 className="text-4xl font-bold leading-[1.1] text-neutral-900 sm:text-5xl">
               Your career isn&apos;t a guess. <span className="text-primary">It&apos;s a plan.</span>
             </h1>
@@ -84,7 +84,7 @@ export default async function Home() {
               Dakshya turns the gap between your degree and the job market into a clear,
               personalized roadmap — built from your real coursework, resume, and practice.
             </p>
-            <div className="flex flex-col items-center gap-4">
+            <div className="flex flex-col items-center gap-3">
               <div className="flex flex-wrap justify-center gap-4">
                 <HeroCTA
                   isAuthenticated={isAuthenticated}
@@ -93,8 +93,8 @@ export default async function Home() {
                   showArrow
                   className="group inline-flex items-center rounded-xl bg-primary px-8 py-4 text-sm font-semibold text-white shadow-[0_12px_30px_-10px_rgba(32,56,16,0.45)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary-dark"
                 />
-                <a
-                  href="#how-it-works"
+
+                <a href="#how-it-works"
                   className="rounded-xl border border-black/10 px-8 py-4 text-sm font-semibold text-neutral-700 transition-colors hover:border-primary/40 hover:bg-white"
                 >
                   See how it works
@@ -107,7 +107,7 @@ export default async function Home() {
             </div>
           </FadeInSection>
 
-          <FadeInSection className="relative mx-auto mt-14 max-w-4xl lg:mt-16" delay={0.15}>
+          <FadeInSection className="relative mx-auto mt-4 max-w-4xl sm:mt-6" delay={0.15}>
             <HeroShowcase />
           </FadeInSection>
         </section>

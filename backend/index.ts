@@ -5,12 +5,12 @@ import { registerCronJobs } from "./src/cron";
 
 connectToMongoDB()
     .then(() => {
-        console.log("MongoDB connection established, starting server  ...");
+        console.log("MongoDB connection established, started server  ...");
         registerCronJobs();
     })
     .catch((error) => {
         console.error("Failed to connect to MongoDB, server not started.", error);
-        process.exit(1); // Exit the process with an error code
+        process.exit(1);
 });
 
 app.listen(

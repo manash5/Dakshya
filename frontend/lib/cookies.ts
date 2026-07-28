@@ -10,12 +10,12 @@ export const getTokenCookie = async () => {
 }
 export const setUserInfoCookie = async (userInfo: any) => {
     const cookieStore = await cookies();
-    cookieStore.set("user_data", JSON.stringify(userInfo)); // convert obj to string
+    cookieStore.set("user_data", JSON.stringify(userInfo));
 }
 export const getUserInfoCookie = async () => {
     const cookieStore = await cookies();
     const userInfoStr = cookieStore.get("user_data")?.value || null;
-    return userInfoStr ? JSON.parse(userInfoStr) : null; // convert string back to obj
+    return userInfoStr ? JSON.parse(userInfoStr) : null;
 }
 export const clearAuthCookies = async () => {
     const cookieStore = await cookies();
