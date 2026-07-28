@@ -32,6 +32,13 @@ import skillPlannerRoute from './routes/skillPlanner.route'
 
 const app: Application = express();
 
+// Render (like any platform putting the app behind a reverse proxy) adds
+// X-Forwarded-For to every request. Without this, Express doesn't trust
+// that header, and express-rate-limit's authLimiter below refuses to key
+// on it -- crashing every /login and /register request. `1` trusts exactly
+// one hop (Render's own proxy), not an arbitrary chain.
+app.set('trust proxy', 1);
+
 // Comma-separated so both the local dev frontend and the deployed Vercel
 // URL can be allowed at once (see ai-services/main.py's CORS_ALLOWED_ORIGINS
 // for the same pattern).
