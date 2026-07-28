@@ -1,5 +1,6 @@
 "use client";
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 
 export default function Modal({
     open,
@@ -21,7 +22,16 @@ export default function Modal({
 
     if (!open) return null;
 
-    return (
+    // Rendered via a portal straight to <body> rather than in place: admin
+    // pages are wrapped by app/admin/template.tsx's `animate-page-enter`
+    // (a `both`-fill-mode animation on `transform`), which -- even once
+    // settled at `transform: none` -- still establishes a containing block
+    // for `position: fixed` descendants. That wrapper lives inside <main>,
+    // a sibling of <Sidebar>/<Header> rather than their ancestor, so this
+    // modal's fixed overlay was only ever covering the main content pane.
+    // Escaping to document.body sidesteps that (and any future ancestor
+    // transform/filter) entirely.
+    return createPortal(
         <div
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
             onClick={onClose}
@@ -44,6 +54,7 @@ export default function Modal({
                 </div>
                 {children}
             </div>
-        </div>
+        </div>,
+        document.body,
     );
 }

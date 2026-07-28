@@ -1,8 +1,8 @@
-# Dev-mode image: source comes from a bind mount in docker-compose.yml, not
-# from this image (see the (lack of) `COPY . .` below) -- this Dockerfile
-# only needs to produce a container with the right runtime + node_modules
-# installed. package.json's own "dev" script (tsx --watch) is what actually
-# runs the app; that's why there's no build step here.
+# Dual-purpose image: locally, docker-compose.yml bind-mounts the live
+# ./backend folder over the COPY below and overrides CMD with --watch for
+# live reload. Standalone (e.g. deployed directly on Render, no bind mount
+# available), this image needs to be self-sufficient -- hence COPY . . and
+# a plain, non-watching CMD as the production-safe default.
 FROM node:24-slim
 
 WORKDIR /app
@@ -17,6 +17,8 @@ RUN apt-get update \
 COPY package.json package-lock.json ./
 RUN npm install
 
+COPY . .
+
 EXPOSE 8088
 
-CMD ["npx", "tsx", "--watch", "index.ts"]
+CMD ["npx", "tsx", "index.ts"]
