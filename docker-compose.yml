@@ -39,6 +39,9 @@ services:
 
   ai-services:
     build: ./ai-services
+    # Overrides the Dockerfile's plain (non-reloading) production CMD --
+    # local dev still wants uvicorn's --reload restart-on-change behavior.
+    command: uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
     ports:
       - "8000:8000"
     volumes:
