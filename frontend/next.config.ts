@@ -16,6 +16,10 @@ const nextConfig: NextConfig = {
         port: '8088',
         pathname: '/uploads/**',
       },
+      // Derived from the actual deployed backend URL (not hardcoded) so this
+      // keeps working automatically if the backend ever moves to a custom
+      // domain -- next/image's optimizer 400s on any host not listed here.
+      new URL(`${backendURL}/uploads/**`),
       {
         protocol: "https",
         hostname: "images.unsplash.com" // domain
