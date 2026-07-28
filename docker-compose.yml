@@ -13,6 +13,9 @@ services:
 
   backend:
     build: ./backend
+    # Overrides the Dockerfile's plain (non-watching) production CMD --
+    # local dev still wants tsx's --watch restart-on-change behavior.
+    command: npx tsx --watch index.ts
     ports:
       - "8088:8088"
     volumes:
